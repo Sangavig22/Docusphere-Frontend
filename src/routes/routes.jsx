@@ -11,7 +11,7 @@ function withLayout(element, pageTitle, pageSubtitle) {
   );
 }
 
-export const documentRoutes = [
+export const routes = [
   {
     path: "/dashboard",
     element: <Navigate to="/documents" replace />,

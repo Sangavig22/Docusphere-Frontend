@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { documentRoutes } from "./routes";
+import { routes } from "./routes";
 
 export default function AppRoutes() {
   return (
@@ -7,7 +7,7 @@ export default function AppRoutes() {
       <Routes>
         <Route path="/" element={<Navigate to="/uploads" replace />} />
 
-        {documentRoutes.map((r) => (
+        {routes.map((r) => (
           <Route key={r.path} path={r.path} element={r.element} />
         ))}
 
