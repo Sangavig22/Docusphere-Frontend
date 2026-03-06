@@ -1,13 +1,8 @@
 import './App.css'
 import AppRoutes from "./routes"
-import { DocumentsProvider } from "./hooks/useDocumentsStore";
 
 function App() {
-   return (
-    <DocumentsProvider>
-      <AppRoutes />
-    </DocumentsProvider>
-  );
-}
+  return <AppRoutes />;
+} 
 
 export default App
