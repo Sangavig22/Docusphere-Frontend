@@ -63,7 +63,7 @@ export default function UploadPage() {
 
       <DocumentUploadSection
         variant="default"
-        title="UploadFiles"
+        title="Upload Documents"
         subtitle="Supported formats: PDF, DOC, XLS, PPT, PNG, JPG"
         onUploadComplete={(file) => {
           addDocuments(file);

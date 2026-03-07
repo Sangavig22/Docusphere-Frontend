@@ -7,7 +7,7 @@ import UploadErrorBox from "./UploadErrorBox";
 
 export default function DocumentUploadSection({
   variant = "default",
-  title = "UploadFiles",
+  title = "Upload Documents",
   subtitle = "Supported formats: PDF, DOC, XLS, PPT, PNG, JPG",
   accept,
   onFileSelected: onFileSelectedProp,
@@ -78,7 +78,7 @@ export default function DocumentUploadSection({
   }
 
   return (
-    <div className="flex min-h-0 w-full max-w-5xl flex-1 flex-col">
+    <div className="flex min-h-0 w-full max-w-6xl flex-1 flex-col">
       <UploadCard title={title} subtitle={subtitle}>
         {status === "idle" && (
           <UploadDropzone
@@ -111,7 +111,7 @@ export default function DocumentUploadSection({
         )}
 
         {status === "success" && !isOcr && (
-          <div className="flex min-h-[280px] min-w-0 flex-1 flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-white p-8 text-center">
+          <div className="flex min-h-[340px] min-w-0 flex-1 flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-white p-8 text-center">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
               <span className="font-bold text-green-700">✓</span>
             </div>
@@ -133,3 +133,4 @@ export default function DocumentUploadSection({
     </div>
   );
 }
+
