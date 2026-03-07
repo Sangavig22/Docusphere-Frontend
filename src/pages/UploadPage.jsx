@@ -41,25 +41,8 @@ export default function UploadPage() {
   }
 
   return (
-    <div className="mx-auto flex min-w-0 w-full max-w-3xl flex-1 flex-col gap-5 sm:gap-6">
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm w-full min-w-0">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-          <div className="min-w-0">
-            <h2 className="text-lg font-semibold tracking-tight text-slate-900">Quick upload</h2>
-            <p className="mt-1 text-sm text-slate-600">Select one or more files to add to My Documents.</p>
-          </div>
-          <label className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 cursor-pointer shrink-0">
-            <input
-              type="file"
-              multiple
-              className="hidden"
-              onChange={handleFilesSelected}
-              disabled={busy}
-            />
-            {busy ? "Uploading..." : "Choose files"}
-          </label>
-        </div>
-      </div>
+    <div className="mx-auto flex min-w-0 w-full max-w-[1100px] flex-1 flex-col gap-6 sm:gap-7">
+     
 
       <DocumentUploadSection
         variant="default"

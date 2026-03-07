@@ -79,7 +79,7 @@ export default function DocumentUploadSection({
   }
 
   return (
-    <div className="flex min-h-0 min-w-0 w-full max-w-5xl flex-1 flex-col">
+    <div className="mx-auto flex min-h-0 min-w-0 w-full max-w-[1080px] flex-1 flex-col">
       <UploadCard title={title} subtitle={subtitle}>
         {status === "idle" && (
           <UploadDropzone
@@ -90,7 +90,7 @@ export default function DocumentUploadSection({
         )}
 
         {status === "uploading" && (
-          <div className="space-y-4">
+          <div className="space-y-5">
             <UploadDropzone disabled accept={accept ?? defaultAccept} variant={variant} />
             <UploadProgress
               filename={selectedFile?.name || "file"}
@@ -112,15 +112,15 @@ export default function DocumentUploadSection({
         )}
 
         {status === "success" && !isOcr && (
-          <div className="flex min-h-[200px] sm:min-h-[240px] md:min-h-[280px] min-w-0 flex-1 flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-white p-5 sm:p-6 md:p-8 text-center">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100">
+          <div className="flex min-h-[240px] sm:min-h-[300px] md:min-h-[340px] min-w-0 flex-1 flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-slate-200 bg-white p-6 sm:p-8 md:p-10 text-center">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-green-100">
               <span className="font-bold text-green-700">✓</span>
             </div>
-            <h3 className="text-base font-semibold text-slate-900">Upload Successful</h3>
-            <p className="text-sm text-slate-500">Your document has been uploaded.</p>
+            <h3 className="text-lg font-semibold text-slate-900 sm:text-xl">Upload Successful</h3>
+            <p className="text-sm text-slate-500 sm:text-base">Your document has been uploaded.</p>
             <button
               onClick={resetUpload}
-              className="w-full sm:w-auto rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="w-full sm:w-auto rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 sm:text-base"
             >
               Upload Another File
             </button>
