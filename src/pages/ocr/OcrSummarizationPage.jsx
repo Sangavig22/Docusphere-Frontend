@@ -1,10 +1,7 @@
 import { useState } from "react";
 import Sidebar from "../../components/Layout/Sidebar";
 import Topbar from "../../components/Layout/Topbar";
-import UploadCard from "../../components/upload/UploadCard";
-import UploadDropzone from "../../components/upload/UploadDropzone";
-import UploadErrorBox from "../../components/upload/UploadErrorBox";
-import UploadProgress from "../../components/upload/UploadProgress";
+import DocumentUploadSection from "../../components/upload/DocumentUploadSection";
 import useOcrFlow from "../../hooks/useOcrFlow";
 import DeleteConfirmModal from "../../components/ocr/DeleteConfirmModal";
 import EditDocumentModal from "../../components/ocr/EditDocumentModal";
@@ -45,7 +42,7 @@ export default function OcrSummarizationPage() {
 
   return (
     <div className="flex h-screen bg-slate-100">
-      <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed((prev) => !prev)} />
+      <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed((previous) => !previous)} />
 
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar
@@ -56,38 +53,26 @@ export default function OcrSummarizationPage() {
 
         <main className="flex-1 overflow-y-auto p-6 md:p-8">
           <div className="mx-auto flex w-full max-w-6xl flex-col gap-4">
-            <UploadCard title="Upload Documents" subtitle="Supported formats: PDF, DOC, XLS, PPT, PNG, JPG">
-              {status === "idle" && (
-                <UploadDropzone
-                  variant="ocr"
-                  onFileSelected={startUpload}
-                  accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg"
-                />
-              )}
-
-              {status === "uploading" && (
-                <UploadProgress
-                  filename={selectedFile?.name || "file"}
-                  percent={uploadPercent}
-                  fileSize={selectedFile?.size}
-                  onCancel={cancelUpload}
-                  showCancel
-                />
-              )}
-
+            <DocumentUploadSection
+              variant="ocr"
+              title="Upload Documents"
+              subtitle="Supported formats: PDF, DOC, XLS, PPT, PNG, JPG"
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg"
+              status={status}
+              selectedFile={selectedFile}
+              percent={uploadPercent}
+              errorMsg={errorMessage}
+              onFileSelected={startUpload}
+              onCancel={cancelUpload}
+              onRetry={retryFromError}
+              onChooseNew={retryFromError}
+            >
               {status === "processing" && (
                 <ProcessingStateCard
                   fileName={selectedFile?.name}
                   activeStep={processingStep}
                   steps={steps}
                   onCancel={cancelUpload}
-                />
-              )}
-
-              {status === "error" && (
-                <UploadErrorBox
-                  message={errorMessage || "Upload failed. Please try again."}
-                  onRetry={retryFromError}
                 />
               )}
 
@@ -103,7 +88,7 @@ export default function OcrSummarizationPage() {
                   />
                 </div>
               )}
-            </UploadCard>
+            </DocumentUploadSection>
           </div>
         </main>
       </div>
@@ -131,5 +116,3 @@ export default function OcrSummarizationPage() {
     </div>
   );
 }
-
-
