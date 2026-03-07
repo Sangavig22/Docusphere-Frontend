@@ -7,7 +7,7 @@ import UploadErrorBox from "./UploadErrorBox";
 
 export default function DocumentUploadSection({
   variant = "default",
-  title = "UploadFiles",
+  title = "Upload Files",
   subtitle = "Supported formats: PDF, DOC, XLS, PPT, PNG, JPG",
   accept,
   onFileSelected: onFileSelectedProp,
@@ -36,6 +36,7 @@ export default function DocumentUploadSection({
     const timer = setInterval(() => {
       p += 10;
       setPercent(p);
+
       if (p >= 100) {
         clearInterval(timer);
         if (isOcr) {
@@ -53,7 +54,7 @@ export default function DocumentUploadSection({
           }
         }
       }
-    }, 200);
+    }, 300);
   }
 
   function handleTryAgain() {
@@ -78,7 +79,7 @@ export default function DocumentUploadSection({
   }
 
   return (
-    <div className="flex min-h-0 w-full max-w-5xl flex-1 flex-col">
+    <div className="flex min-h-0 min-w-0 w-full max-w-5xl flex-1 flex-col">
       <UploadCard title={title} subtitle={subtitle}>
         {status === "idle" && (
           <UploadDropzone
@@ -111,15 +112,15 @@ export default function DocumentUploadSection({
         )}
 
         {status === "success" && !isOcr && (
-          <div className="flex min-h-[280px] min-w-0 flex-1 flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-white p-8 text-center">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
+          <div className="flex min-h-[200px] sm:min-h-[240px] md:min-h-[280px] min-w-0 flex-1 flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-white p-5 sm:p-6 md:p-8 text-center">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100">
               <span className="font-bold text-green-700">✓</span>
             </div>
             <h3 className="text-base font-semibold text-slate-900">Upload Successful</h3>
             <p className="text-sm text-slate-500">Your document has been uploaded.</p>
             <button
               onClick={resetUpload}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="w-full sm:w-auto rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
             >
               Upload Another File
             </button>

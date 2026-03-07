@@ -33,7 +33,7 @@ export default function UploadDropzone({
       tabIndex={0}
       aria-label="File upload area. Press Enter or Space to browse files."
       className={[
-        "flex min-h-[280px] min-w-0 flex-1 flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-blue-300 px-8 py-8 text-center transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
+        "flex min-h-[180px] sm:min-h-[220px] md:min-h-[280px] min-w-0 w-full flex-1 flex-col items-center justify-center gap-2 sm:gap-3 rounded-xl border-2 border-dashed border-blue-300 px-4 py-5 sm:px-6 sm:py-6 md:px-8 md:py-8 text-center transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
         "bg-white",
         disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:border-blue-400 hover:bg-slate-50/50",
       ].join(" ")}
@@ -63,11 +63,11 @@ export default function UploadDropzone({
       </div>
 
       {isOcr ? (
-        <div className="flex flex-col items-center gap-1">
-          <p className="text-base font-medium text-slate-800">
+        <div className="flex w-full min-w-0 max-w-sm flex-col items-center gap-1">
+          <p className="text-sm sm:text-base font-medium text-slate-800">
             Upload Document for OCR. Drag and drop or click to select
           </p>
-          <p className="text-sm text-slate-500">Images, scans, or PDFs.</p>
+          <p className="text-sm text-slate-600">Images, scans, or PDFs.</p>
           <button
             type="button"
             onClick={(e) => {
@@ -75,18 +75,18 @@ export default function UploadDropzone({
               handleClick();
             }}
             disabled={disabled}
-            className="mt-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="mt-2 w-full sm:w-auto rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             Select Files
           </button>
         </div>
       ) : (
-        <div className="flex flex-col items-center gap-1">
-          <p className="text-base font-semibold text-slate-800">Drag & drop files here</p>
+        <div className="flex w-full min-w-0 max-w-sm flex-col items-center gap-1">
+          <p className="text-sm sm:text-base font-semibold text-slate-800">Drag & drop files here</p>
           <p className="text-sm text-slate-600">
             or <span className="text-blue-600 underline">browse</span> to upload
           </p>
-          <p className="text-sm text-slate-500">Maximum file size: 50MB</p>
+          <p className="text-sm text-slate-600">Maximum file size: 50MB</p>
         </div>
       )}
     </div>
