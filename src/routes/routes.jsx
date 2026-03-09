@@ -13,16 +13,16 @@ function withLayout(element, pageTitle, pageSubtitle) {
 }
 
 export const routes = [
-  {
-    path: "/dashboard",
-    element: <Navigate to="/documents" replace />,
-  },
 
   {
     path: "/uploads",
     element: withLayout(<UploadPage />, "Uploads", "Drag and drop files or browse to upload."),
   },
 ];
+<<<<<<< sangavi/feature/upload-document
+    
+
+=======
     element: withLayout(
       <Dashboard />,
       "Dashboard",
@@ -30,3 +30,4 @@ export const routes = [
     ),
   },
 ];
+>>>>>>> develop
