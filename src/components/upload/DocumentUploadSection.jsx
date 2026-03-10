@@ -1,5 +1,6 @@
 import { useState } from "react";
 import UploadCard from "./UploadCard";
+import UploadProgress from "./UploadProgress";
 
 export default function DocumentUploadSection({
   variant = "default",
@@ -122,7 +123,7 @@ export default function DocumentUploadSection({
   return (
     <div className="flex min-h-0 w-full max-w-6xl flex-1 flex-col">
       <UploadCard title={title} subtitle={subtitle}>
-        {currentStatus === "idle" && (
+        {(currentStatus === "idle" || currentStatus === "uploading") && (
           <div
             role="button"
             tabIndex={0}
@@ -158,23 +159,14 @@ export default function DocumentUploadSection({
         )}
 
         {currentStatus === "uploading" && (
-          <div className="space-y-4">
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <div className="mb-2 flex items-center justify-between text-sm text-slate-700">
-                <span className="truncate pr-2">{currentFile?.name || "file"}</span>
-                <span>{currentPercent}%</span>
-              </div>
-              <div className="h-2 w-full rounded-full bg-slate-200">
-                <div className="h-2 rounded-full bg-blue-600" style={{ width: `${currentPercent}%` }} />
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={isControlled ? controlledCancel : resetUpload}
-              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
-            >
-              Cancel
-            </button>
+          <div className="mt-4">
+            <UploadProgress
+              filename={currentFile?.name || "file"}
+              percent={currentPercent}
+              fileSize={currentFile?.size}
+              showCancel={true}
+              onCancel={isControlled ? controlledCancel : resetUpload}
+            />
           </div>
         )}
 

@@ -5,8 +5,6 @@ export default function EditDocumentModal({ open, document, onCancel, onSave }) 
     title: "",
     description: "",
     tags: "",
-    extractedText: "",
-    summary: "",
   });
 
   useEffect(() => {
@@ -15,8 +13,6 @@ export default function EditDocumentModal({ open, document, onCancel, onSave }) 
       title: document.title || "",
       description: document.description || "",
       tags: Array.isArray(document.tags) ? document.tags.join(", ") : "",
-      extractedText: document.extractedText || "",
-      summary: document.summary || "",
     });
   }, [open, document]);
 
@@ -34,14 +30,9 @@ export default function EditDocumentModal({ open, document, onCancel, onSave }) 
         .split(",")
         .map((tag) => tag.trim())
         .filter(Boolean),
-      extractedText: form.extractedText,
-      summary: form.summary,
     });
   }
 
-  function refreshExtractedText() {
-    updateField("extractedText", document?.extractedText || form.extractedText);
-  }
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50 px-4 py-6">
@@ -68,7 +59,7 @@ export default function EditDocumentModal({ open, document, onCancel, onSave }) 
           </label>
 
           <label className="grid gap-1">
-            <span className="text-sm font-medium text-slate-700">Tags / Category</span>
+            <span className="text-sm font-medium text-slate-700">Tags</span>
             <input
               value={form.tags}
               onChange={(e) => updateField("tags", e.target.value)}
@@ -76,34 +67,6 @@ export default function EditDocumentModal({ open, document, onCancel, onSave }) 
             />
           </label>
 
-          <div className="grid gap-1">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-slate-700">Extracted OCR Text</span>
-              <button
-                type="button"
-                onClick={refreshExtractedText}
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-              >
-                Refresh
-              </button>
-            </div>
-            <textarea
-              value={form.extractedText}
-              onChange={(e) => updateField("extractedText", e.target.value)}
-              rows={8}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            />
-          </div>
-
-          <label className="grid gap-1">
-            <span className="text-sm font-medium text-slate-700">AI Summary</span>
-            <textarea
-              value={form.summary}
-              onChange={(e) => updateField("summary", e.target.value)}
-              rows={4}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            />
-          </label>
         </div>
 
         <div className="mt-6 flex justify-end gap-2">

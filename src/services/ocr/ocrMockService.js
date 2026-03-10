@@ -60,7 +60,7 @@ export function buildMockResult(file) {
       "Invoice for $19,964 from DocuFlow Solutions Inc. includes enterprise licensing, support services, and tax, due on January 10, 2025.",
     title: file?.name || "invoice_scan.pdf",
     description: "Scanned invoice document",
-    tags: ["Invoice", "Financial"],
+    tags: ["Invoice"],
   };
 }
 
