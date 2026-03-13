@@ -38,3 +38,20 @@ export function normalizeDocumentType(type) {
   return "other";
 }
 
+export function formatDocumentFormat(type, name) {
+  const rawName = (name ?? "").toString().trim();
+  const extensionFromName = rawName.includes(".") ? rawName.split(".").pop()?.toLowerCase() : "";
+  const rawType = (type ?? "").toString().trim().toLowerCase();
+  const extensionFromType = rawType.includes("/") ? rawType.split("/").pop() : rawType;
+  const resolvedExtension = extensionFromName || extensionFromType;
+
+  if (resolvedExtension) return resolvedExtension.toUpperCase();
+
+  const normalized = normalizeDocumentType(type);
+  if (normalized === "word") return "DOC";
+  if (normalized === "sheet") return "XLS";
+  if (normalized === "image") return "IMG";
+  if (normalized === "pdf") return "PDF";
+  return "FILE";
+}
+
