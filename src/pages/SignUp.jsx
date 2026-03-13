@@ -1,15 +1,16 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Mail, Lock } from "lucide-react";
+import { toast } from "react-toastify";
 import PrimaryButton from "../components/PrimaryButton";
 import SecondaryButton from "../components/SecondaryButton";
 import InputField from "../components/InputField";
 import AuthPageLayout from "../components/Layout/AuthPageLayout";
 import SocialAuthButtons from "../components/SocialAuthButtons";
 import AuthPageHeading from "../components/AuthPageHeading";
+import PasswordIndicator from "../components/PasswordIndicator";
 
 const SignUp = () => {
-
  const navigate = useNavigate()
     const [formData, setFormData] = React.useState({
     fullName: '',
@@ -17,21 +18,44 @@ const SignUp = () => {
     password: '',
     confirmPassword: ''
     })
+    
+    // Check if password meets all requirements
+    const isPasswordStrong = React.useMemo(() => {
+      const hasMinLength = formData.password.length >= 8;
+      const hasNumber = /\d/.test(formData.password);
+      const hasLowerCase = /[a-z]/.test(formData.password);
+      const hasUpperCase = /[A-Z]/.test(formData.password);
+      const hasSpecialChar = /[@#$%!]/.test(formData.password);
+      
+      return hasMinLength && hasNumber && hasLowerCase && hasUpperCase && hasSpecialChar;
+    }, [formData.password])
 
     const handleSubmit = async (e) => {
       e.preventDefault()
 
       const { fullName, email, password, confirmPassword } = formData
+      
       if (!fullName || !email || !password || !confirmPassword) {
         toast.error('Please fill in all fields!')
         return
       }
-        if (password !== confirmPassword) {
-          toast.error('Passwords do not match!')
-          return
-        }
-      
 
+      // Check if password meets all 5 requirements
+      const hasMinLength = password.length >= 8;
+      const hasNumber = /\d/.test(password);
+      const hasLowerCase = /[a-z]/.test(password);
+      const hasUpperCase = /[A-Z]/.test(password);
+      const hasSpecialChar = /[@#$%!]/.test(password);
+
+      if (!hasMinLength || !hasNumber || !hasLowerCase || !hasUpperCase || !hasSpecialChar) {
+        toast.error('Password must meet all 5 requirements: 8+ characters, 1 number, 1 lowercase, 1 uppercase, 1 special character')
+        return
+      }
+      
+      if (password !== confirmPassword) {
+        toast.error('Passwords do not match!')
+        return
+      }
     }
 
     const handleChange = (e) => {
@@ -94,6 +118,8 @@ const SignUp = () => {
           icon={Lock}
           required
         />
+
+        <PasswordIndicator password={formData.password} isFocused={false} />
 
         <InputField
           type="password"
