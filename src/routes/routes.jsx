@@ -1,26 +1,20 @@
-import DashboardLayout from "../components/Layout/DashboardLayout";
-import UploadPage from "../pages/UploadPage";
-import { Navigate } from "react-router-dom";
-import Dashboard from "../Pages/Dashboard";
+import React from "react";
+import AdminLayout from "../components/Layout/AdminLayout.jsx";
+import AdminDashboardPage from "../pages/AdminDashboardPage.jsx";
 
 function withLayout(element, pageTitle, pageSubtitle) {
   return (
-    <DashboardLayout pageTitle={pageTitle} pageSubtitle={pageSubtitle}>
+    <AdminLayout pageTitle={pageTitle} pageSubtitle={pageSubtitle}>
       {element}
-    </DashboardLayout>
+    </AdminLayout>
   );
 }
 
 export const routes = [
-      {
-      path: "/dashboard",
-      element: withLayout( <Dashboard />,"Dashboard","Overview of your workspace" ),
-      },
-     {
-      path: "/uploads",
-      element: withLayout(<UploadPage />, "Uploads", "Drag and drop files or browse to upload."),
-     },
+  {
+    path: "/admin/dashboard",
+    element: withLayout(<AdminDashboardPage />, 
+      "Dashboard", 
+      "Manage Your platform with ease"),
+  },
 ];
-    
-
-
