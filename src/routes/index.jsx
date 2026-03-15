@@ -5,12 +5,13 @@ export default function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/ocr" replace />} />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
         {routes.map((r) => (
-          <Route key={r.path} 
-          
-          path={r.path} element={r.element} 
+          <Route
+            key={r.path}
+            path={r.path}
+            element={r.element}
           />
         ))}
 

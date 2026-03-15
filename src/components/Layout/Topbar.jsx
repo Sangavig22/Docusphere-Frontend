@@ -10,7 +10,7 @@ function Topbar({ user, title = "Dashboard", subtitle }) {
     subtitle ?? "Welcome back! Here's an overview of your documents.";
 
   return (
-    <div className="flex items-center justify-between bg-white px-6 py-4 shadow-sm">
+    <div className="flex items-center justify-between bg-white px-6 py-4.5 shadow-sm">
       {/* Left Section */}
       <div>
         <h1 className="text-xl font-semibold">{title}</h1>

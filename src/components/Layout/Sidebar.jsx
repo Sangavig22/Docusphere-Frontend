@@ -13,6 +13,7 @@ import {
   HelpCircle,
   ChevronLeft,
   ChevronRight,
+  RecycleIcon,
 } from "lucide-react";
 
 function Sidebar({ collapsed, onToggle }) {
@@ -28,6 +29,7 @@ function Sidebar({ collapsed, onToggle }) {
   ];
 
   const secondaryMenu = [
+    { label: "Recycle bin", icon: RecycleIcon},
     { label: "Settings", icon: Settings },
     { label: "Help & Support", icon: HelpCircle },
   ];
