@@ -5,7 +5,7 @@ import {
   regenerateSummaryMock,
   simulateProcessing,
   simulateUpload,
-} from "../services/ocr/ocrMockService";
+} from "./ocrMockService";
 
 const VALID_EXTENSIONS = new Set([
   ".pdf",
