@@ -1,7 +1,9 @@
+import { Navigate } from "react-router-dom";
+
 import DashboardLayout from "../components/Layout/DashboardLayout";
 import UploadPage from "../pages/UploadPage";
-import { Navigate } from "react-router-dom";
-import Dashboard from "../Pages/Dashboard";
+import OcrSummarizationPage from "../pages/ocr/OcrSummarizationPage";
+import Dashboard from "../pages/Dashboard";
 
 function withLayout(element, pageTitle, pageSubtitle) {
   return (
@@ -12,15 +14,25 @@ function withLayout(element, pageTitle, pageSubtitle) {
 }
 
 export const routes = [
-      {
-      path: "/dashboard",
-      element: withLayout( <Dashboard />,"Dashboard","Overview of your workspace" ),
-      },
-     {
-      path: "/uploads",
-      element: withLayout(<UploadPage />, "Uploads", "Drag and drop files or browse to upload."),
-     },
+  {
+    path: "/dashboard",
+    element: withLayout(<Dashboard />, "Dashboard", "Overview of your workspace"),
+  },
+  {
+    path: "/documents",
+    element: <Navigate to="/uploads" replace />,
+  },
+  {
+    path: "/uploads",
+    element: withLayout(<UploadPage />, "Uploads", "Drag and drop files or browse to upload."),
+  },
+  {
+    path: "/ocr",
+    element: withLayout(
+      <OcrSummarizationPage />,
+      "OCR Summarization",
+      "Extract and summarize text from images and PDFs.",
+    ),
+  },
 ];
-    
-
 

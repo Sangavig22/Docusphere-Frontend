@@ -13,18 +13,19 @@ export const mockDocuments = [
 // Custom hook to manage dashboard data
 export function useDashboardData() {
   const [documents] = useState(mockDocuments);
+  const [referenceNow] = useState(() => Date.now());
 
   // Calculate counts dynamically
   const counts = useMemo(() => {
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    
+    const sevenDaysAgoMs = referenceNow - 7 * 24 * 60 * 60 * 1000;
+
     return {
       total: documents.length,
-      recent: documents.filter(doc => doc.uploaded >= sevenDaysAgo).length,
-      starred: documents.filter(doc => doc.starred).length,
+      recent: documents.filter((doc) => doc.uploaded?.getTime?.() >= sevenDaysAgoMs).length,
+      starred: documents.filter((doc) => doc.starred).length,
       uploads: documents.length,
     };
-  }, [documents]);
+  }, [documents, referenceNow]);
 
   return {
     documents,
