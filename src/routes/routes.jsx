@@ -2,7 +2,7 @@ import { Navigate } from "react-router-dom";
 
 import DashboardLayout from "../components/Layout/DashboardLayout";
 import UploadPage from "../pages/UploadPage";
-import OcrSummarizationPage from "../pages/ocr/OcrSummarizationPage";
+import OcrSummarizationPage from "../pages/OcrSummarizationPage";
 import Dashboard from "../pages/Dashboard";
 
 function withLayout(element, pageTitle, pageSubtitle) {

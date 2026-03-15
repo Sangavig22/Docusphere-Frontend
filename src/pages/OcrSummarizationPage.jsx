@@ -1,11 +1,11 @@
-import DocumentUploadSection from "../../components/upload/DocumentUploadSection";
-import useOcrFlow from "../../hooks/useOcrFlow";
-import DeleteConfirmModal from "../../components/ocr/DeleteConfirmModal";
-import EditDocumentModal from "../../components/ocr/EditDocumentModal";
-import ProcessingStateCard from "../../components/ocr/ProcessingStateCard";
-import RegenerateToast from "../../components/ocr/RegenerateToast";
-import ResultCards from "../../components/ocr/ResultCards";
-import SuccessBanner from "../../components/ocr/SuccessBanner";
+import DocumentUploadSection from "../components/upload/DocumentUploadSection";
+import useOcrFlow from "../hooks/useOcrFlow";
+import DeleteConfirmModal from "../components/ocr/DeleteConfirmModal";
+import EditDocumentModal from "../components/ocr/EditDocumentModal";
+import ProcessingStateCard from "../components/ocr/ProcessingStateCard";
+import RegenerateToast from "../components/ocr/RegenerateToast";
+import ResultCards from "../components/ocr/ResultCards";
+import SuccessBanner from "../components/ocr/SuccessBanner";
 
 export default function OcrSummarizationPage() {
   const {
