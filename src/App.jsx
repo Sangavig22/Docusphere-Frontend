@@ -1,6 +1,6 @@
 import "./App.css";
 import AppRoutes from "./routes";
-import { DocumentsProvider } from "./hooks/useDocumentsStore";
+import { DocumentsProvider } from "./hooks/DocumentsProvider";
 
 function App() {
   return (

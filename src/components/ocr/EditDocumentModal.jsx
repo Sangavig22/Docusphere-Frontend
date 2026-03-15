@@ -1,32 +1,21 @@
-import { useEffect, useState } from "react";
+import { useRef } from "react";
 
 export default function EditDocumentModal({ open, document, onCancel, onSave }) {
-  const [form, setForm] = useState({
-    title: "",
-    description: "",
-    tags: "",
-  });
-
-  useEffect(() => {
-    if (!open || !document) return;
-    setForm({
-      title: document.title || "",
-      description: document.description || "",
-      tags: Array.isArray(document.tags) ? document.tags.join(", ") : "",
-    });
-  }, [open, document]);
+  const titleRef = useRef(null);
+  const descriptionRef = useRef(null);
+  const tagsRef = useRef(null);
 
   if (!open) return null;
 
-  function updateField(field, value) {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  }
-
   function handleSave() {
+    const title = titleRef.current?.value ?? "";
+    const description = descriptionRef.current?.value ?? "";
+    const tagsValue = tagsRef.current?.value ?? "";
+
     onSave({
-      title: form.title,
-      description: form.description,
-      tags: form.tags
+      title,
+      description,
+      tags: tagsValue
         .split(",")
         .map((tag) => tag.trim())
         .filter(Boolean),
@@ -43,8 +32,8 @@ export default function EditDocumentModal({ open, document, onCancel, onSave }) 
           <label className="grid gap-1">
             <span className="text-sm font-medium text-slate-700">Document Title</span>
             <input
-              value={form.title}
-              onChange={(e) => updateField("title", e.target.value)}
+              ref={titleRef}
+              defaultValue={document?.title ?? ""}
               className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
           </label>
@@ -52,8 +41,8 @@ export default function EditDocumentModal({ open, document, onCancel, onSave }) 
           <label className="grid gap-1">
             <span className="text-sm font-medium text-slate-700">Description</span>
             <input
-              value={form.description}
-              onChange={(e) => updateField("description", e.target.value)}
+              ref={descriptionRef}
+              defaultValue={document?.description ?? ""}
               className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
           </label>
@@ -61,8 +50,8 @@ export default function EditDocumentModal({ open, document, onCancel, onSave }) 
           <label className="grid gap-1">
             <span className="text-sm font-medium text-slate-700">Tags</span>
             <input
-              value={form.tags}
-              onChange={(e) => updateField("tags", e.target.value)}
+              ref={tagsRef}
+              defaultValue={Array.isArray(document?.tags) ? document.tags.join(", ") : ""}
               className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
           </label>
