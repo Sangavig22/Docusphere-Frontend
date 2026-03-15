@@ -4,7 +4,7 @@ import { FileText, Clock, Star, UploadCloud } from "lucide-react";
 import { useDashboardData } from "../hooks/useDashboardData";
 
 function Dashboard() {
-  const { documents, counts } = useDashboardData();
+  const { counts } = useDashboardData();
 
   return (
       <div className="space-y-6">
