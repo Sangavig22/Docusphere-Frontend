@@ -5,8 +5,7 @@ export default function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-
+        
         {routes.map((r) => (
           <Route
             key={r.path}
