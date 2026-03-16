@@ -2,7 +2,7 @@ import React from "react";
 import DashboardLayout from "../components/Layout/DashboardLayout";
 import AdminLayout from "../components/Layout/AdminLayout.jsx";
 
-import Dashboard from "../pages/Dashboard";
+import Dashboard from "../Pages/Dashboard";
 import UploadPage from "../pages/UploadPage";
 import AdminDashboardPage from "../pages/AdminDashboardPage.jsx";
 
