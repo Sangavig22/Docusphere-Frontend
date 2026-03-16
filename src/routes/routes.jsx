@@ -1,7 +1,7 @@
 import React from "react";
+import LandingPage from "../pages/LandingPage";
 import DashboardLayout from "../components/Layout/DashboardLayout";
 import AdminLayout from "../components/Layout/AdminLayout.jsx";
-
 import Dashboard from "../Pages/Dashboard";
 import UploadPage from "../pages/UploadPage";
 import AdminDashboardPage from "../pages/AdminDashboardPage.jsx";
@@ -27,6 +27,11 @@ function withAdminLayout(element, pageTitle, pageSubtitle) {
 
 // Combined routes
 export const routes = [
+
+  {
+    path: "/",
+    element: <LandingPage />,
+  },
   // User routes
   {
     path: "/dashboard",
