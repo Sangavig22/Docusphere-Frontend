@@ -1,11 +1,12 @@
 import React from "react";
 import LandingPage from "../pages/LandingPage";
+import SignUp from "../pages/SignUp";
+import SignIn from "../pages/SignIn";
 import DashboardLayout from "../components/Layout/DashboardLayout";
 import AdminLayout from "../components/Layout/AdminLayout.jsx";
 import Dashboard from "../Pages/Dashboard";
 import UploadPage from "../pages/UploadPage";
 import AdminDashboardPage from "../pages/AdminDashboardPage.jsx";
-
 import OCRSummarization from "../pages/OCRSummarization";
 
 // Wrapper functions
@@ -32,7 +33,14 @@ export const routes = [
     path: "/",
     element: <LandingPage />,
   },
-  // User routes
+   {
+    path: "/signup",
+    element: <SignUp />,
+  },
+  {
+    path: "/signin",
+    element: <SignIn />,
+  },
   {
     path: "/dashboard",
     element: withLayout(<Dashboard />, "Dashboard", "Overview of your workspace"),

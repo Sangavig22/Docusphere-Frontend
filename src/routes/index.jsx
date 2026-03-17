@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { routes } from "./routes";
 
+
 export default function AppRoutes() {
   return (
     <BrowserRouter>
