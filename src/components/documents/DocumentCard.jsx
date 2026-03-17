@@ -7,7 +7,8 @@ import {
   formatDocumentFormat,
   formatRelativeTime,
   normalizeDocumentType,
-} from "./documentUtils";
+} from "../../utils/documents/documentUtils.js";
+
 
 function typeStyles(type) {
   switch (type) {
