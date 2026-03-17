@@ -8,8 +8,10 @@ import Dashboard from "../Pages/Dashboard";
 import UploadPage from "../pages/UploadPage";
 import AdminDashboardPage from "../pages/AdminDashboardPage.jsx";
 import OCRSummarization from "../pages/OCRSummarization";
+import MyDocumentsPage from "../pages/MyDocumentsPage";
+import StarredPage from "../pages/StarredPage";
+import RecentPage from "../pages/RecentPage";
 
-// Wrapper functions
 function withLayout(element, pageTitle, pageSubtitle) {
   return (
     <DashboardLayout pageTitle={pageTitle} pageSubtitle={pageSubtitle}>
@@ -47,11 +49,7 @@ export const routes = [
   },
   {
     path: "/uploads",
-    element: withLayout(
-      <UploadPage />,
-      "Uploads",
-      "Drag and drop files or browse to upload."
-    ),
+    element: withLayout(<UploadPage />, "Uploads", "Drag and drop files or browse to upload." ),
   },
   {
     path: "/ocr",
@@ -60,6 +58,19 @@ export const routes = [
       "OCR Summarization",
       "Extract text and summarize documents."
     ),
+  },
+   {
+    path: "/documents",
+    element: withLayout(<MyDocumentsPage />, "My Documents", "Manage and organize all your documents."),
+  },
+ 
+  {
+    path: "/starred",
+    element: withLayout(<StarredPage />, "Starred", "Manage and organize all your documents."),
+  },
+  {
+    path: "/recent",
+    element: withLayout(<RecentPage />, "Recent", "Manage and organize all your documents."),
   },
 
   // Admin route
