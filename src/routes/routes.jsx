@@ -6,6 +6,8 @@ import Dashboard from "../Pages/Dashboard";
 import UploadPage from "../pages/UploadPage";
 import AdminDashboardPage from "../pages/AdminDashboardPage.jsx";
 
+import OCRSummarization from "../pages/OCRSummarization";
+
 // Wrapper functions
 function withLayout(element, pageTitle, pageSubtitle) {
   return (
@@ -41,6 +43,14 @@ export const routes = [
       <UploadPage />,
       "Uploads",
       "Drag and drop files or browse to upload."
+    ),
+  },
+  {
+    path: "/ocr",
+    element: withLayout(
+      <OCRSummarization />,
+      "OCR Summarization",
+      "Extract text and summarize documents."
     ),
   },
 
