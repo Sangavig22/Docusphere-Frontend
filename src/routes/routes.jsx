@@ -66,11 +66,11 @@ export const routes = [
  
   {
     path: "/starred",
-    element: withLayout(<StarredPage />, "Starred", "Manage and organize all your documents."),
+    element: withLayout(<StarredPage />, "Starred ", "Manage and organize all starred documents."),
   },
   {
     path: "/recent",
-    element: withLayout(<RecentPage />, "Recent", "Manage and organize all your documents."),
+    element: withLayout(<RecentPage />, "Recent", "Manage and organize all recently opened documents."),
   },
 
   // Admin route

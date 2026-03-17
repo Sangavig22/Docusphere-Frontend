@@ -24,15 +24,19 @@ function typeStyles(type) {
   }
 }
 
-export default function DocumentRow({ doc, onToggleStar, onAction }) {
+export default function DocumentRow({
+  doc,
+  onToggleStar,
+  onAction,
+  menuPortal = false,
+  menuPushContent = false,
+  menuClassName = "",
+  denseMenu = false,
+}) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuButtonRef = useRef(null);
   const type = useMemo(() => normalizeDocumentType(doc.type), [doc.type]);
   const formatLabel = useMemo(() => formatDocumentFormat(doc.type, doc.name), [doc.type, doc.name]);
-  const sectionLabel = useMemo(() => {
-    const value = (doc.category ?? "").toString().trim();
-    return value || "General";
-  }, [doc.category]);
   const styles = useMemo(() => typeStyles(type), [type]);
 
   return (
@@ -50,9 +54,6 @@ export default function DocumentRow({ doc, onToggleStar, onAction }) {
           <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
             <span className="inline-flex shrink-0 items-center rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
               {formatLabel}
-            </span>
-            <span className="max-w-[180px] truncate font-medium text-slate-500" title={sectionLabel}>
-              {sectionLabel}
             </span>
             <span className="text-slate-300">•</span>
             <span>{formatRelativeTime(doc.updatedAt)}</span>
@@ -86,9 +87,22 @@ export default function DocumentRow({ doc, onToggleStar, onAction }) {
         >
           <MoreVertical size={18} />
         </button>
-        <Popover open={menuOpen} onClose={() => setMenuOpen(false)} anchorRef={menuButtonRef} portal={false} className="right-0 top-10">
+        <Popover
+          open={menuOpen}
+          onClose={() => setMenuOpen(false)}
+          anchorRef={menuButtonRef}
+          portal={menuPortal}
+          side={menuPortal ? "bottom" : "auto"}
+          pushContent={menuPushContent}
+          scrollable={!menuPortal}
+          className={[
+            menuPortal ? "" : "right-0 top-10",
+            menuClassName,
+          ].join(" ")}
+        >
           <DocumentActionsMenu
             doc={doc}
+            dense={denseMenu}
             onAction={(key, d) => {
               setMenuOpen(false);
               onAction?.(key, d);

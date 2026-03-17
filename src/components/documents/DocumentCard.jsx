@@ -25,15 +25,19 @@ function typeStyles(type) {
   }
 }
 
-export default function DocumentCard({ doc, onToggleStar, onAction }) {
+export default function DocumentCard({
+  doc,
+  onToggleStar,
+  onAction,
+  menuPortal = false,
+  menuPushContent = false,
+  menuClassName = "",
+  denseMenu = false,
+}) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuButtonRef = useRef(null);
   const type = useMemo(() => normalizeDocumentType(doc.type), [doc.type]);
   const formatLabel = useMemo(() => formatDocumentFormat(doc.type, doc.name), [doc.type, doc.name]);
-  const sectionLabel = useMemo(() => {
-    const value = (doc.category ?? "").toString().trim();
-    return value || "General";
-  }, [doc.category]);
   const styles = typeStyles(type);
 
   return (
@@ -66,9 +70,22 @@ export default function DocumentCard({ doc, onToggleStar, onAction }) {
             >
               <MoreVertical size={18} />
             </button>
-            <Popover open={menuOpen} onClose={() => setMenuOpen(false)} anchorRef={menuButtonRef} portal={false} className="right-0 top-10">
+            <Popover
+              open={menuOpen}
+              onClose={() => setMenuOpen(false)}
+              anchorRef={menuButtonRef}
+              portal={menuPortal}
+              side={menuPortal ? "bottom" : "auto"}
+              pushContent={menuPushContent}
+              scrollable={!menuPortal}
+              className={[
+                menuPortal ? "" : "right-0 top-10",
+                menuClassName,
+              ].join(" ")}
+            >
               <DocumentActionsMenu
                 doc={doc}
+                dense={denseMenu}
                 onAction={(key, d) => {
                   setMenuOpen(false);
                   onAction?.(key, d);
@@ -91,9 +108,6 @@ export default function DocumentCard({ doc, onToggleStar, onAction }) {
         <div className="mt-auto flex items-center gap-2 pt-3">
           <span className="inline-flex shrink-0 items-center rounded-md bg-slate-100 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
             {formatLabel}
-          </span>
-          <span className="truncate text-xs font-medium text-slate-500" title={sectionLabel}>
-            {sectionLabel}
           </span>
         </div>
       </div>
