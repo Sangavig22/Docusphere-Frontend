@@ -45,6 +45,11 @@ const PasswordIndicator = ({ password = "", isFocused = false }) => {
     return null;
   }
 
+  // Hide indicator when password is strong and user is not focused (moved to next field)
+  if (!isFocused && allRequirementsMet) {
+    return null;
+  }
+
   return (
     <div className="w-full max-w-md mt-4">
       {/* Strength Bar */}

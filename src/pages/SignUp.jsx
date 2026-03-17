@@ -2,13 +2,13 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Mail, Lock } from "lucide-react";
 import { toast } from "react-toastify";
-import PrimaryButton from "../components/PrimaryButton";
-import SecondaryButton from "../components/SecondaryButton";
-import InputField from "../components/InputField";
+import PrimaryButton from "../components/Authentication/PrimaryButton";
+import SecondaryButton from "../components/Authentication/SecondaryButton";
+import InputField from "../components/Authentication/InputField";
 import AuthPageLayout from "../components/Layout/AuthPageLayout";
-import SocialAuthButtons from "../components/SocialAuthButtons";
-import AuthPageHeading from "../components/AuthPageHeading";
-import PasswordIndicator from "../components/PasswordIndicator";
+import SocialAuthButtons from "../components/Authentication/SocialAuthButtons";
+import AuthPageHeading from "../components/Authentication/AuthPageHeading";
+import PasswordIndicator from "../components/Authentication/PasswordIndicator";
 
 const SignUp = () => {
  const navigate = useNavigate()
@@ -18,7 +18,9 @@ const SignUp = () => {
     password: '',
     confirmPassword: ''
     })
-    
+
+    const [isPasswordFocused, setIsPasswordFocused] = React.useState(false)
+
     // Check if password meets all requirements
     const isPasswordStrong = React.useMemo(() => {
       const hasMinLength = formData.password.length >= 8;
@@ -40,15 +42,15 @@ const SignUp = () => {
         return
       }
 
-      // Check if password meets all 5 requirements
-      const hasMinLength = password.length >= 8;
-      const hasNumber = /\d/.test(password);
-      const hasLowerCase = /[a-z]/.test(password);
-      const hasUpperCase = /[A-Z]/.test(password);
-      const hasSpecialChar = /[@#$%!]/.test(password);
-
-      if (!hasMinLength || !hasNumber || !hasLowerCase || !hasUpperCase || !hasSpecialChar) {
-        toast.error('Password must meet all 5 requirements: 8+ characters, 1 number, 1 lowercase, 1 uppercase, 1 special character')
+      if (!isPasswordStrong) {
+        const missing = [];
+        if (password.length < 8) missing.push("8+ characters");
+        if (!/\d/.test(password)) missing.push("1 number");
+        if (!/[a-z]/.test(password)) missing.push("1 lowercase letter");
+        if (!/[A-Z]/.test(password)) missing.push("1 uppercase letter");
+        if (!/[@#$%!]/.test(password)) missing.push("1 special character");
+        
+        toast.error(`Password needs: ${missing.join(", ")}`);
         return
       }
       
@@ -115,11 +117,13 @@ const SignUp = () => {
           placeholder="Password"
           value={formData.password}
           onChange={handleChange}
+          onFocus={() => setIsPasswordFocused(true)}
+          onBlur={() => setIsPasswordFocused(false)}
           icon={Lock}
           required
         />
 
-        <PasswordIndicator password={formData.password} isFocused={false} />
+        <PasswordIndicator password={formData.password} isFocused={isPasswordFocused} />
 
         <InputField
           type="password"

@@ -1,12 +1,13 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Mail, Lock } from "lucide-react";
-import PrimaryButton from "../components/PrimaryButton";
-import SecondaryButton from "../components/SecondaryButton";
-import InputField from "../components/InputField";
+import { toast } from "react-toastify";
+import PrimaryButton from "../components/Authentication/PrimaryButton";
+import SecondaryButton from "../components/Authentication/SecondaryButton";
+import InputField from "../components/Authentication/InputField";
 import AuthPageLayout from "../components/Layout/AuthPageLayout";
-import SocialAuthButtons from "../components/SocialAuthButtons";
-import AuthPageHeading from "../components/AuthPageHeading";
+import SocialAuthButtons from "../components/Authentication/SocialAuthButtons";
+import AuthPageHeading from "../components/Authentication/AuthPageHeading";
 
 const SignIn = () => {
 
