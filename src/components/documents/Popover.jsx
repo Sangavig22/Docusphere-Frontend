@@ -1,11 +1,22 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-export default function Popover({ open, onClose, className = "", children, anchorRef, portal = true }) {
+export default function Popover({
+  open,
+  onClose,
+  className = "",
+  children,
+  anchorRef,
+  portal = true,
+  side = "auto",
+  pushContent = false,
+  scrollable = true,
+}) {
   const ref = useRef(null);
   const [style, setStyle] = useState({});
   const [placement, setPlacement] = useState("bottom");
   const usePortal = portal && !!anchorRef;
+  const pushedRef = useRef({ el: null, prevPaddingBottom: "", applied: false });
 
   const getScrollParent = useCallback((startEl) => {
     let el = startEl;
@@ -58,77 +69,77 @@ export default function Popover({ open, onClose, className = "", children, ancho
     const spaceBelow = boundaryRect.bottom - (rect.bottom + gap) - padding;
     const spaceAbove = rect.top - gap - minTop;
     const canOpenAbove = rect.top - gap - effectiveMenuHeight >= minTop;
-    
-    // Always prefer opening below unless there's absolutely no space
-    // and there's more space above
-    const openAbove =
-      canOpenAbove && (spaceBelow < effectiveMenuHeight && spaceAbove > spaceBelow);
+    const canOpenBelow = rect.bottom + gap + effectiveMenuHeight <= boundaryRect.bottom - padding;
 
-    const preferredTop = openAbove
-      ? rect.top - effectiveMenuHeight - gap
-      : rect.bottom + gap;
-    const top = maxTop < minTop ? minTop : Math.min(Math.max(minTop, preferredTop), maxTop);
+    let openAbove = false;
+    if (side === "top") {
+      openAbove = true;
+    } else if (side === "bottom") {
+      openAbove = false;
+    } else {
+      // auto: open above only when below doesn't fit and above is better
+      openAbove = canOpenAbove && (spaceBelow < effectiveMenuHeight && spaceAbove > spaceBelow);
+    }
+
+    // Keep the menu visually anchored to the trigger.
+    // If there isn't enough space on the chosen side, the menu will become scrollable
+    // via its own `maxHeight` (instead of "jumping" far away from the trigger).
+    const top = openAbove
+      ? Math.max(minTop, rect.top - effectiveMenuHeight - gap)
+      : Math.max(minTop, rect.bottom + gap);
 
     const leftAlignEnd = rect.right - effectiveMenuWidth;
     const leftAlignStart = rect.left;
     const preferredLeft = leftAlignEnd < minLeft ? leftAlignStart : leftAlignEnd;
     const left = maxLeft < minLeft ? minLeft : Math.min(Math.max(minLeft, preferredLeft), maxLeft);
 
-    // If menu would be cut off at bottom, scroll it into view
-    if (!openAbove && preferredTop + effectiveMenuHeight > window.innerHeight - padding) {
-      const scrollParent = getScrollParent(anchorRef.current);
-      if (scrollParent && scrollParent !== document.documentElement) {
-        const additionalScroll = (preferredTop + effectiveMenuHeight) - (window.innerHeight - padding);
-        scrollParent.scrollTop += additionalScroll;
-      }
-    }
-
     setPlacement(openAbove ? "top" : "bottom");
     setStyle({
       position: "fixed",
       top,
       left,
-      maxHeight: Math.max(0, boundaryRect.bottom - top - padding),
+      maxHeight: scrollable ? Math.max(0, boundaryRect.bottom - top - padding) : undefined,
       maxWidth: Math.max(0, boundaryRect.right - left - padding),
     });
-  }, [anchorRef, getScrollParent, usePortal]);
+  }, [anchorRef, getScrollParent, scrollable, usePortal]);
 
   useLayoutEffect(() => {
-    if (!open || !usePortal || !anchorRef?.current) return;
-    updatePosition();
-    
-    // Additional scroll check after a short delay to ensure menu is rendered
-    const timer = setTimeout(() => {
-      if (!anchorRef?.current || !ref.current) return;
-      const rect = anchorRef.current.getBoundingClientRect();
-      const menuRect = ref.current.getBoundingClientRect();
-      const menuHeight = menuRect?.height ?? 320;
-      const padding = 12;
-      const topBarHeight = 80;
-      
-      // If menu would be cut off at bottom, scroll the container
-      if (rect.bottom + menuHeight + padding > window.innerHeight) {
-        const scrollParent = getScrollParent(anchorRef.current);
-        if (scrollParent && scrollParent !== document.documentElement) {
-          const additionalScroll = (rect.bottom + menuHeight + padding) - window.innerHeight;
-          scrollParent.scrollTop += additionalScroll;
+    if (!open || !anchorRef?.current) return;
+    if (usePortal) updatePosition();
+
+    // For "bottom" menus near the bottom of the scroll area, create temporary
+    // space and scroll the page (so the menu can fully render without an inner scrollbar).
+    if (pushContent && side === "bottom") {
+      const scrollParent = getScrollParent(anchorRef.current);
+      if (scrollParent && scrollParent !== document.documentElement) {
+        const rect = anchorRef.current.getBoundingClientRect();
+        const menuRect = ref.current?.getBoundingClientRect();
+        const menuHeight = menuRect?.height ?? 320;
+        const padding = 12;
+        const gap = 8;
+
+        const availableBelow = window.innerHeight - padding - (rect.bottom + gap);
+        const needed = Math.max(0, menuHeight - availableBelow);
+
+        if (needed > 0) {
+          const prevPaddingBottom = scrollParent.style.paddingBottom;
+          const prevNum = Number.parseFloat(prevPaddingBottom || "0") || 0;
+          scrollParent.style.paddingBottom = `${prevNum + needed}px`;
+          pushedRef.current = { el: scrollParent, prevPaddingBottom, applied: true };
+
+          // Scroll so the trigger moves up, giving room for the menu.
+          scrollParent.scrollTop += needed;
         }
       }
-      
-      // If menu would overlap with top bar when opening above, adjust
-      if (rect.top - menuHeight - padding < topBarHeight) {
-        const scrollParent = getScrollParent(anchorRef.current);
-        if (scrollParent && scrollParent !== document.documentElement) {
-          const additionalScroll = topBarHeight - (rect.top - menuHeight - padding);
-          if (additionalScroll > 0) {
-            scrollParent.scrollTop += additionalScroll;
-          }
-        }
+    }
+
+    return () => {
+      if (pushedRef.current.applied && pushedRef.current.el) {
+        pushedRef.current.el.style.paddingBottom = pushedRef.current.prevPaddingBottom;
       }
-    }, 50);
-    
-    return () => clearTimeout(timer);
-  }, [open, anchorRef, updatePosition, getScrollParent, usePortal]);
+      pushedRef.current = { el: null, prevPaddingBottom: "", applied: false };
+    };
+  }, [open, anchorRef, updatePosition, getScrollParent, usePortal, pushContent, side]);
 
   useEffect(() => {
     if (!open) return;
@@ -182,7 +193,8 @@ export default function Popover({ open, onClose, className = "", children, ancho
     <div
       ref={ref}
       className={[
-        "z-[9999] w-56 overflow-y-auto overscroll-contain rounded-xl border border-slate-200 bg-white p-1 shadow-xl",
+        "z-[9999] w-56 overscroll-contain rounded-xl border border-slate-200 bg-white p-1 shadow-xl",
+        scrollable ? "overflow-y-auto" : "overflow-visible",
         !usePortal && "absolute",
         className,
       ].join(" ")}
@@ -196,4 +208,3 @@ export default function Popover({ open, onClose, className = "", children, ancho
 
   return usePortal ? createPortal(content, document.body) : content;
 }
-

@@ -58,7 +58,7 @@ export default function RecentPage() {
     <div className="flex w-full max-w-6xl flex-1 flex-col gap-5">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-2">
-          <h2 className="text-2xl font-semibold text-slate-900">Recent</h2>
+          <h2 className="text-2xl font-semibold text-slate-900">Recently Opened</h2>
           <Clock size={18} className="text-slate-500" />
         </div>
         <button
@@ -85,15 +85,31 @@ export default function RecentPage() {
       </div>
 
       {viewMode === "grid" ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 pb-72 sm:grid-cols-2 lg:grid-cols-3">
           {visibleDocs.map((d) => (
-            <DocumentCard key={d.id} doc={d} onToggleStar={toggleStar} onAction={onAction} />
+            <DocumentCard
+              key={d.id}
+              doc={d}
+              onToggleStar={toggleStar}
+              onAction={onAction}
+              menuPushContent
+              denseMenu
+              menuClassName="w-52 p-0"
+            />
           ))}
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 pb-72">
           {visibleDocs.map((d) => (
-            <DocumentRow key={d.id} doc={d} onToggleStar={toggleStar} onAction={onAction} />
+            <DocumentRow
+              key={d.id}
+              doc={d}
+              onToggleStar={toggleStar}
+              onAction={onAction}
+              menuPushContent
+              denseMenu
+              menuClassName="w-52 p-0"
+            />
           ))}
         </div>
       )}

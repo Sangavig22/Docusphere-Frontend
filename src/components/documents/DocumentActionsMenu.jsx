@@ -11,12 +11,13 @@ import {
   Trash2,
 } from "lucide-react";
 
-function Item({ icon: Icon, label, danger = false, onClick }) {
+function Item({ icon: Icon, label, danger = false, onClick, dense = false }) {
   return (
     <button
       type="button"
       className={[
-        "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors",
+        "flex w-full items-center gap-2 rounded-lg text-left text-sm transition-colors",
+        dense ? "px-2.5 py-1.5" : "px-3 py-2",
         danger ? "text-rose-600 hover:bg-rose-50" : "text-slate-700 hover:bg-slate-50",
       ].join(" ")}
       onClick={onClick}
@@ -28,7 +29,7 @@ function Item({ icon: Icon, label, danger = false, onClick }) {
   );
 }
 
-export default function DocumentActionsMenu({ doc, onAction }) {
+export default function DocumentActionsMenu({ doc, onAction, dense = false }) {
   const actions = useMemo(
     () => [
       { key: "preview", label: "Preview", icon: Eye },
@@ -45,13 +46,14 @@ export default function DocumentActionsMenu({ doc, onAction }) {
   );
 
   return (
-    <div className="py-1">
+    <div className={dense ? "py-0.5" : "py-1"}>
       {actions.map((a) => (
         <Item
           key={a.key}
           icon={a.icon}
           label={a.label}
           danger={a.danger}
+          dense={dense}
           onClick={() => onAction?.(a.key, doc)}
         />
       ))}
