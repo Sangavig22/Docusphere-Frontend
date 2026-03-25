@@ -87,4 +87,4 @@ export const routes = [
       "Manage your platform with ease"
     ),
   },
-];
+];
