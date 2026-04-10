@@ -16,7 +16,8 @@ function App() {
         rtl={false} 
         pauseOnFocusLoss 
         draggable 
-        pauseOnHover 
+        pauseOnHover
+        style={{ width: '500px' }}
       />
       <AppRoutes />
     </DocumentsProvider>

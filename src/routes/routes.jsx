@@ -2,6 +2,8 @@ import React from "react";
 import LandingPage from "../pages/LandingPage";
 import SignUp from "../pages/SignUp";
 import SignIn from "../pages/SignIn";
+import EmailVerification from "../pages/EmailVerification";
+import DashboardSelector from "../pages/DashboardSelector";
 import DashboardLayout from "../components/Layout/DashboardLayout";
 import AdminLayout from "../components/Layout/AdminLayout.jsx";
 import Dashboard from "../Pages/Dashboard";
@@ -42,6 +44,14 @@ export const routes = [
   {
     path: "/signin",
     element: <SignIn />,
+  },
+  {
+    path: "/verify-email",
+    element: <EmailVerification />,
+  },
+  {
+    path: "/dashboard-selector",
+    element: <DashboardSelector />,
   },
   {
     path: "/dashboard",

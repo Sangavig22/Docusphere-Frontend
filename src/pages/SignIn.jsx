@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Mail, Lock } from "lucide-react";
 import { toast } from "react-toastify";
@@ -8,6 +8,7 @@ import InputField from "../components/Authentication/InputField";
 import AuthPageLayout from "../components/Layout/AuthPageLayout";
 import SocialAuthButtons from "../components/Authentication/SocialAuthButtons";
 import AuthPageHeading from "../components/Authentication/AuthPageHeading";
+import authService from "../services/authService";
 
 const SignIn = () => {
 
@@ -16,11 +17,61 @@ const SignIn = () => {
         email: '',
         password: ''
     })
-
+    
+      const [isLoading, setIsLoading] = useState(false);
     const handleSubmit = async (e) => {
       e.preventDefault()
 
       const { email, password } = formData
+
+      if (!email || !password) {
+        toast.error("Please fill in all fields")
+        return
+      }
+     setIsLoading(true);
+    try {
+      const data = await authService.signIn(email, password);
+
+      if (data.token) {
+        localStorage.setItem("authToken", data.token);
+      }
+      if (data.role) {
+        localStorage.setItem("userRole", data.role);
+      }
+
+      toast.success("Sign in successful!");
+
+      //Role-based redirect
+      setTimeout(() => {
+        if (data.role && data.role.toUpperCase().includes("ADMIN")) {
+          navigate("/dashboard-selector");
+        } else {
+          navigate("/dashboard");
+        }
+      }, 500);
+
+      } catch (error) {
+  console.error("Sign in error:", error);
+  const errorMsg = error.message || "An error occurred. Please try again.";
+
+  if (errorMsg.includes('not registered') || errorMsg.includes('Email not registered')) {
+    toast.error(
+      <span>
+        Email not registered.{" "}
+        <button
+          onClick={() => navigate("/signup")}
+          className="underline text-[#05152C] font-bold hover:text-blue-600 transition-all duration-300"
+        >
+          Sign up here
+        </button>
+      </span>
+    );
+  } else {
+    toast.error(errorMsg);
+  }
+} finally {
+  setIsLoading(false);
+}
     }
 
     const handleChange = (e) => {

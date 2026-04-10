@@ -9,7 +9,7 @@ import AuthPageLayout from "../components/Layout/AuthPageLayout";
 import SocialAuthButtons from "../components/Authentication/SocialAuthButtons";
 import AuthPageHeading from "../components/Authentication/AuthPageHeading";
 import PasswordIndicator from "../components/Authentication/PasswordIndicator";
-
+import authService from "../services/authService";
 const SignUp = () => {
  const navigate = useNavigate()
     const [formData, setFormData] = React.useState({
@@ -20,6 +20,7 @@ const SignUp = () => {
     })
 
     const [isPasswordFocused, setIsPasswordFocused] = React.useState(false)
+     const [isLoading, setIsLoading] = useState(false)
 
     // Check if password meets all requirements
     const isPasswordStrong = React.useMemo(() => {
@@ -58,7 +59,20 @@ const SignUp = () => {
         toast.error('Passwords do not match!')
         return
       }
+
+      setIsLoading(true);
+       try {
+      await authService.signUp({ fullName, email, password, confirmPassword });
+      localStorage.setItem("verificationEmail", email);
+      toast.success("Account created! Please verify your email.");
+      navigate("/verify-email", { state: { email } });
+    } catch (error) {
+      console.error("Sign up error:", error);
+      toast.error(error.message || "An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
+  };
 
     const handleChange = (e) => {
         const { name, value } = e.target
