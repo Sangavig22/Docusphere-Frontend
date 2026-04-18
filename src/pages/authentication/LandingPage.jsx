@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import logo from "../assets/logo_2.jpeg";
-import GradientButton from "../components/Authentication/GradientButton";
+import logo from "../../assets/logo_2.jpeg";
+import GradientButton from "../../components/Authentication/GradientButton";
 import { FileText, ShieldCheck, Users, Zap, Clock, Sparkles, ArrowRight } from "lucide-react";
 
 export default function LandingPage() {

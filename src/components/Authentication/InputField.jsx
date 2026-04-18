@@ -7,6 +7,8 @@ const InputField = ({
   placeholder,
   value,
   onChange,
+  onFocus,
+  onBlur,
   icon: Icon,
   required = false,
   className = "",
@@ -25,6 +27,8 @@ const InputField = ({
         placeholder={placeholder}
         value={value}
         onChange={onChange}
+        onFocus={onFocus}
+        onBlur={onBlur}
         required={required}
         className="w-full 
           focus:outline-none 
