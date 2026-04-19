@@ -1,10 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
-import PrimaryButton from "../components/Authentication/PrimaryButton";
-import AuthPageLayout from "../components/Layout/AuthPageLayout";
-import AuthPageHeading from "../components/Authentication/AuthPageHeading";
-import authService from "../services/authService";
+import PrimaryButton from "../../components/Authentication/PrimaryButton";
+import AuthLink from "../../components/Authentication/AuthLink";
+import AuthPageLayout from "../../components/Layout/AuthPageLayout";
+import AuthPageHeading from "../../components/Authentication/AuthPageHeading";
+import AuthPageLeftContent from "../../components/Authentication/AuthPageLeftContent";
+import { ROLES } from "../../constants/roleConstants";
+import authService from "../../services/authService";
+import { getEmailProvider, EMAIL_PROVIDER_URLS } from "../../utils/emailProvider";
 
 const EmailVerification = () => {
   const navigate = useNavigate();
@@ -26,27 +30,26 @@ const EmailVerification = () => {
       try {
         const data = await authService.verifyEmail(token);
 
-        //store the auth token, role
-        if (data.token) {
-          localStorage.setItem("authToken", data.token);
-        }
-        localStorage.setItem("userRole", data.role);
-
+        // Store auth data using centralized service
+        authService.saveAuth(data);
         toast.success("Email verified successfully!");
 
         setTimeout(() => {
-          if (data.role && data.role.toUpperCase().includes("ADMIN")) {
+          if (data.role?.toUpperCase() === ROLES.ADMIN) {
             navigate("/dashboard-selector", { state: { token: data.token } });
           } else {
             navigate("/dashboard", { state: { token: data.token } });
           }
         }, 1000);
-      } catch (error) {
+      } 
+        catch (error) {
         console.error("Verification error:", error);
         toast.error(error.message || "Failed to verify email. Please try again.");
         setIsVerifyingToken(false);
+
       // Reset verifiedRef on failure so user can retry
         verifiedRef.current = false;
+
       // Clear sessionStorage guard so user can retry without stale block
         sessionStorage.removeItem("emailVerificationAttempted");
       }
@@ -54,7 +57,6 @@ const EmailVerification = () => {
     [navigate]
   );
 
-//reads the token from the URL and verifies the user's email only once,preventing repeated API calls when the page reloads
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const token = params.get("token");
@@ -70,8 +72,6 @@ const EmailVerification = () => {
       verifyToken(token);
     }
   }, [location.search, verifyToken]); 
-
-  // Countdown timer for resend button
   useEffect(() => {
     if (resendTimer > 0) {
       const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
@@ -101,21 +101,20 @@ const EmailVerification = () => {
 
   const handleChangeEmail = () => {
     localStorage.removeItem("verificationEmail");
-     //Deletes the stored verification email
     sessionStorage.removeItem("emailVerificationAttempted");
     navigate("/signup");
   };
 
+  const handleOpenEmail = () => {
+    const provider = getEmailProvider(email);
+    window.open(EMAIL_PROVIDER_URLS[provider], "_blank");
+  };
+
   const leftContent = (
-    <>
-      <h1 className="text-white text-4xl md:text-5xl font-bold mb-4 mt-3">
-        Almost There!
-      </h1>
-      <p className="text-white text-lg md:text-2xl font-medium leading-relaxed mb-8">
-        Just one more step—verify your email using the link we sent to start
-        your journey with Docusphere.
-      </p>
-    </>
+    <AuthPageLeftContent 
+      heading="Almost done!"
+      subheading="Just one more step verify your email using the link we sent to start your journey with Docusphere."
+    />
   );
 
   const rightContent = (
@@ -129,8 +128,7 @@ const EmailVerification = () => {
         <p className="text-gray-600 text-base mb-4">
           Please click the link we sent to the following email:
         </p>
-
-        {/* Fix 10: Handle missing email gracefully in UI */}
+        
         {email ? (
           <p className="text-gray-900 font-semibold text-lg break-all mb-4">
             {email}
@@ -138,24 +136,23 @@ const EmailVerification = () => {
         ) : (
           <p className="text-red-500 text-base mb-4">
             No email found. Please{" "}
-            <button
+            <AuthLink
+              text="sign up again"
               onClick={handleChangeEmail}
-              className="underline font-medium"
-            >
-              sign up again
-            </button>
+              underline
+              className="font-medium"
+            />
             .
           </p>
         )}
 
         <p className="text-gray-600 text-base">
           Not the right email?{" "}
-          <button
+          <AuthLink
+            text="Change account"
             onClick={handleChangeEmail}
-            className="font-medium text-base text-[#05152C] hover:text-blue-600 transition-all duration-300"
-          >
-            Change account
-          </button>
+            className="text-base"
+          />
         </p>
       </div>
 
@@ -179,7 +176,7 @@ const EmailVerification = () => {
 
         <PrimaryButton
           type="button"
-          onClick={() => window.open("https://gmail.com", "_blank")}
+          onClick={handleOpenEmail}
           className="!w-[250px]"
         >
           Open Email Inbox
@@ -208,9 +205,6 @@ const EmailVerification = () => {
     <AuthPageLayout
       leftContent={leftContent}
       rightContent={rightContent}
-      leftBg="bg-[#05152C]"
-      rightBg="bg-white"
-      rightScroll={true}
     />
   );
 };

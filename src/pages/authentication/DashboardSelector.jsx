@@ -1,18 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import PrimaryButton from "../components/Authentication/PrimaryButton";
-import AuthPageHeading from "../components/Authentication/AuthPageHeading";
-import AuthPageLayout from "../components/Layout/AuthPageLayout";
+import PrimaryButton from "../../components/Authentication/PrimaryButton";
+import AuthPageHeading from "../../components/Authentication/AuthPageHeading";
+import AuthPageLayout from "../../components/Layout/AuthPageLayout";
+import { ROLES } from "../../constants/roleConstants";
 
 const DashboardSelector = () => {
   const navigate = useNavigate();
-  const userRole = localStorage.getItem("userRole");
-  const isAdmin = userRole && userRole.toUpperCase().includes("ADMIN");
+  // Check both sessionStorage and localStorage for user role
+  const userRole = sessionStorage.getItem("userRole") || localStorage.getItem("userRole");
+  const isAdmin = userRole?.toUpperCase() === ROLES.ADMIN;
 
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    // Redirect non-admins/user immediately
     if (!userRole) {
       navigate("/signin");
       return;
@@ -23,11 +24,9 @@ const DashboardSelector = () => {
       return;
     }
 
-    // Fix 3: Only show page if confirmed admin
     setIsChecking(false);
   }, [navigate, userRole, isAdmin]);
-  
-// Show nothing while checking role (prevents button flash)
+
   if (isChecking) {
     return (
       <div className="w-full h-screen flex items-center justify-center bg-[#05152C]">
@@ -39,10 +38,10 @@ const DashboardSelector = () => {
   const leftContent = (
     <>
       <h1 className="text-white text-4xl md:text-5xl font-bold mb-4 mt-3">
-        Welcome to Docusphere!
+        Choose your dashboard
       </h1>
       <p className="text-white text-lg md:text-2xl font-medium leading-relaxed mb-8">
-        Choose your dashboard to continue your journey.
+         Select where you'd like to continue.
       </p>
     </>
   );
@@ -65,7 +64,6 @@ const DashboardSelector = () => {
             User Dashboard
           </PrimaryButton>
 
-          {/* Fix 5: Only show admin button for admins */}
           {isAdmin && (
             <PrimaryButton
               type="button"
@@ -88,8 +86,6 @@ const DashboardSelector = () => {
     <AuthPageLayout
       leftContent={leftContent}
       rightContent={rightContent}
-      leftBg="bg-[#05152C]"
-      rightBg="bg-white"
     />
   );
 };
