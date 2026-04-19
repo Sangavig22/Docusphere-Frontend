@@ -1,17 +1,16 @@
-import DashboardLayout from "../components/Layout/DashboardLayout";
+import Layout from "../components/Layout/DashboardLayout";
 import UploadPage from "../pages/UploadPage";
 import { Navigate } from "react-router-dom";
 
 import Dashboard from "../Pages/Dashboard";
 
-function withLayout(element, pageTitle, pageSubtitle) {
+function withLayout(element, pageTitle, pageSubtitle, type = "dashboard") {
   return (
-    <DashboardLayout pageTitle={pageTitle} pageSubtitle={pageSubtitle}>
+    <Layout type={type} pageTitle={pageTitle} pageSubtitle={pageSubtitle}>
       {element}
-    </DashboardLayout>
+    </Layout>
   );
 }
-
 export const routes = [
 
   {
