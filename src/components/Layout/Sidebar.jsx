@@ -1,54 +1,34 @@
 import { NavLink } from "react-router-dom";
 import logo_2 from "../../assets/logo_2.jpeg";
-import {
-  LayoutDashboard,
-  FileText,
-  Upload,
-  Users,
-  Star,
-  Clock,
-  Search,
-  ScanText,
-  Settings,
-  HelpCircle,
-  ChevronLeft,
-  ChevronRight,
-  RecycleIcon,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { DASHBOARD_MENU, SIDEBAR_STYLES } from "../../config/sidebarConfig";
+import { LAYOUT_COLORS } from "../../config/layoutConfig";
 
-function Sidebar({ collapsed, onToggle }) {
-  const primaryMenu = [
-    { label: "Dashboard", icon: LayoutDashboard, to: "/dashboard" },
-    { label: "My Documents", icon: FileText, to: "/documents" },
-    { label: "Uploads", icon: Upload, to: "/uploads" },
-    { label: "Team", icon: Users, to: "/team" },
-    { label: "Starred", icon: Star, to: "/starred" },
-    { label: "Recent", icon: Clock, to: "/recent" },
-    { label: "Search", icon: Search, to: "/search" },
-    { label: "OCR", icon: ScanText, to: "/ocr" },
-  ];
+function Sidebar({ collapsed, onToggle, role = "user" }) {
+  // normalize incoming role
+  const normalizedRole = role === "admin" ? "admin" : "user";
 
-  const secondaryMenu = [
-    { label: "Recycle bin", icon: RecycleIcon},
-    { label: "Settings", icon: Settings },
-    { label: "Help & Support", icon: HelpCircle },
-  ];
+  const menu = normalizedRole === "admin" ? ADMIN_MENU : DASHBOARD_MENU;
+  const styles = SIDEBAR_STYLES?.[normalizedRole] ?? {
+  widthCollapsed: "w-20",
+  widthExpanded: "w-64",
+  container: "bg-white border-r border-slate-200 h-screen flex flex-col",
+};
+
+const colors = LAYOUT_COLORS?.[normalizedRole] ?? {
+  sidebarActiveLink: "bg-blue-50 text-blue-600",
+  sidebarHoverLink: "hover:bg-slate-100",
+};
+  const { primary: primaryMenu, secondary: secondaryMenu } = menu;
+  const widthClass = collapsed ? styles.widthCollapsed : styles.widthExpanded;
 
   return (
-    <aside
-      className={`bg-white h-screen shadow-md flex flex-col transition-all duration-300 ${
-        collapsed ? "w-20" : "w-64"
-      }`}
-    >
+    <aside className={`${widthClass} ${styles.container}`}>
       {/* Logo + collapse toggle */}
       <div className="flex items-center justify-between gap-3 px-4 py-6 border-b border-slate-100">
         <div className="flex items-center gap-3">
           <div className="h-9 w-9 flex items-center justify-center">
-            <img
-              src={logo_2}
-              alt="DocuSphere logo"
-              className="h-9 w-9 object-contain"
-            />
+            <img src={logo_2} alt="DocuSphere logo" className="h-9 w-9 object-contain" />
           </div>
           {!collapsed && (
             <span className="text-xl font-semibold text-slate-900">
@@ -71,16 +51,15 @@ function Sidebar({ collapsed, onToggle }) {
         <ul className="space-y-1">
           {primaryMenu.map((item) => {
             const Icon = item.icon;
-
             return (
               <li key={item.label}>
                 <NavLink
                   to={item.to}
+                  end
+                  title={collapsed ? item.label : ""}
                   className={({ isActive }) =>
                     `w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      isActive
-                        ? "bg-blue-600 text-white shadow-sm"
-                        : "text-slate-600 hover:bg-blue-50"
+                      isActive ? colors.sidebarActiveLink : `text-slate-600 ${colors.sidebarHoverLink}`
                     }`
                   }
                 >
@@ -94,21 +73,26 @@ function Sidebar({ collapsed, onToggle }) {
       </nav>
 
       {/* Bottom links */}
-      <div className="px-3 pb-4 pt-2 border-t border-slate-100">
-        <ul className="space-y-1">
-          {secondaryMenu.map((item) => {
-            const Icon = item.icon;
-            return (
-              <li key={item.label}>
-                <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-blue-50 transition-colors">
-                  <Icon size={18} />
-                  {!collapsed && <span>{item.label}</span>}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
+      {secondaryMenu.length > 0 && (
+        <div className="px-3 pb-4 pt-2 border-t border-slate-100">
+          <ul className="space-y-1">
+            {secondaryMenu.map((item) => {
+              const Icon = item.icon;
+              return (
+                <li key={item.label}>
+                  <button
+                    title={collapsed ? item.label : ""}
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 ${colors.sidebarHoverLink} transition-colors`}
+                  >
+                    <Icon size={18} />
+                    {!collapsed && <span>{item.label}</span>}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
     </aside>
   );
 }

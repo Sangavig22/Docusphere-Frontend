@@ -19,15 +19,5 @@ export const routes = [
     element: withLayout(<UploadPage />, "Uploads", "Drag and drop files or browse to upload."),
   },
 ];
-<<<<<<< sangavi/feature/upload-document
     
 
-=======
-    element: withLayout(
-      <Dashboard />,
-      "Dashboard",
-      "Overview of your workspace"
-    ),
-  },
-];
->>>>>>> develop
