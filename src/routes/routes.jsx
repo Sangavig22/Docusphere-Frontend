@@ -4,9 +4,8 @@ import SignUp from "../pages/authentication/SignUp";
 import SignIn from "../pages/authentication/SignIn";
 import EmailVerification from "../pages/authentication/EmailVerification";
 import DashboardSelector from "../pages/authentication/DashboardSelector";
-import DashboardLayout from "../components/Layout/DashboardLayout";
-import AdminLayout from "../components/Layout/AdminLayout.jsx";
-import Dashboard from "../pages/Dashboard";
+import Layout from "../components/Layout/Layout";
+import Dashboard from "../Pages/Dashboard";
 import UploadPage from "../pages/UploadPage";
 import AdminDashboardPage from "../pages/AdminDashboardPage.jsx";
 import OCRSummarization from "../pages/OCRSummarization";
@@ -14,19 +13,11 @@ import MyDocumentsPage from "../pages/MyDocumentsPage";
 import StarredPage from "../pages/StarredPage";
 import RecentPage from "../pages/RecentPage";
 
-function withLayout(element, pageTitle, pageSubtitle) {
+function withLayout(element, pageTitle, pageSubtitle, type = "dashboard") {
   return (
-    <DashboardLayout pageTitle={pageTitle} pageSubtitle={pageSubtitle}>
+    <Layout type={type} pageTitle={pageTitle} pageSubtitle={pageSubtitle}>
       {element}
-    </DashboardLayout>
-  );
-}
-
-function withAdminLayout(element, pageTitle, pageSubtitle) {
-  return (
-    <AdminLayout pageTitle={pageTitle} pageSubtitle={pageSubtitle}>
-      {element}
-    </AdminLayout>
+    </Layout>
   );
 }
 
@@ -86,7 +77,7 @@ export const routes = [
   // Admin route
   {
     path: "/admin/dashboard",
-    element: withAdminLayout(
+    element: withLayout(
       <AdminDashboardPage />,
       "Dashboard",
       "Manage your platform with ease"
