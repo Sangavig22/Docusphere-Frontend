@@ -121,3 +121,6 @@ export function useDocumentsStore() {
   return ctx;
 }
 
+// Export context for direct context usage
+export { DocumentsContext };
+
