@@ -1,9 +1,10 @@
 import React from "react";
-import LandingPage from "../pages/LandingPage";
-import SignUp from "../pages/SignUp";
-import SignIn from "../pages/SignIn";
-import DashboardLayout from "../components/Layout/DashboardLayout";
-import AdminLayout from "../components/Layout/AdminLayout.jsx";
+import LandingPage from "../pages/authentication/LandingPage";
+import SignUp from "../pages/authentication/SignUp";
+import SignIn from "../pages/authentication/SignIn";
+import EmailVerification from "../pages/authentication/EmailVerification";
+import DashboardSelector from "../pages/authentication/DashboardSelector";
+import Layout from "../components/Layout/Layout";
 import Dashboard from "../Pages/Dashboard";
 import UploadPage from "../pages/UploadPage";
 import AdminDashboardPage from "../pages/AdminDashboardPage.jsx";
@@ -13,19 +14,11 @@ import StarredPage from "../pages/StarredPage";
 import RecentPage from "../pages/RecentPage";
 
 
-function withLayout(element, pageTitle, pageSubtitle) {
+function withLayout(element, pageTitle, pageSubtitle, type = "dashboard") {
   return (
-    <DashboardLayout pageTitle={pageTitle} pageSubtitle={pageSubtitle}>
+    <Layout type={type} pageTitle={pageTitle} pageSubtitle={pageSubtitle}>
       {element}
-    </DashboardLayout>
-  );
-}
-
-function withAdminLayout(element, pageTitle, pageSubtitle) {
-  return (
-    <AdminLayout pageTitle={pageTitle} pageSubtitle={pageSubtitle}>
-      {element}
-    </AdminLayout>
+    </Layout>
   );
 }
 
@@ -43,6 +36,14 @@ export const routes = [
   {
     path: "/signin",
     element: <SignIn />,
+  },
+  {
+    path: "/verify-email",
+    element: <EmailVerification />,
+  },
+  {
+    path: "/dashboard-selector",
+    element: <DashboardSelector />,
   },
   {
     path: "/dashboard",
@@ -78,7 +79,7 @@ export const routes = [
   // Admin route
   {
     path: "/admin/dashboard",
-    element: withAdminLayout(
+    element: withLayout(
       <AdminDashboardPage />,
       "Dashboard",
       "Manage your platform with ease"

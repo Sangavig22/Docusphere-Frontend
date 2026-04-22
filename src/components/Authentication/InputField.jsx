@@ -7,6 +7,8 @@ const InputField = ({
   placeholder,
   value,
   onChange,
+  onFocus,
+  onBlur,
   icon: Icon,
   required = false,
   className = "",
@@ -25,6 +27,8 @@ const InputField = ({
         placeholder={placeholder}
         value={value}
         onChange={onChange}
+        onFocus={onFocus}
+        onBlur={onBlur}
         required={required}
         className="w-full 
           focus:outline-none 
@@ -35,6 +39,14 @@ const InputField = ({
           font-medium 
           text-lg
           "
+        style={{
+          // Chrome adds blue background on autofill - this overrides it to transparent
+          WebkitBoxShadow: '0 0 0 1000px transparent inset !important',
+          // Keep text color black when autofilled
+          WebkitTextFillColor: 'black !important',
+          transition: 'background-color 5000s ease-in-out 0s',
+          backgroundColor: 'transparent !important'
+        }}
       />
       {type === "password" && (
         <button

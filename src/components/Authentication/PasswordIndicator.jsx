@@ -1,30 +1,16 @@
 import React, { useMemo } from "react";
 import { Check, X } from "lucide-react";
+import { passwordRules } from "../../utils/passwordValidator";
 
 const PasswordIndicator = ({ password = "", isFocused = false }) => {
   const requirements = useMemo(() => {
-    return {
-      minLength: {
-        label: "At least 8 characters",
-        met: password.length >= 8,
-      },
-      hasNumber: {
-        label: "At least 1 number",
-        met: /\d/.test(password),
-      },
-      hasLowerCase: {
-        label: "At least 1 lowercase letter",
-        met: /[a-z]/.test(password),
-      },
-      hasUpperCase: {
-        label: "At least 1 uppercase letter",
-        met: /[A-Z]/.test(password),
-      },
-      hasSpecialChar: {
-        label: "At least 1 special character",
-        met: /[@#$%!]/.test(password),
-      },
-    };
+    return passwordRules.reduce((acc, rule) => {
+      acc[rule.name] = {
+        label: rule.message,
+        met: rule.test(password),
+      };
+      return acc;
+    }, {});
   }, [password]);
 
   const metCount = Object.values(requirements).filter((req) => req.met).length;
@@ -45,8 +31,8 @@ const PasswordIndicator = ({ password = "", isFocused = false }) => {
     return null;
   }
 
-  // Hide indicator when password is strong and user is not focused (moved to next field)
-  if (!isFocused && allRequirementsMet) {
+  // Hide entire indicator when password is strong
+  if (allRequirementsMet) {
     return null;
   }
 
@@ -67,7 +53,6 @@ const PasswordIndicator = ({ password = "", isFocused = false }) => {
         </div>
       )}
 
-      {/* Heading with Strength */}
       {password.length > 0 && (
         <h3 className="text-lg font-semibold text-gray-800 mb-3">
           {allRequirementsMet ? (
@@ -78,8 +63,6 @@ const PasswordIndicator = ({ password = "", isFocused = false }) => {
           . Must contain:
         </h3>
       )}
-
-      {/* Requirements List */}
       <div className="space-y-2">
         {Object.entries(requirements).map(([key, requirement]) => (
           <div
@@ -88,14 +71,11 @@ const PasswordIndicator = ({ password = "", isFocused = false }) => {
               requirement.met ? "opacity-100" : "opacity-60"
             }`}
           >
-            {/* Icon */}
             {requirement.met ? (
               <Check size={20} className="text-green-500 flex-shrink-0" strokeWidth={3} />
             ) : (
               <X size={20} className="text-gray-400 flex-shrink-0" strokeWidth={3} />
             )}
-
-            {/* Label */}
             <span
               className={`font-medium transition-colors ${
                 requirement.met ? "text-green-600" : "text-gray-600"
