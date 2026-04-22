@@ -11,7 +11,7 @@ import OCRSummarization from "../pages/OCRSummarization";
 import MyDocumentsPage from "../pages/MyDocumentsPage";
 import StarredPage from "../pages/StarredPage";
 import RecentPage from "../pages/RecentPage";
-import SearchPage from "../pages/SearchPage";
+
 
 function withLayout(element, pageTitle, pageSubtitle) {
   return (
@@ -73,10 +73,7 @@ export const routes = [
     path: "/recent",
     element: withLayout(<RecentPage />, "Recent", "Manage and organize all recently opened documents."),
   },
-  {
-    path: "/search",
-    element: withLayout(<SearchPage />, "Search", "Search and filter documents by title, tags, or OCR content."),
-  },
+
 
   // Admin route
   {
@@ -87,4 +84,4 @@ export const routes = [
       "Manage your platform with ease"
     ),
   },
-];
+];

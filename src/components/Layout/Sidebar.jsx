@@ -7,7 +7,6 @@ import {
   Users,
   Star,
   Clock,
-  Search,
   ScanText,
   Settings,
   HelpCircle,
@@ -24,7 +23,6 @@ function Sidebar({ collapsed, onToggle }) {
     { label: "Team", icon: Users, to: "/team" },
     { label: "Starred", icon: Star, to: "/starred" },
     { label: "Recent", icon: Clock, to: "/recent" },
-    { label: "Search", icon: Search, to: "/search" },
     { label: "OCR", icon: ScanText, to: "/ocr" },
   ];
 

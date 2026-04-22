@@ -9,6 +9,7 @@ import EditDocumentModal from "../components/ocr/EditDocumentModal";
 import DeleteConfirmModal from "../components/ocr/DeleteConfirmModal";
 import ErrorStateCard from "../components/ocr/ErrorStateCard";
 import { useOcrMockData } from "../hooks/useOcrMockData";
+import { ocrService } from "../services/ocrService";
 
 /**
  * OcrProcessingView is defined here to provide the "Upload Process Section"
@@ -55,7 +56,8 @@ export default function OCRSummarization() {
     documentData, 
     correctOutput, 
     updateDocumentData, 
-    resetDocumentData 
+    resetDocumentData,
+    setDocumentResults
   } = useOcrMockData();
 
   const MAX_FILE_SIZE =50000000; // 50MB
@@ -70,19 +72,26 @@ export default function OCRSummarization() {
     setStatus("idle"); 
   };
 
-  const handleUploadComplete = (file) => {
-    if (file && file.size > MAX_FILE_SIZE) {
+  const handleUploadComplete = async (file) => {
+    if (!file) return;
+    
+    if (file.size > MAX_FILE_SIZE) {
       setStatus("error");
       return;
     }
 
     setSelectedFile(file);
     
-    // Synchronized transition to results after the "Relevant Time" has passed
-    setTimeout(() => {
-      correctOutput(file);
+    try {
+      // Real API Call
+      const result = await ocrService.uploadDocument(file);
+      setDocumentResults(result);
       setStatus("success");
-    }, 5500);
+    } catch (err) {
+      console.error("OCR Error:", err);
+      setErrorHeader(err.message || "The document could not be processed");
+      setStatus("error");
+    }
   };
 
   const handleRegenerate = () => {

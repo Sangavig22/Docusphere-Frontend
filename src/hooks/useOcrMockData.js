@@ -50,10 +50,15 @@ export function useOcrMockData() {
     });
   }, []);
 
+  const setDocumentResults = useCallback((data) => {
+    setDocumentData(data);
+  }, []);
+
   return {
     documentData,
     correctOutput,
     updateDocumentData,
-    resetDocumentData
+    resetDocumentData,
+    setDocumentResults
   };
 }
