@@ -1,4 +1,6 @@
 
+import { uploadConfig } from "../../config/uploadConfig";
+
 export default function UploadDropzone({
   onFileSelected,
   disabled = false,
@@ -7,6 +9,7 @@ export default function UploadDropzone({
 }) {
   const isOcr = variant === "ocr";
   const inputId = isOcr ? "upload-input-ocr" : "upload-input";
+  const maxSizeMb = Math.round(uploadConfig.maxFileSize / (1024 * 1024));
 
   function handleInputChange(e) {
     const file = e.target.files?.[0];
@@ -86,7 +89,7 @@ export default function UploadDropzone({
           <p className="text-sm text-slate-600 sm:text-base">
             or <span className="text-blue-600 underline">browse</span> to upload
           </p>
-          <p className="text-xs text-slate-500 sm:text-sm">Maximum file size: 50MB</p>
+          <p className="text-xs text-slate-500 sm:text-sm">Maximum file size: {maxSizeMb}MB</p>
         </div>
       )}
     </div>
