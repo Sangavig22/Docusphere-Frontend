@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { ArrowDownUp, LayoutGrid, List, Search, SlidersHorizontal } from "lucide-react";
 import Popover from "./Popover";
+import { DOCUMENT_TYPE_FILTER_OPTIONS } from "../../constants/documents";
 
 function IconButton({ active = false, label, onClick, children }) {
   return (
@@ -73,17 +74,7 @@ export default function DocumentsToolbar({
   const [filterOpen, setFilterOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
 
-  const filterOptions = useMemo(
-    () => [
-      { key: "all", label: "All Types" },
-      { key: "pdf", label: "PDF Documents" },
-      { key: "word", label: "Word Documents" },
-      { key: "sheet", label: "Spreadsheets" },
-      { key: "image", label: "Images" },
-      { key: "other", label: "Other" },
-    ],
-    [],
-  );
+  const filterOptions = useMemo(() => DOCUMENT_TYPE_FILTER_OPTIONS, []);
 
   const sortOptions = useMemo(
     () => [
@@ -114,7 +105,7 @@ export default function DocumentsToolbar({
           open={filterOpen}
           onToggle={(v) => setFilterOpen(typeof v === "boolean" ? v : !filterOpen)}
         >
-          <div className="py-1">
+          <div className="max-h-72 overflow-y-auto py-1">
             {filterOptions.map((o) => (
               <MenuItem
                 key={o.key}
