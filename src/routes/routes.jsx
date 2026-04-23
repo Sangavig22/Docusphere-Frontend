@@ -4,6 +4,8 @@ import SignUp from "../pages/authentication/SignUp";
 import SignIn from "../pages/authentication/SignIn";
 import EmailVerification from "../pages/authentication/EmailVerification";
 import DashboardSelector from "../pages/authentication/DashboardSelector";
+import ForgotPassword from "../pages/authentication/ForgotPassword";
+import ResetPassword from "../pages/authentication/ResetPassword";
 import Layout from "../components/Layout/Layout";
 import Dashboard from "../Pages/Dashboard";
 import UploadPage from "../pages/UploadPage";
@@ -36,6 +38,14 @@ export const routes = [
   {
     path: "/signin",
     element: <SignIn />,
+  },
+   {
+    path: "/forgot-password",
+    element: <ForgotPassword />,
+  },
+  {
+    path: "/reset-password",
+    element: <ResetPassword />,
   },
   {
     path: "/verify-email",

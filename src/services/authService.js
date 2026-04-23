@@ -6,11 +6,13 @@ const authService = {
     REMEMBER_ME_EMAIL: 'rememberMeEmail',
     REMEMBER_ME_ROLE: 'rememberMeRole',
     REMEMBER_ME_FULLNAME: 'rememberMeFullName',
+    REMEMBER_ME_USER_ID: 'rememberMeUserId',
     
     AUTH_TOKEN: 'authToken',
     USER_ROLE: 'userRole',
     USER_EMAIL: 'userEmail',
     USER_FULLNAME: 'userFullName',
+    USER_ID: 'userId',
     
     VERIFICATION_EMAIL: 'verificationEmail',
     
@@ -44,6 +46,32 @@ const authService = {
         return data;
     },
 
+    async forgotPassword(email) {
+        return request('/auth/forgot-password', {
+            method: 'POST',
+            body: JSON.stringify({ email }),
+        });
+    },
+
+    async requestPasswordReset(email) {
+        return this.forgotPassword(email);
+    },
+
+    async verifyPasswordResetToken(token) {
+        return request(`/auth/verify-reset-token?token=${encodeURIComponent(token)}`);
+    },
+
+    async resetPassword(token, password, confirmPassword) {
+        return request('/auth/reset-password', {
+            method: 'POST',
+            body: JSON.stringify({
+                token,
+                newPassword: password,
+                confirmPassword: confirmPassword
+            }),
+        });
+    },
+
     saveAuth(data, rememberMe = false) {
         if (!data?.token) {
             return;
@@ -59,18 +87,21 @@ const authService = {
             localStorage.setItem(this.REMEMBER_ME_EMAIL, data.email || '');
             localStorage.setItem(this.REMEMBER_ME_ROLE, data.role || '');
             localStorage.setItem(this.REMEMBER_ME_FULLNAME, data.fullName || '');
+            localStorage.setItem(this.REMEMBER_ME_USER_ID, data.userId || '');
             
             // Also set in sessionStorage for immediate use
             sessionStorage.setItem(this.AUTH_TOKEN, data.token);
             if (data.role) sessionStorage.setItem(this.USER_ROLE, data.role);
             if (data.email) sessionStorage.setItem(this.USER_EMAIL, data.email);
             if (data.fullName) sessionStorage.setItem(this.USER_FULLNAME, data.fullName);
+            if (data.userId) sessionStorage.setItem(this.USER_ID, data.userId);
         } else {
             // Store in sessionStorage (temporary session)
             sessionStorage.setItem(this.AUTH_TOKEN, data.token);
             if (data.role) sessionStorage.setItem(this.USER_ROLE, data.role);
             if (data.email) sessionStorage.setItem(this.USER_EMAIL, data.email);
             if (data.fullName) sessionStorage.setItem(this.USER_FULLNAME, data.fullName);
+            if (data.userId) sessionStorage.setItem(this.USER_ID, data.userId);
         }
     },
 
@@ -81,7 +112,6 @@ const authService = {
         return sessionStorage.getItem(this.AUTH_TOKEN);
     },
 
-    //Check if user is authenticated
 
     isAuthenticated() {
         return !!this.getToken();
@@ -107,11 +137,13 @@ const authService = {
             const email = localStorage.getItem(this.REMEMBER_ME_EMAIL);
             const role = localStorage.getItem(this.REMEMBER_ME_ROLE);
             const fullName = localStorage.getItem(this.REMEMBER_ME_FULLNAME);
+            const userId = localStorage.getItem(this.REMEMBER_ME_USER_ID);
 
             sessionStorage.setItem(this.AUTH_TOKEN, token);
             if (email) sessionStorage.setItem(this.USER_EMAIL, email);
             if (role) sessionStorage.setItem(this.USER_ROLE, role);
             if (fullName) sessionStorage.setItem(this.USER_FULLNAME, fullName);
+            if (userId) sessionStorage.setItem(this.USER_ID, userId);
 
             return true;
         }
@@ -123,6 +155,7 @@ const authService = {
         localStorage.removeItem(this.REMEMBER_ME_EMAIL);
         localStorage.removeItem(this.REMEMBER_ME_ROLE);
         localStorage.removeItem(this.REMEMBER_ME_FULLNAME);
+        localStorage.removeItem(this.REMEMBER_ME_USER_ID);
     },
 
     saveVerificationEmail(email) {
@@ -142,6 +175,7 @@ const authService = {
         sessionStorage.removeItem(this.USER_ROLE);
         sessionStorage.removeItem(this.USER_EMAIL);
         sessionStorage.removeItem(this.USER_FULLNAME);
+        sessionStorage.removeItem(this.USER_ID);
         sessionStorage.removeItem(this.VERIFICATION_EMAIL);
 
         this.clearRememberMe();
@@ -152,6 +186,10 @@ const authService = {
         if (!expiry) return 0;
         const daysLeft = Math.ceil((parseInt(expiry) - Date.now()) / (24 * 60 * 60 * 1000));
         return Math.max(0, daysLeft);
+    },
+
+    getUserId() {
+        return sessionStorage.getItem(this.USER_ID);
     },
 };
 
