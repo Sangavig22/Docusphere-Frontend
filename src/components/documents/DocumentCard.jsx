@@ -7,7 +7,7 @@ import {
   formatDocumentFormat,
   formatRelativeTime,
   normalizeDocumentType,
-} from "../../utils/documents/documentUtils.js";
+} from "../../utils/documentUtils.js";
 
 
 function typeStyles(type) {
@@ -18,6 +18,8 @@ function typeStyles(type) {
       return { bg: "bg-blue-50", fg: "text-blue-600", ring: "ring-blue-100" };
     case "sheet":
       return { bg: "bg-emerald-50", fg: "text-emerald-600", ring: "ring-emerald-100" };
+    case "powerpoint":
+      return { bg: "bg-orange-50", fg: "text-orange-600", ring: "ring-orange-100" };
     case "image":
       return { bg: "bg-violet-50", fg: "text-violet-600", ring: "ring-violet-100" };
     default:
