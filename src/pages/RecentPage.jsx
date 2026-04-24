@@ -1,58 +1,32 @@
 import { useMemo, useState } from "react";
 import { Clock, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { DocumentCard, DocumentRow, DocumentsToolbar, normalizeDocumentType } from "../components/documents";
-import { useDocumentsStore } from "../hooks/useDocumentsStore";
-
+import { DocumentCard, DocumentRow, DocumentsToolbar } from "../components/documents";
+import { usePaginatedMyDocuments } from "../hooks/usePaginatedMyDocuments";
 
 const RECENT_DAYS = 7;
-
-function isRecent(updatedAt) {
-  const d = updatedAt instanceof Date ? updatedAt : new Date(updatedAt);
-  if (Number.isNaN(d.getTime())) return false;
-  const cutoff = Date.now() - RECENT_DAYS * 24 * 60 * 60 * 1000;
-  return d.getTime() >= cutoff;
-}
+const RECENT_PAGE_LIMIT = 10;
 
 export default function RecentPage() {
   const navigate = useNavigate();
-  const { documents, toggleStar, removeDocument } = useDocumentsStore();
-
-  const [query, setQuery] = useState("");
-  const [filterType, setFilterType] = useState("all");
-  const [sortKey, setSortKey] = useState("updated_desc");
+  const {
+    query,
+    setQuery,
+    filterType,
+    setFilterType,
+    sortKey,
+    setSortKey,
+    documents,
+    loading,
+    error,
+    reload,
+    toggleStar,
+  } = usePaginatedMyDocuments({ recentDays: RECENT_DAYS, pageSize: RECENT_PAGE_LIMIT });
   const [viewMode, setViewMode] = useState("grid");
-  const [versionDoc, setVersionDoc] = useState(null);
 
-  const visibleDocs = useMemo(() => {
-    const q = query.trim().toLowerCase();
+  const visibleDocs = useMemo(() => documents, [documents]);
 
-    let out = documents.filter((d) => isRecent(d.updatedAt));
-
-    out = out.filter((d) => {
-      const type = normalizeDocumentType(d.type);
-      const matchesType = filterType === "all" ? true : type === filterType;
-      const matchesQuery = !q ? true : `${d.name} ${d.category ?? ""}`.toLowerCase().includes(q);
-      return matchesType && matchesQuery;
-    });
-
-    out = out.slice().sort((a, b) => {
-      if (sortKey === "name_asc") return a.name.localeCompare(b.name);
-      if (sortKey === "name_desc") return b.name.localeCompare(a.name);
-      if (sortKey === "size_desc") return (b.sizeBytes ?? 0) - (a.sizeBytes ?? 0);
-      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-    });
-
-    return out;
-  }, [documents, query, filterType, sortKey]);
-
-  function onAction(key, doc) {
-    if (key === "versions") {
-      setVersionDoc(doc);
-      return;
-    }
-    if (key === "trash") removeDocument(doc.id);
-  }
+  function onAction() {}
 
   return (
     <div className="flex w-full max-w-6xl flex-1 flex-col gap-5">
@@ -114,14 +88,36 @@ export default function RecentPage() {
         </div>
       )}
 
-      {visibleDocs.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-600 shadow-sm">
-          No recent documents in the last {RECENT_DAYS} days.
+      <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
+        <span>
+          Showing {visibleDocs.length} recent documents (max {RECENT_PAGE_LIMIT})
+        </span>
+        <span className="text-xs text-slate-500">Newest first</span>
+      </div>
+
+      {loading ? (
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-sm">
+          Loading documents...
         </div>
       ) : null}
 
-      {versionDoc ? (
-        <DocumentVersionHistory doc={versionDoc} onClose={() => setVersionDoc(null)} />
+      {error ? (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700 shadow-sm">
+          <div>{error}</div>
+          <button
+            type="button"
+            onClick={reload}
+            className="mt-2 rounded-lg border border-rose-300 px-3 py-1.5 text-rose-700"
+          >
+            Retry
+          </button>
+        </div>
+      ) : null}
+
+      {!loading && visibleDocs.length === 0 ? (
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-600 shadow-sm">
+          No recent documents in the last {RECENT_DAYS} days.
+        </div>
       ) : null}
     </div>
   );
