@@ -8,7 +8,7 @@ import RegenerateToast from "../components/ocr/RegenerateToast";
 import DeleteConfirmModal from "../components/ocr/DeleteConfirmModal";
 import EditDocumentModal from "../components/ocr/EditDocumentModal";
 import ErrorStateCard from "../components/ocr/ErrorStateCard";
-import { useOcrMockData } from "../hooks/useOcrMockData";
+import { useOcrState } from "../hooks/useOcrState";
 import { ocrService } from "../services/ocrService";
 
 /**
@@ -58,7 +58,7 @@ export default function OCRSummarization() {
     updateDocumentData, 
     resetDocumentData,
     setDocumentResults
-  } = useOcrMockData();
+  } = useOcrState();
 
   const MAX_FILE_SIZE =50000000; // 50MB
 
