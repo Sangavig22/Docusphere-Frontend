@@ -19,6 +19,19 @@ export const DASHBOARD_MENU = {
   ],
 };
 
+// Admin menu items
+export const ADMIN_MENU = {
+  primary: [
+    { label: "Dashboard", icon: LayoutDashboard, to: "/admin/dashboard" },
+    { label: "Team Management", icon: Users, to: "/teams" },
+    { label: "Merge Teams", icon: GitMerge, to: "/merge" },
+  ],
+  secondary: [
+    { label: "Settings", icon: Settings },
+    { label: "Help & Support", icon: HelpCircle },
+  ],
+};
+
 // Shared sidebar styles
 const SHARED_STYLES = {
   widthCollapsed: "w-20",
@@ -29,5 +42,6 @@ const SHARED_STYLES = {
 // Sidebar styles
 export const SIDEBAR_STYLES = {
   dashboard: SHARED_STYLES,
+  admin: SHARED_STYLES,
 };
 
