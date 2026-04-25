@@ -1,0 +1,228 @@
+import { useMemo, useState } from "react";
+import { toast } from "react-toastify";
+import {
+  downloadDocument,
+  duplicateDocument,
+  getTeams,
+  moveDocument,
+  permanentlyDeleteDocument,
+  renameDocument,
+  restoreDocumentApi,
+  trashDocument,
+} from "../services/documentActionsService";
+
+const EMPTY_MODAL = { open: false, type: "confirm", title: "", message: "" };
+
+function resolveApiId(doc) {
+  return doc?.apiId || doc?.documentId || doc?.fileId || doc?.id;
+}
+
+function isLocalOnlyDocument(doc) {
+  const apiId = resolveApiId(doc);
+  return typeof apiId === "string" && apiId.startsWith("doc_");
+}
+
+function getActionErrorMessage(error, fallback) {
+  const raw = error?.message || fallback;
+  if (/request failed \(404\)/i.test(raw)) {
+    return "Backend endpoint is missing or route is wrong (404).";
+  }
+  if (/failed to fetch|networkerror|network error/i.test(raw)) {
+    return "Cannot connect to backend. Check API server and VITE_API_BASE_URL.";
+  }
+  return raw;
+}
+
+export default function useDocumentActions({ onSuccess } = {}) {
+  const [modalState, setModalState] = useState(EMPTY_MODAL);
+  const [loadingAction, setLoadingAction] = useState(false);
+
+  async function handleRename(doc, nextName) {
+    const name = nextName?.trim();
+    if (!name) {
+      toast.warning("Document name is required.");
+      return;
+    }
+    const docId = resolveApiId(doc);
+    if (!docId) {
+      toast.error("Cannot rename: missing document id from backend data.");
+      return;
+    }
+    if (name === doc?.name?.trim()) {
+      toast.info("Name is unchanged.");
+      setModalState(EMPTY_MODAL);
+      return;
+    }
+
+    await renameDocument(docId, name);
+    toast.success("Document renamed successfully.");
+    setModalState(EMPTY_MODAL);
+    await onSuccess?.("rename", doc);
+  }
+
+  async function handleMove(doc, selectedDestination) {
+    const destination = selectedDestination === "personal" ? { destinationType: "personal" } : {
+      destinationType: "team",
+      teamId: selectedDestination.replace("team:", ""),
+    };
+
+    await moveDocument(resolveApiId(doc), destination);
+    toast.success("Document moved successfully.");
+    setModalState(EMPTY_MODAL);
+    await onSuccess?.("move", doc);
+  }
+
+  async function runWithGuard(action) {
+    setLoadingAction(true);
+    try {
+      await action();
+    } catch (error) {
+      toast.error(getActionErrorMessage(error, "Action failed. Please try again."));
+    } finally {
+      setLoadingAction(false);
+    }
+  }
+
+  async function openMoveModal(doc) {
+    let normalizedTeams = [];
+    try {
+      const payload = await getTeams();
+      const teams = Array.isArray(payload) ? payload : payload?.teams ?? [];
+      normalizedTeams = teams.map((team) => ({
+        value: `team:${team.id}`,
+        label: team.name,
+      }));
+    } catch {
+      toast.warning("Could not load teams. You can still move to personal space.");
+    }
+
+    setModalState({
+      open: true,
+      type: "select",
+      title: "Move document",
+      message: `Choose destination for "${doc.name}".`,
+      doc,
+      options: [{ value: "personal", label: "Personal space" }, ...normalizedTeams],
+      confirmText: "Move",
+    });
+  }
+
+  async function handleAction(actionKey, doc) {
+    if (doc?.isOwner === false) {
+      toast.warning("Only owner can manage this document.");
+      return;
+    }
+
+    if (actionKey === "rename") {
+      setModalState({
+        open: true,
+        type: "input",
+        title: "Rename document",
+        message: "Enter a new document name.",
+        value: doc.name,
+        doc,
+        confirmText: "Save",
+      });
+      return;
+    }
+
+    if (actionKey === "move") {
+      await openMoveModal(doc);
+      return;
+    }
+
+    if (actionKey === "duplicate") {
+      await runWithGuard(async () => {
+        await duplicateDocument(resolveApiId(doc));
+        toast.success("Document duplicated.");
+        await onSuccess?.("duplicate", doc);
+      });
+      return;
+    }
+
+    if (actionKey === "download") {
+      await runWithGuard(async () => {
+        await downloadDocument(resolveApiId(doc), doc.name);
+        toast.success("Download started.");
+      });
+      return;
+    }
+
+    if (actionKey === "trash") {
+      setModalState({
+        open: true,
+        type: "confirm",
+        title: "Move to Trash?",
+        message: `"${doc.name}" will be moved to recycle bin and can be restored later.`,
+        doc,
+        confirmText: "Move to Trash",
+        confirmVariant: "danger",
+      });
+      return;
+    }
+
+    if (actionKey === "restore") {
+      await runWithGuard(async () => {
+        await restoreDocumentApi(resolveApiId(doc));
+        toast.success("Document restored.");
+        await onSuccess?.("restore", doc);
+      });
+      return;
+    }
+
+    if (actionKey === "delete_permanently") {
+      setModalState({
+        open: true,
+        type: "confirm",
+        title: "Delete permanently?",
+        message: "This action cannot be undone.",
+        doc,
+        confirmText: "Delete permanently",
+        confirmVariant: "danger",
+      });
+    }
+  }
+
+  async function submitModal(value) {
+    const doc = modalState.doc;
+    if (!doc) return;
+
+    await runWithGuard(async () => {
+      if (modalState.type === "input") {
+        await handleRename(doc, value);
+        return;
+      }
+
+      if (modalState.type === "select") {
+        await handleMove(doc, value);
+        return;
+      }
+
+      if (modalState.confirmText === "Move to Trash") {
+        await trashDocument(resolveApiId(doc));
+        toast.success("Document moved to trash.");
+        setModalState(EMPTY_MODAL);
+        await onSuccess?.("trash", doc);
+        return;
+      }
+
+      if (modalState.confirmText === "Delete permanently") {
+        await permanentlyDeleteDocument(resolveApiId(doc));
+        toast.success("Document deleted permanently.");
+        setModalState(EMPTY_MODAL);
+        await onSuccess?.("delete_permanently", doc);
+      }
+    });
+  }
+
+  return useMemo(
+    () => ({
+      modalState,
+      loadingAction,
+      handleAction,
+      closeModal: () => setModalState(EMPTY_MODAL),
+      submitModal,
+    }),
+    [modalState, loadingAction],
+  );
+}

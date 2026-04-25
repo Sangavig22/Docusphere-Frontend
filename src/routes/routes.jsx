@@ -7,13 +7,14 @@ import DashboardSelector from "../pages/authentication/DashboardSelector";
 import ForgotPassword from "../pages/authentication/ForgotPassword";
 import ResetPassword from "../pages/authentication/ResetPassword";
 import Layout from "../components/Layout/Layout";
-import Dashboard from "../Pages/Dashboard";
+import Dashboard from "../pages/Dashboard";
 import UploadPage from "../pages/UploadPage";
 import AdminDashboardPage from "../pages/AdminDashboardPage.jsx";
 import OCRSummarization from "../pages/OCRSummarization";
 import MyDocumentsPage from "../pages/MyDocumentsPage";
 import StarredPage from "../pages/StarredPage";
 import RecentPage from "../pages/RecentPage";
+import TrashPage from "../pages/TrashPage";
 
 function withLayout(element, pageTitle, pageSubtitle, type = "dashboard") {
   return (
@@ -82,6 +83,10 @@ export const routes = [
   {
     path: "/recent",
     element: withLayout(<RecentPage />, "Recent", "Manage and organize all recently opened documents."),
+  },
+   {
+    path: "/trash",
+    element: withLayout(<TrashPage />, "Recycle Bin", "Restore or permanently delete documents."),
   },
 
   // Admin route

@@ -55,3 +55,29 @@ export function formatDocumentFormat(type, name) {
   return "FILE";
 }
 
+export function matchesDocumentFilter(type, filterType, name = "") {
+  const normalizedFilter = (filterType ?? "").toString().trim().toLowerCase();
+  if (!normalizedFilter || normalizedFilter === "all") return true;
+
+  const normalizedType = (type ?? "").toString().trim().toLowerCase();
+  const extensionFromName = (name ?? "").toString().toLowerCase().split(".").pop() || "";
+
+  if (normalizedFilter === "word") {
+    return ["doc", "docx", "word"].includes(normalizedType) || ["doc", "docx"].includes(extensionFromName);
+  }
+  if (normalizedFilter === "sheet") {
+    return ["xls", "xlsx", "csv", "sheet", "spreadsheet"].includes(normalizedType) ||
+      ["xls", "xlsx", "csv"].includes(extensionFromName);
+  }
+  if (normalizedFilter === "powerpoint") {
+    return ["ppt", "pptx", "powerpoint"].includes(normalizedType) ||
+      ["ppt", "pptx"].includes(extensionFromName);
+  }
+  if (normalizedFilter === "image") {
+    return ["png", "jpg", "jpeg", "gif", "webp", "image"].includes(normalizedType) ||
+      ["png", "jpg", "jpeg", "gif", "webp"].includes(extensionFromName);
+  }
+
+  return normalizedType === normalizedFilter || extensionFromName === normalizedFilter;
+}
+
