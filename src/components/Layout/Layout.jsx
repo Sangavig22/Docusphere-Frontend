@@ -1,44 +1,36 @@
 import { useState } from "react";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
-import authService from "../../services/authService";
 
-function Layout({
-  children,
-  pageTitle,
-  pageSubtitle,
+function Layout({ 
+  children, 
+  pageTitle, 
+  pageSubtitle, 
   user,
-  role = "user",
+  type = "dashboard" 
 }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  const storedUser =
-    typeof authService?.getUser === "function"
-      ? authService.getUser()
-      : (() => {
-          try {
-            const raw = localStorage.getItem("authUser");
-            return raw ? JSON.parse(raw) : null;
-          } catch {
-            return null;
-          }
-        })();
+  const defaultUser = {
+    name: "sample",
+    email: "sample@example.com",
+  };
 
-  const currentUser = user ?? storedUser ?? { name: "User", email: "" };
+  const currentUser = user ?? defaultUser;
 
   return (
     <div className="flex h-screen bg-gray-100">
       <Sidebar
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed((prev) => !prev)}
-        role={role}
+        type={type}
       />
       <div className="flex-1 flex flex-col">
         <Topbar
           user={currentUser}
           title={pageTitle}
           subtitle={pageSubtitle}
-          type={role}
+          type={type}
         />
         <main className="flex-1 p-6 overflow-auto">{children}</main>
       </div>
