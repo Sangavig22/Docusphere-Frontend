@@ -90,7 +90,8 @@ export const routes = [
     element: withLayout(
       <AdminDashboardPage />,
       "Dashboard",
-      "Manage your platform with ease"
+      "Manage your platform with ease",
+      "admin"
     ),
   },
 ];

@@ -1,68 +1,105 @@
-import React from "react";
-import AdminStatCard from "../components/ui/AdminStatCard";
+import React, { useState, useEffect } from "react";
+import StatCard from "../components/ui/StatCard";
 import AdminChartLine from "../components/ui/ChartLine";
 import AdminChartBar from "../components/ui/ChartBar";
+import { AdminDashboardService } from "../services/AdminDashboardService";
+import { DASHBOARD_CONFIG } from "../config/dashboardsConfig";
 
-const DashboardPage = () => {
+function AdminDashboardPage() {
+  const [stats, setStats] = useState(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await AdminDashboardService.getDashboardStats();
+        
+        // Handle different possible response structures depending on backend format
+        const statsData = response?.data?.data || response?.data || response;
+        
+        if (statsData) {
+          setStats(statsData);
+        }
+      } catch (error) {
+        console.error("Failed to fetch admin stats:", error);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  if (!stats) return null;
+
+  const config = DASHBOARD_CONFIG.admin; // ✅ ADD THIS
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="space-y-8">
 
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <AdminStatCard
-          title="Total Users"
-          value="2,847"
-          hint="+12% from last month"
-          variant="users"
-          icon="users"
-        />
-        <AdminStatCard
-          title="Total Documents"
-          value="14,562"
-          hint="+8% from last month"
-          variant="documents"
-          icon="document"
-        />
-        <AdminStatCard
-          title="Active Session"
-          value="268"
-          hint="Currently online"
-          variant="sessions"
-        />
-        <AdminStatCard
-          title="Total Teams"
-          value="01"
-          hint="+2% from last month"
-          variant="teams"
-          icon="teams"
-        />
-      </section>
+      {/* Stat Cards Section - Back at the top */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {config.statCards.map((card) => {
+          const growth = stats[card.growthKey];
+          const growthDisplay = growth !== undefined && growth !== null
+            ? `${growth > 0 ? '+' : ''}${Math.round(growth)}%`
+            : '+0%';
 
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-0">
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col min-h-[340px] transition-colors duration-500">
-          <h3 className="text-base font-semibold text-slate-800 dark:text-slate-100 m-0 mb-1">
-            Monthly Uploads
-          </h3>
-          <p className="text-slate-500 dark:text-slate-400 text-sm m-0 mb-4">
-            Document upload trends over the year
-          </p>
-          <div className="flex-1 min-h-[280px]">
-            <AdminChartLine />
+          return (
+            <StatCard
+              key={card.title}
+              title={card.title}
+              value={
+                stats[card.dataKey]?.toLocaleString?.() ??
+                stats[card.dataKey] ??
+                0
+              }
+              subtitle={
+                card.subtitle ||
+                `${growthDisplay} from last month`
+              }
+              growth={growth || null}
+              variant="admin"
+              type={card.type}
+            />
+          );
+        })}
+      </div>
+
+      {/* Charts Section - Now below Stats */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        {/* Active Team Chart (Top Active Team) */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col min-h-[400px]">
+          <div className="mb-6">
+            <h3 className="text-lg font-bold text-slate-800">
+              {config.charts[1].title}
+            </h3>
+            <p className="text-slate-500 text-sm">
+              {config.charts[1].description}
+            </p>
           </div>
-        </div>
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col min-h-[340px] transition-colors duration-500">
-          <h3 className="text-base font-semibold text-slate-800 dark:text-slate-100 m-0 mb-1">
-            Active Team
-          </h3>
-          <p className="text-slate-500 dark:text-slate-400 text-sm m-0 mb-4">
-            Daily active users this week
-          </p>
-          <div className="flex-1 min-h-[280px]">
+          <div className="flex-1 min-h-[300px]">
             <AdminChartBar />
           </div>
         </div>
-      </section>
+
+        {/* Monthly Uploads Chart */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col min-h-[400px]">
+          <div className="mb-6">
+            <h3 className="text-lg font-bold text-slate-800">
+              {config.charts[0].title}
+            </h3>
+            <p className="text-slate-500 text-sm">
+              {config.charts[0].description}
+            </p>
+          </div>
+          <div className="flex-1 min-h-[300px]">
+            <AdminChartLine />
+          </div>
+        </div>
+
+      </div>
+
     </div>
   );
-};
+}
 
-export default DashboardPage;
+export default AdminDashboardPage;
