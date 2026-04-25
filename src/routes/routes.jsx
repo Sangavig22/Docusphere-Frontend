@@ -7,7 +7,7 @@ import DashboardSelector from "../pages/authentication/DashboardSelector";
 import ForgotPassword from "../pages/authentication/ForgotPassword";
 import ResetPassword from "../pages/authentication/ResetPassword";
 import Layout from "../components/Layout/Layout";
-import Dashboard from "../pages/Dashboard";
+import Dashboard from "../Pages/Dashboard";
 import UploadPage from "../pages/UploadPage";
 import AdminDashboardPage from "../pages/AdminDashboardPage.jsx";
 import OCRSummarization from "../pages/OCRSummarization";

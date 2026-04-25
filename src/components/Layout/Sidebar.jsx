@@ -8,7 +8,7 @@ function Sidebar({ collapsed, onToggle, role = "user" }) {
   // normalize incoming role
   const normalizedRole = role === "admin" ? "admin" : "user";
 
-  const menu = DASHBOARD_MENU;
+  const menu = normalizedRole === "admin" ? ADMIN_MENU : DASHBOARD_MENU;
   const styles = SIDEBAR_STYLES?.[normalizedRole] ?? {
   widthCollapsed: "w-20",
   widthExpanded: "w-64",
@@ -80,30 +80,13 @@ const colors = LAYOUT_COLORS?.[normalizedRole] ?? {
               const Icon = item.icon;
               return (
                 <li key={item.label}>
-                  {item.to ? (
-                    <NavLink
-                      to={item.to}
-                      end
-                      title={collapsed ? item.label : ""}
-                      className={({ isActive }) =>
-                        `w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          isActive ? colors.sidebarActiveLink : `text-slate-600 ${colors.sidebarHoverLink}`
-                        }`
-                      }
-                    >
-                      <Icon size={18} />
-                      {!collapsed && <span>{item.label}</span>}
-                    </NavLink>
-                  ) : (
-                    <button
-                      type="button"
-                      title={collapsed ? item.label : ""}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 ${colors.sidebarHoverLink} transition-colors`}
-                    >
-                      <Icon size={18} />
-                      {!collapsed && <span>{item.label}</span>}
-                    </button>
-                  )}
+                  <button
+                    title={collapsed ? item.label : ""}
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 ${colors.sidebarHoverLink} transition-colors`}
+                  >
+                    <Icon size={18} />
+                    {!collapsed && <span>{item.label}</span>}
+                  </button>
                 </li>
               );
             })}
