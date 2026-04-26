@@ -40,6 +40,15 @@ function buildApiUrl(pathWithOptionalQuery) {
 function normalizeDoc(raw) {
   if (!raw) return null;
 
+  const statusValue = String(raw.status ?? raw.documentStatus ?? "").toLowerCase();
+  const deletedAt = raw.deletedAt ?? raw.deleted_at ?? raw.trashedAt ?? raw.trashed_at ?? null;
+  const isTrashed =
+    Boolean(raw.trashed ?? raw.deleted ?? raw.inTrash ?? raw.isTrashed ?? raw.isDeleted) ||
+    Boolean(deletedAt) ||
+    statusValue === "trash" ||
+    statusValue === "trashed" ||
+    statusValue === "deleted";
+
   return {
     id: raw.id ?? raw._id ?? raw.documentId,
     name: raw.name ?? raw.fileName ?? "Untitled",
@@ -48,6 +57,8 @@ function normalizeDoc(raw) {
     updatedAt: raw.updatedAt ?? raw.updated_at ?? raw.modifiedAt ?? new Date().toISOString(),
     category: raw.category ?? raw.folder ?? "",
     starred: Boolean(raw.starred),
+    isTrashed,
+    deletedAt,
   };
 }
 
@@ -156,13 +167,25 @@ export async function fetchMyDocuments({
   if (typeof starred === "boolean") params.set("starred", String(starred));
 
   // Backend currently validates these directly. Include only when explicitly set.
-  if (scope && scope !== "all") params.set("scope", scope);
+  if (scope && scope !== "all") {
+    params.set("scope", scope);
+    if (scope === "trash") {
+      // Send common trash filters to support different backend contracts.
+      params.set("trashed", "true");
+      params.set("deleted", "true");
+      params.set("inTrash", "true");
+    }
+  }
   if (Number.isFinite(Number(recentDays)) && Number(recentDays) > 0) {
     params.set("recentDays", String(Number(recentDays)));
   }
 
   const endpoint = DOCUMENTS_ENDPOINT.startsWith("/") ? DOCUMENTS_ENDPOINT : `/${DOCUMENTS_ENDPOINT}`;
-  const url = buildApiUrl(`${endpoint}?${params.toString()}`);
+  const listPath =
+    scope === "trash"
+      ? `/api/documents/trash?page=${Math.max(0, page - 1)}&size=${pageSize}`
+      : `${endpoint}?${params.toString()}`;
+  const url = buildApiUrl(listPath);
   const response = await fetch(url, {
     signal,
     headers: {
@@ -180,7 +203,20 @@ export async function fetchMyDocuments({
   }
 
   const payload = await response.json();
-  return parseListPayload(payload);
+  const parsed = parseListPayload(payload);
+
+  if (scope === "trash") {
+    return {
+      ...parsed,
+      documents: parsed.documents.filter((doc) => doc.isTrashed),
+    };
+  }
+
+  // Keep active lists clean if backend returns mixed data.
+  return {
+    ...parsed,
+    documents: parsed.documents.filter((doc) => !doc.isTrashed),
+  };
 }
 
 export async function starDocument(documentId, { userId } = {}) {

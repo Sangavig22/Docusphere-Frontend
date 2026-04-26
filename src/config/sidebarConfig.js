@@ -13,7 +13,7 @@ export const DASHBOARD_MENU = {
     { label: "OCR", icon: ScanText, to: "/ocr" },
   ],
   secondary: [
-    { label: "Recycle bin", icon: RecycleIcon },
+    { label: "Recycle bin", icon: RecycleIcon, to: "/trash" },
     { label: "Settings", icon: Settings },
     { label: "Help & Support", icon: HelpCircle },
   ],

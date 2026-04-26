@@ -30,6 +30,8 @@ export default function DocumentRow({
   doc,
   onToggleStar,
   onAction,
+  actions,
+  disableActions = false,
   menuPortal = false,
   menuPushContent = false,
   menuClassName = "",
@@ -69,6 +71,7 @@ export default function DocumentRow({
 
       <button
         type="button"
+        disabled={disableActions}
         className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-50 hover:text-amber-500"
         aria-label={doc.starred ? "Unstar document" : "Star document"}
         onClick={() => onToggleStar?.(doc.id)}
@@ -80,6 +83,7 @@ export default function DocumentRow({
         <button
           ref={menuButtonRef}
           type="button"
+          disabled={disableActions}
           className={[
             "inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors",
             menuOpen ? "bg-slate-100 text-slate-700" : "text-slate-400 hover:bg-slate-50 hover:text-slate-700",
@@ -105,6 +109,8 @@ export default function DocumentRow({
           <DocumentActionsMenu
             doc={doc}
             dense={denseMenu}
+            actions={actions}
+            disabled={disableActions}
             onAction={(key, d) => {
               setMenuOpen(false);
               onAction?.(key, d);
