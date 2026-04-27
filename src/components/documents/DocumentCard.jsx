@@ -7,7 +7,7 @@ import {
   formatDocumentFormat,
   formatRelativeTime,
   normalizeDocumentType,
-} from "../../utils/documents/documentUtils.js";
+} from "../../utils/documentUtils.js";
 
 
 function typeStyles(type) {
@@ -18,6 +18,8 @@ function typeStyles(type) {
       return { bg: "bg-blue-50", fg: "text-blue-600", ring: "ring-blue-100" };
     case "sheet":
       return { bg: "bg-emerald-50", fg: "text-emerald-600", ring: "ring-emerald-100" };
+    case "powerpoint":
+      return { bg: "bg-orange-50", fg: "text-orange-600", ring: "ring-orange-100" };
     case "image":
       return { bg: "bg-violet-50", fg: "text-violet-600", ring: "ring-violet-100" };
     default:
@@ -29,6 +31,8 @@ export default function DocumentCard({
   doc,
   onToggleStar,
   onAction,
+  actions,
+  disableActions = false,
   menuPortal = false,
   menuPushContent = false,
   menuClassName = "",
@@ -50,6 +54,7 @@ export default function DocumentCard({
         <div className="flex shrink-0 items-center gap-1">
           <button
             type="button"
+            disabled={disableActions}
             className="inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-50 hover:text-amber-500"
             aria-label={doc.starred ? "Unstar document" : "Star document"}
             onClick={() => onToggleStar?.(doc.id)}
@@ -61,6 +66,7 @@ export default function DocumentCard({
             <button
               ref={menuButtonRef}
               type="button"
+              disabled={disableActions}
               className={[
                 "inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors",
                 menuOpen ? "bg-slate-100 text-slate-700" : "text-slate-400 hover:bg-slate-50 hover:text-slate-700",
@@ -86,6 +92,8 @@ export default function DocumentCard({
               <DocumentActionsMenu
                 doc={doc}
                 dense={denseMenu}
+                actions={actions}
+                disabled={disableActions}
                 onAction={(key, d) => {
                   setMenuOpen(false);
                   onAction?.(key, d);
