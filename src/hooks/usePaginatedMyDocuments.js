@@ -5,7 +5,7 @@ import {
   DEFAULT_DOCUMENTS_SORT,
 } from "../constants/documents";
 import { fetchMyDocuments, starDocument, unstarDocument } from "../services/documentsService";
-import { matchesDocumentFilter } from "../utils/documents/documentUtils.js";
+import { matchesDocumentFilter } from "../utils/documentUtils.js";
 
 export function usePaginatedMyDocuments(options = {}) {
   const { starred, recentDays, scope, pageSize = DOCUMENTS_PAGE_SIZE } = options;
