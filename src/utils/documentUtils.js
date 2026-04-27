@@ -30,16 +30,6 @@ export function formatRelativeTime(input) {
 
 export function normalizeDocumentType(type) {
   const raw = (type ?? "").toString().trim().toLowerCase();
-<<<<<<< HEAD
-  const t = raw.includes("/") ? raw.split("/").pop() : raw; // handle MIME like image/png
-  if (t === "pdf") return "pdf";
-  if (t === "doc" || t === "docx" || t === "word") return "word";
-  if (t === "xls" || t === "xlsx" || t === "csv" || t === "sheet" || t === "spreadsheet") return "sheet";
-  if (t === "png" || t === "jpg" || t === "jpeg" || t === "gif" || t === "webp" || t === "image") return "image";
-  return "other";
-}
-
-=======
   const rawNoParams = raw.split(";")[0].trim();
   const subtypeOrType = rawNoParams.includes("/") ? rawNoParams.split("/").pop() : rawNoParams;
   const t = subtypeOrType.split("+")[0].replace(/^\.+/, "");
@@ -121,8 +111,6 @@ export function matchesDocumentFilter(docType, filterType, docName = "") {
 
   return false;
 }
-
->>>>>>> origin/develop
 export function formatDocumentFormat(type, name) {
   const rawName = (name ?? "").toString().trim();
   const extensionFromName = rawName.includes(".") ? rawName.split(".").pop()?.toLowerCase() : "";
@@ -135,41 +123,8 @@ export function formatDocumentFormat(type, name) {
   const normalized = normalizeDocumentType(type);
   if (normalized === "word") return "DOC";
   if (normalized === "sheet") return "XLS";
-<<<<<<< HEAD
-=======
   if (normalized === "powerpoint") return "PPT";
->>>>>>> origin/develop
   if (normalized === "image") return "IMG";
   if (normalized === "pdf") return "PDF";
   return "FILE";
 }
-
-<<<<<<< HEAD
-export function matchesDocumentFilter(type, filterType, name = "") {
-  const normalizedFilter = (filterType ?? "").toString().trim().toLowerCase();
-  if (!normalizedFilter || normalizedFilter === "all") return true;
-
-  const normalizedType = (type ?? "").toString().trim().toLowerCase();
-  const extensionFromName = (name ?? "").toString().toLowerCase().split(".").pop() || "";
-
-  if (normalizedFilter === "word") {
-    return ["doc", "docx", "word"].includes(normalizedType) || ["doc", "docx"].includes(extensionFromName);
-  }
-  if (normalizedFilter === "sheet") {
-    return ["xls", "xlsx", "csv", "sheet", "spreadsheet"].includes(normalizedType) ||
-      ["xls", "xlsx", "csv"].includes(extensionFromName);
-  }
-  if (normalizedFilter === "powerpoint") {
-    return ["ppt", "pptx", "powerpoint"].includes(normalizedType) ||
-      ["ppt", "pptx"].includes(extensionFromName);
-  }
-  if (normalizedFilter === "image") {
-    return ["png", "jpg", "jpeg", "gif", "webp", "image"].includes(normalizedType) ||
-      ["png", "jpg", "jpeg", "gif", "webp"].includes(extensionFromName);
-  }
-
-  return normalizedType === normalizedFilter || extensionFromName === normalizedFilter;
-}
-
-=======
->>>>>>> origin/develop
