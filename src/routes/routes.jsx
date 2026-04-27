@@ -15,6 +15,9 @@ import MyDocumentsPage from "../pages/MyDocumentsPage";
 import StarredPage from "../pages/StarredPage";
 import RecentPage from "../pages/RecentPage";
 import TrashPage from "../pages/TrashPage";
+import Team from "../pages/Team.jsx";
+import TeamNew from "../pages/TeamNew.jsx";
+import TeamDetail from "../pages/TeamDetail.jsx";
 
 function withLayout(element, pageTitle, pageSubtitle, type = "dashboard") {
   return (
@@ -87,6 +90,18 @@ export const routes = [
    {
     path: "/trash",
     element: withLayout(<TrashPage />, "Recycle Bin", "Restore or permanently delete documents."),
+  },
+  {
+    path: "/team",
+    element: withLayout(<Team />, "Teams", "Collaborate with your team members"),
+  },
+  {
+    path: "/team/new",
+    element: withLayout(<TeamNew />, "New Team", "Create a new collaborative workspace"),
+  },
+  {
+    path: "/team/:teamId",
+    element: withLayout(<TeamDetail />, "Team Details", "Manage team documents and members"),
   },
 
   // Admin route
