@@ -1,6 +1,48 @@
 // Dashboard configuration (Admin + User)
 
 export const DASHBOARD_CONFIG = {
+  admin: {
+    statCards: [
+      {
+        title: "Total Users",
+        dataKey: "totalUsers",
+        growthKey: "userGrowth",
+        type: "users",
+      },
+      {
+        title: "Total Documents",
+        dataKey: "totalDocuments",
+        growthKey: "documentGrowth",
+        type: "documents",
+      },
+      {
+        title: "Active Session",
+        dataKey: "activeSessions",
+        subtitle: "Currently online",
+        type: "sessions",
+      },
+      {
+        title: "Total Teams",
+        dataKey: "totalTeams",
+        growthKey: "teamGrowth",
+        type: "teams",
+      },
+    ],
+
+    charts: [
+      {
+        title: "Monthly Uploads",
+        description: "Document upload trends over the year",
+        component: "AdminChartLine",
+      },
+      {
+        title: "Active Team",
+        description: "Daily active users this week",
+        component: "AdminChartBar",
+      },
+    ],
+  },
+
   user: {
     statCards: [
       {
