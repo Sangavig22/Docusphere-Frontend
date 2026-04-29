@@ -7,6 +7,7 @@ const UPLOAD_CHUNK_ENDPOINT = "/documents/upload-chunk";
 function buildAuthHeaders(extraHeaders = {}) {
   const token = authService.getToken();
   return {
+    //add authorization header
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...extraHeaders,
   };
