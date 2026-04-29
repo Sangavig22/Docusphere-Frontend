@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { DocumentCard, DocumentRow, normalizeDocumentType } from "../documents";
+import { DEFAULT_DOCUMENT_ACTIONS } from "../documents/DocumentActionsMenu";
 
 const resolveUploader = (doc) => {
   if (typeof doc?.uploadedBy === "string" && doc.uploadedBy.trim()) return doc.uploadedBy.trim();
@@ -50,8 +51,20 @@ export default function DocumentsList({
   filterType = "all",
   sortKey = "name_asc",
   actionKeys,
+  actions,
   onDelete,
+  onAction,
+  onToggleStar,
+  showStar = true,
 }) {
+  const resolvedActions = useMemo(() => {
+    // If actions prop is provided directly, use it; otherwise resolve from actionKeys
+    if (actions && Array.isArray(actions) && actions.length > 0) {
+      return actions;
+    }
+    return DEFAULT_DOCUMENT_ACTIONS;
+  }, [actions]);
+
   const visibleDocs = useMemo(() => {
     const normalized = documents.map(normalizeDoc);
     const q = searchQuery.trim().toLowerCase();
@@ -84,13 +97,19 @@ export default function DocumentsList({
   }
 
   const handleAction = (key, doc) => {
+    // If parent provided a handler, use it (this covers rename/duplicate/move/download/etc.)
+    if (typeof onAction === "function") {
+      onAction(key, doc);
+      return;
+    }
+
     if (key === "trash" && onDelete) {
       onDelete(doc);
+      return;
     }
-    // Handle other actions if needed
-  };
 
-  const onToggleStar = () => {};
+    // Fallback: no-op for actions not handled here
+  };
 
   if (viewMode === "list") {
     return (
@@ -101,8 +120,8 @@ export default function DocumentsList({
             doc={doc}
             onAction={(key) => handleAction(key, doc)}
             onToggleStar={onToggleStar}
-            actionKeys={actionKeys}
-          />
+            actions={resolvedActions}
+            disableActions={doc.isOwner === false}            showStar={showStar}          />
         ))}
       </div>
     );
@@ -116,8 +135,8 @@ export default function DocumentsList({
           doc={doc}
           onAction={(key) => handleAction(key, doc)}
           onToggleStar={onToggleStar}
-          actionKeys={actionKeys}
-        />
+          actions={resolvedActions}
+          disableActions={doc.isOwner === false}          showStar={showStar}        />
       ))}
     </div>
   );

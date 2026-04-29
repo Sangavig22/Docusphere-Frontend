@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { X } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -7,19 +7,38 @@ import "react-toastify/dist/ReactToastify.css";
 import { EmailInput, RoleSelector } from "../components/Team/FormFields";
 import { teamsApi } from "../services/teamsApi";
 
-// roles
-const baseRoleOptions = [
+// roles for regular users (no Leader option)
+const userRoleOptions = [
+  { name: "Member", value: "MEMBER", description: "Can upload and edit own documents" },
+  { name: "Manager", value: "MANAGER", description: "Can upload, edit, and view all documents" },
+];
+
+// roles for admin (includes Leader)
+const adminRoleOptions = [
+  { name: "Leader", value: "LEADER", description: "Full administrative access to the team" },
   { name: "Member", value: "MEMBER", description: "Can upload and edit own documents" },
   { name: "Manager", value: "MANAGER", description: "Can upload, edit, and view all documents" },
 ];
 
 function TeamNew({ backPath = "/team" }) {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Detect if we're on the admin route
+  const isAdmin = location.pathname.startsWith("/admin");
+  const resolvedBackPath = isAdmin ? "/admin/teams" : backPath;
+  const baseRoles = isAdmin ? adminRoleOptions : userRoleOptions;
 
   const [teamName, setTeamName] = useState("");
   const [currentEmail, setCurrentEmail] = useState("");
   const [currentRole, setCurrentRole] = useState("MEMBER");
   const [members, setMembers] = useState([]);
+
+  // Only one leader allowed — hide LEADER option once assigned
+  const hasLeader = members.some((m) => m.role === "LEADER");
+  const roleOptions = hasLeader
+    ? baseRoles.filter((r) => r.value !== "LEADER")
+    : baseRoles;
 
   const isValidEmail = (email) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -49,12 +68,23 @@ function TeamNew({ backPath = "/team" }) {
       return;
     }
 
+    // Prevent adding a second leader
+    if (currentRole === "LEADER" && hasLeader) {
+      toast.error("Only one leader allowed per team");
+      return;
+    }
+
     setMembers((prev) => [...prev, { email, role: currentRole }]);
     setCurrentEmail("");
+    // Reset role selector to MEMBER after adding a leader
+    if (currentRole === "LEADER") setCurrentRole("MEMBER");
   };
 
   const removeMember = (index) => {
+    const removed = members[index];
     setMembers((prev) => prev.filter((_, i) => i !== index));
+    // If leader was removed, reset role selector
+    if (removed?.role === "LEADER") setCurrentRole("MEMBER");
   };
 
   // submit
@@ -67,14 +97,24 @@ function TeamNew({ backPath = "/team" }) {
     }
 
     try {
-      await teamsApi.createTeam({
-        name: teamName.trim(),
-        members,
-      });
+      if (isAdmin) {
+        // Admin endpoint — roles assigned by admin are sent as-is (LEADER, MEMBER, MANAGER)
+        const adminPayload = {
+          name: teamName.trim(),
+          additionalMembers: members.map(m => ({ email: m.email, role: m.role })),
+        };
+        await teamsApi.createAdminTeam(adminPayload);
+      } else {
+        // Regular user endpoint — POST /api/teams
+        await teamsApi.createTeam({
+          name: teamName.trim(),
+          members,
+        });
+      }
 
       toast.success("Team created!");
 
-      setTimeout(() => navigate(backPath), 1000);
+      setTimeout(() => navigate(resolvedBackPath), 1000);
     } catch (err) {
       if (err?.status === 409 || err?.code === "TEAM_ALREADY_EXISTS") {
         toast.error("A team with this name already exists. Please choose another name.");
@@ -134,7 +174,7 @@ function TeamNew({ backPath = "/team" }) {
                   <RoleSelector
                     role={currentRole}
                     setRole={setCurrentRole}
-                    roles={baseRoleOptions}
+                    roles={roleOptions}
                   />
                 </div>
 
@@ -180,7 +220,7 @@ function TeamNew({ backPath = "/team" }) {
             <div className="flex justify-end gap-3 pt-4">
               <button
                 type="button"
-                onClick={() => navigate(backPath)}
+                onClick={() => navigate(resolvedBackPath)}
                 className="px-4 py-2 text-sm text-slate-600"
               >
                 Cancel
