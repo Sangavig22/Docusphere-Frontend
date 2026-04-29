@@ -1,5 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { teamsApi } from '../services/teamsApi';
+import { starDocument, unstarDocument } from '../services/documentsService';
+import { toast } from 'react-toastify';
+import authService from '../services/authService';
 
 /**
  * Fetches documents for a specific team.
@@ -9,6 +12,7 @@ export function useTeamDocuments(teamId) {
   const [documents, setDocuments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const documentsRef = useRef([]);
 
   const fetchDocuments = useCallback(async () => {
     if (!teamId) return;
@@ -20,11 +24,19 @@ export function useTeamDocuments(teamId) {
       const data = response?.data ?? response;
       
       const list = Array.isArray(data) ? data : (data?.items || data?.documents || []);
-      setDocuments(list);
+      const currentUserId = authService.getUserId();
+      // Mark each document with isOwner flag for action menu enable/disable
+      const enrichedList = list.map(doc => ({
+        ...doc,
+        isOwner: String(doc.ownerId || doc.userId) === String(currentUserId),
+      }));
+      setDocuments(enrichedList);
+      documentsRef.current = enrichedList;
     } catch (err) {
       console.error('[useTeamDocuments] fetch error:', err);
       setError(err.message || 'Failed to load team documents');
       setDocuments([]);
+      documentsRef.current = [];
     } finally {
       setIsLoading(false);
     }
@@ -44,5 +56,30 @@ export function useTeamDocuments(teamId) {
     }
   }, [teamId]);
 
-  return { documents, isLoading, error, refetch: fetchDocuments, deleteDocument };
+  const toggleStar = useCallback(
+    async (id) => {
+      const currentDoc = documentsRef.current.find((d) => d.id === id);
+      const prevStarred = Boolean(currentDoc?.starred);
+      const nextStarred = !prevStarred;
+
+      // Optimistic update for immediate UI response.
+      setDocuments((prev) => prev.map((doc) => (doc.id === id ? { ...doc, starred: nextStarred } : doc)));
+
+      try {
+        if (nextStarred) await starDocument(id);
+        else await unstarDocument(id);
+        await fetchDocuments();
+      } catch (err) {
+        // Revert on failure.
+        setDocuments((prev) =>
+          prev.map((doc) => (doc.id === id ? { ...doc, starred: prevStarred } : doc)),
+        );
+        setError(err instanceof Error ? err.message : "Unable to update star.");
+        toast.error("Failed to update star status");
+      }
+    },
+    [fetchDocuments],
+  );
+
+  return { documents, isLoading, error, refetch: fetchDocuments, deleteDocument, toggleStar };
 }

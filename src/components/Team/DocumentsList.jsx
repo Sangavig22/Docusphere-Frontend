@@ -1,4 +1,16 @@
 import { useMemo } from "react";
+import {
+  Download,
+  Pencil,
+  FolderInput,
+  Copy,
+  RotateCcw,
+  Trash2,
+  Eye,
+  Share2,
+  Lock,
+  Clock,
+} from "lucide-react";
 import { DocumentCard, DocumentRow, normalizeDocumentType } from "../documents";
 
 const resolveUploader = (doc) => {
@@ -43,6 +55,29 @@ const normalizeDoc = (doc, index) => {
   };
 };
 
+// Map action keys to action objects with icons
+const resolveActions = (actionKeys) => {
+  if (!actionKeys || !Array.isArray(actionKeys)) {
+    return [];
+  }
+
+  const actionMap = {
+    rename: { key: "rename", label: "Rename", icon: Pencil },
+    move: { key: "move", label: "Move to", icon: FolderInput },
+    duplicate: { key: "duplicate", label: "Duplicate", icon: Copy },
+    download: { key: "download", label: "Download", icon: Download },
+    trash: { key: "trash", label: "Move to trash", icon: Trash2, danger: true },
+    restore: { key: "restore", label: "Restore", icon: RotateCcw },
+    delete_permanently: { key: "delete_permanently", label: "Delete permanently", icon: Trash2, danger: true },
+    preview: { key: "preview", label: "Preview", icon: Eye },
+    share: { key: "share", label: "Share", icon: Share2 },
+    secure: { key: "secure", label: "Secure", icon: Lock },
+    versions: { key: "versions", label: "Versions", icon: Clock },
+  };
+
+  return actionKeys.map((key) => actionMap[key] || { key, label: key, icon: () => null }).filter(Boolean);
+};
+
 export default function DocumentsList({
   documents = [],
   viewMode = "grid",
@@ -50,8 +85,20 @@ export default function DocumentsList({
   filterType = "all",
   sortKey = "name_asc",
   actionKeys,
+  actions,
   onDelete,
+  onAction,
+  onToggleStar,
+  showStar = true,
 }) {
+  const resolvedActions = useMemo(() => {
+    // If actions prop is provided directly, use it; otherwise resolve from actionKeys
+    if (actions && Array.isArray(actions) && actions.length > 0) {
+      return actions;
+    }
+    return resolveActions(actionKeys);
+  }, [actions, actionKeys]);
+
   const visibleDocs = useMemo(() => {
     const normalized = documents.map(normalizeDoc);
     const q = searchQuery.trim().toLowerCase();
@@ -84,13 +131,19 @@ export default function DocumentsList({
   }
 
   const handleAction = (key, doc) => {
+    // If parent provided a handler, use it (this covers rename/duplicate/move/download/etc.)
+    if (typeof onAction === "function") {
+      onAction(key, doc);
+      return;
+    }
+
     if (key === "trash" && onDelete) {
       onDelete(doc);
+      return;
     }
-    // Handle other actions if needed
-  };
 
-  const onToggleStar = () => {};
+    // Fallback: no-op for actions not handled here
+  };
 
   if (viewMode === "list") {
     return (
@@ -101,8 +154,8 @@ export default function DocumentsList({
             doc={doc}
             onAction={(key) => handleAction(key, doc)}
             onToggleStar={onToggleStar}
-            actionKeys={actionKeys}
-          />
+            actions={resolvedActions}
+            disableActions={doc.isOwner === false}            showStar={showStar}          />
         ))}
       </div>
     );
@@ -116,8 +169,8 @@ export default function DocumentsList({
           doc={doc}
           onAction={(key) => handleAction(key, doc)}
           onToggleStar={onToggleStar}
-          actionKeys={actionKeys}
-        />
+          actions={resolvedActions}
+          disableActions={doc.isOwner === false}          showStar={showStar}        />
       ))}
     </div>
   );

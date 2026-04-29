@@ -8,8 +8,9 @@ import MembersTable from "../components/Team/MembersTable";
 import DocumentsList from "../components/Team/DocumentsList";
 import AddMemberModal from "../components/Team/AddMemberModal";
 import DocumentsToolbar from "../components/documents/DocumentsToolbar";
-import ChangeRoleModal from "../components/Team/ChangeRoleModal";
-import ConfirmDelete from "../components/Team/ConfirmDelete";
+import DocumentActionModal from "../components/documents/DocumentActionModal";
+import { DEFAULT_DOCUMENT_ACTIONS } from "../components/documents/DocumentActionsMenu";
+import useDocumentActions from "../hooks/useDocumentActions";
 import { ChevronLeft } from "lucide-react";
 import authService from "../services/authService";
 
@@ -20,7 +21,10 @@ function TeamDetail() {
   const { teamId } = useParams();
   const navigate = useNavigate();
   const { teamData, members, isLoading: isTeamLoading, error: teamError, addMember, deleteMember, updateMemberRole, transferLeader } = useTeamMemberDetails(teamId);
-  const { documents, isLoading: isDocsLoading, error: docsError, deleteDocument, refetch: refetchDocs } = useTeamDocuments(teamId);
+  const { documents, isLoading: isDocsLoading, error: docsError, deleteDocument, refetch: refetchDocs, toggleStar } = useTeamDocuments(teamId);
+
+  // Document action handlers (rename, duplicate, move, download, trash, etc.)
+  const { modalState, loadingAction, handleAction, closeModal, submitModal } = useDocumentActions({ onSuccess: refetchDocs });
 
   const isLoading = isTeamLoading || isDocsLoading;
   const error = teamError || docsError;
@@ -136,7 +140,7 @@ function TeamDetail() {
                viewMode={toolbar.view}
               onViewModeChange={(v) => updateToolbar("view", v)}
               Sort={true}
-              Filter={true}
+              Filter={false}
             />
           </div>
 
@@ -147,8 +151,23 @@ function TeamDetail() {
             filterType={toolbar.filter}
             sortKey={toolbar.sort}
             onDelete={handleDocumentDelete}
-            // User gets all actions
-            actionKeys={["preview", "download", "share", "rename", "move", "duplicate", "secure", "versions", "trash"]}
+            onAction={handleAction}
+            onToggleStar={toggleStar}
+            actions={DEFAULT_DOCUMENT_ACTIONS}
+            showStar={false}
+          />
+          <DocumentActionModal
+            open={modalState.open}
+            type={modalState.type}
+            title={modalState.title}
+            message={modalState.message}
+            value={modalState.value}
+            options={modalState.options}
+            confirmText={modalState.confirmText}
+            confirmVariant={modalState.confirmVariant}
+            loading={loadingAction}
+            onClose={closeModal}
+            onConfirm={submitModal}
           />
         </div>
       )}
@@ -170,14 +189,6 @@ function TeamDetail() {
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         onAddMember={addMember}
-      />
-
-      <ChangeRoleModal
-        isOpen={roleModal.isOpen}
-        onClose={() => setRoleModal({ isOpen: false, member: null })}
-        member={roleModal.member}
-        allMembers={members}
-        onRoleChange={handleRoleUpdate}
       />
     </div>
   );

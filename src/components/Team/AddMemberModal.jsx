@@ -27,7 +27,6 @@ const RoleSelector = ({ role, setRole }) => {
   const roleOptions = [
     { name: "Member", value: "MEMBER", description: "Can upload and edit own documents" },
     { name: "Manager", value: "MANAGER", description: "Can upload, edit, and view all documents" },
-    { name: "Leader", value: "LEADER", description: "Full administrative access to the team" },
   ];
 
   const selected = roleOptions.find((r) => r.value === role);
