@@ -14,8 +14,8 @@ export const DASHBOARD_MENU = {
   ],
   secondary: [
     { label: "Recycle bin", icon: RecycleIcon, to: "/trash" },
-    { label: "Settings", icon: Settings },
-    { label: "Help & Support", icon: HelpCircle },
+    { label: "Settings", icon: Settings, to: "/setting" },
+    { label: "Help & Support", icon: HelpCircle, to: "/help" },
   ],
 };
 
@@ -23,12 +23,12 @@ export const DASHBOARD_MENU = {
 export const ADMIN_MENU = {
   primary: [
     { label: "Dashboard", icon: LayoutDashboard, to: "/admin/dashboard" },
-    { label: "Team Management", icon: Users, to: "/teams" },
-    { label: "Merge Teams", icon: GitMerge, to: "/merge" },
+    { label: "Team Management", icon: Users, to: "/admin/teams" },
+    { label: "Merge Teams", icon: GitMerge, to: "/admin/merge" },
   ],
   secondary: [
-    { label: "Settings", icon: Settings },
-    { label: "Help & Support", icon: HelpCircle },
+    { label: "Settings", icon: Settings, to: "/setting" },
+    { label: "Help & Support", icon: HelpCircle, to: "/help" },
   ],
 };
 
