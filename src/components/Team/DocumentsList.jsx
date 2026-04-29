@@ -1,17 +1,6 @@
 import { useMemo } from "react";
-import {
-  Download,
-  Pencil,
-  FolderInput,
-  Copy,
-  RotateCcw,
-  Trash2,
-  Eye,
-  Share2,
-  Lock,
-  Clock,
-} from "lucide-react";
 import { DocumentCard, DocumentRow, normalizeDocumentType } from "../documents";
+import { resolveActions } from "../documents/DocumentActionsMenu";
 
 const resolveUploader = (doc) => {
   if (typeof doc?.uploadedBy === "string" && doc.uploadedBy.trim()) return doc.uploadedBy.trim();
@@ -53,29 +42,6 @@ const normalizeDoc = (doc, index) => {
     starred: Boolean(doc?.starred),
     uploadedBy: resolveUploader(doc),
   };
-};
-
-// Map action keys to action objects with icons
-const resolveActions = (actionKeys) => {
-  if (!actionKeys || !Array.isArray(actionKeys)) {
-    return [];
-  }
-
-  const actionMap = {
-    rename: { key: "rename", label: "Rename", icon: Pencil },
-    move: { key: "move", label: "Move to", icon: FolderInput },
-    duplicate: { key: "duplicate", label: "Duplicate", icon: Copy },
-    download: { key: "download", label: "Download", icon: Download },
-    trash: { key: "trash", label: "Move to trash", icon: Trash2, danger: true },
-    restore: { key: "restore", label: "Restore", icon: RotateCcw },
-    delete_permanently: { key: "delete_permanently", label: "Delete permanently", icon: Trash2, danger: true },
-    preview: { key: "preview", label: "Preview", icon: Eye },
-    share: { key: "share", label: "Share", icon: Share2 },
-    secure: { key: "secure", label: "Secure", icon: Lock },
-    versions: { key: "versions", label: "Versions", icon: Clock },
-  };
-
-  return actionKeys.map((key) => actionMap[key] || { key, label: key, icon: () => null }).filter(Boolean);
 };
 
 export default function DocumentsList({
