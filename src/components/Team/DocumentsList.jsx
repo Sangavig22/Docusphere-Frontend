@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { DocumentCard, DocumentRow, normalizeDocumentType } from "../documents";
-import { resolveActions } from "../documents/DocumentActionsMenu";
+import { DEFAULT_DOCUMENT_ACTIONS } from "../documents/DocumentActionsMenu";
 
 const resolveUploader = (doc) => {
   if (typeof doc?.uploadedBy === "string" && doc.uploadedBy.trim()) return doc.uploadedBy.trim();
@@ -62,8 +62,8 @@ export default function DocumentsList({
     if (actions && Array.isArray(actions) && actions.length > 0) {
       return actions;
     }
-    return resolveActions(actionKeys);
-  }, [actions, actionKeys]);
+    return DEFAULT_DOCUMENT_ACTIONS;
+  }, [actions]);
 
   const visibleDocs = useMemo(() => {
     const normalized = documents.map(normalizeDoc);
