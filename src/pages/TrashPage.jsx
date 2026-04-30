@@ -114,7 +114,7 @@ export default function TrashPage() {
       ) : null}
 
       <DocumentActionModal
-        open={modalState.open}
+        open={modalState.open && modalState.type !== "share"}
         type={modalState.type}
         title={modalState.title}
         message={modalState.message}

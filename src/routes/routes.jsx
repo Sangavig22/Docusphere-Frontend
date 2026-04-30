@@ -18,6 +18,8 @@ import TrashPage from "../pages/TrashPage";
 import Team from "../pages/Team.jsx";
 import TeamNew from "../pages/TeamNew.jsx";
 import TeamDetail from "../pages/TeamDetail.jsx";
+import SharedDocumentPage from "../pages/SharedDocumentPage";
+
 
 function withLayout(element, pageTitle, pageSubtitle, type = "dashboard") {
   return (
@@ -54,6 +56,11 @@ export const routes = [
     path: "/verify-email",
     element: <EmailVerification />,
   },
+   {
+    path: "/share/:token",
+    element: <SharedDocumentPage />,
+  },
+
   {
     path: "/dashboard-selector",
     element: <DashboardSelector />,

@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import { FileText, MoreVertical, Star } from "lucide-react";
 import Popover from "./Popover";
 import DocumentActionsMenu from "./DocumentActionsMenu";
@@ -36,6 +36,8 @@ export default function DocumentRow({
   menuPushContent = false,
   menuClassName = "",
   denseMenu = false,
+  showStar = true,
+  actionKeys,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuButtonRef = useRef(null);
@@ -45,12 +47,12 @@ export default function DocumentRow({
 
   return (
     <div className="relative flex items-center gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-      <div className="flex items-center gap-3 min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
         <div className={["flex h-10 w-10 items-center justify-center rounded-xl ring-1", styles.bg, styles.ring].join(" ")}>
           <FileText size={18} className={styles.fg} />
         </div>
         <div className="min-w-0">
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex min-w-0 items-center gap-2">
             <div className="truncate text-sm font-semibold text-slate-900" title={doc.name}>
               {doc.name}
             </div>
@@ -61,23 +63,29 @@ export default function DocumentRow({
             </span>
             <span className="text-slate-300">•</span>
             <span>{formatRelativeTime(doc.updatedAt)}</span>
+            {doc.uploadedBy && doc.uploadedBy !== "-" ? (
+              <>
+                <span className="text-slate-300">•</span>
+                <span className="max-w-[150px] truncate">By {doc.uploadedBy}</span>
+              </>
+            ) : null}
           </div>
         </div>
       </div>
 
-      <div className="hidden sm:block w-28 text-right text-sm font-medium text-slate-600">
-        {formatBytes(doc.sizeBytes)}
-      </div>
+      <div className="hidden w-28 text-right text-sm font-medium text-slate-600 sm:block">{formatBytes(doc.sizeBytes)}</div>
 
-      <button
-        type="button"
-        disabled={disableActions}
-        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-50 hover:text-amber-500"
-        aria-label={doc.starred ? "Unstar document" : "Star document"}
-        onClick={() => onToggleStar?.(doc.id)}
-      >
-        <Star size={18} className={doc.starred ? "fill-amber-400 text-amber-400" : ""} />
-      </button>
+      {showStar ? (
+        <button
+          type="button"
+          disabled={disableActions}
+          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-50 hover:text-amber-500"
+          aria-label={doc.starred ? "Unstar document" : "Star document"}
+          onClick={() => onToggleStar?.(doc.id)}
+        >
+          <Star size={18} className={doc.starred ? "fill-amber-400 text-amber-400" : ""} />
+        </button>
+      ) : null}
 
       <div className="relative shrink-0">
         <button
@@ -101,14 +109,12 @@ export default function DocumentRow({
           side={menuPortal ? "bottom" : "auto"}
           pushContent={menuPushContent}
           scrollable={!menuPortal}
-          className={[
-            menuPortal ? "" : "right-0 top-10",
-            menuClassName,
-          ].join(" ")}
+          className={[menuPortal ? "" : "right-0 top-10", menuClassName].join(" ")}
         >
           <DocumentActionsMenu
             doc={doc}
             dense={denseMenu}
+            actionKeys={actionKeys}
             actions={actions}
             disabled={disableActions}
             onAction={(key, d) => {
