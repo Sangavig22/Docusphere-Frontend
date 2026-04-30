@@ -43,7 +43,9 @@ function TeamDetail() {
   const currentUserId = authService.getUserId();
   const currentUserMember = members.find(m => String(m.userId || m.id) === String(currentUserId));
   const currentUserRole = currentUserMember?.role || "";
-  const isLeader = (currentUserRole || "").toUpperCase() === "LEADER";
+  const normalizedCurrentUserRole = String(currentUserRole || "").toUpperCase();
+  const isLeader = normalizedCurrentUserRole === "LEADER";
+  const canManageAllTeamDocs = isLeader || normalizedCurrentUserRole === "MANAGER";
 
   const updateToolbar = (key, value) => {
     setToolbar((prev) => ({ ...prev, [key]: value }));
@@ -154,6 +156,7 @@ function TeamDetail() {
             onAction={handleAction}
             onToggleStar={toggleStar}
             actions={DEFAULT_DOCUMENT_ACTIONS}
+            canManageAllTeamDocs={canManageAllTeamDocs}
             showStar={false}
           />
           <DocumentActionModal

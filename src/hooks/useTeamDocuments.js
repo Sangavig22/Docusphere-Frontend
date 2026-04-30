@@ -8,6 +8,29 @@ import authService from '../services/authService';
  * Fetches documents for a specific team.
  * Replaces useDocumentMock
  */
+// The function to resolve the document owner ID from various possible fields in the document object.
+const resolveDocumentOwnerId = (doc) => {
+  const candidates = [
+    doc?.ownerId,
+    doc?.ownerUserId,
+    doc?.uploadedById,
+    doc?.createdById,
+    doc?.creatorId,
+    doc?.userId,
+    doc?.createdBy?.id,
+    doc?.createdBy?.userId,
+    doc?.uploadedBy?.id,
+    doc?.uploadedBy?.userId,
+  ];
+
+  for (const candidate of candidates) {
+    const value = candidate == null ? "" : String(candidate).trim();
+    if (value) return value;
+  }
+
+  return "";
+};
+
 export function useTeamDocuments(teamId) {
   const [documents, setDocuments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,11 +48,14 @@ export function useTeamDocuments(teamId) {
       
       const list = Array.isArray(data) ? data : (data?.items || data?.documents || []);
       const currentUserId = authService.getUserId();
-      // Mark each document with isOwner flag for action menu enable/disable
-      const enrichedList = list.map(doc => ({
-        ...doc,
-        isOwner: String(doc.ownerId || doc.userId) === String(currentUserId),
-      }));
+      // Mark each document with isOwner flag for action menu enable/disable.
+      const enrichedList = list.map((doc) => {
+        const ownerId = resolveDocumentOwnerId(doc);
+        return {
+          ...doc,
+          isOwner: ownerId !== "" && String(ownerId) === String(currentUserId),
+        };
+      });
       setDocuments(enrichedList);
       documentsRef.current = enrichedList;
     } catch (err) {

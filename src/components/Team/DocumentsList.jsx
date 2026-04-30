@@ -50,12 +50,12 @@ export default function DocumentsList({
   searchQuery = "",
   filterType = "all",
   sortKey = "name_asc",
-  actionKeys,
   actions,
   onDelete,
   onAction,
   onToggleStar,
   showStar = true,
+  canManageAllTeamDocs = false,
 }) {
   const resolvedActions = useMemo(() => {
     // If actions prop is provided directly, use it; otherwise resolve from actionKeys
@@ -66,7 +66,10 @@ export default function DocumentsList({
   }, [actions]);
 
   const visibleDocs = useMemo(() => {
-    const normalized = documents.map(normalizeDoc);
+    const normalized = documents.map((doc, index) => ({
+      ...normalizeDoc(doc, index),
+      canManageTeamDoc: canManageAllTeamDocs || doc?.isOwner === true,
+    }));
     const q = searchQuery.trim().toLowerCase();
 
     let out = normalized.filter((d) => {
@@ -110,6 +113,14 @@ export default function DocumentsList({
 
     // Fallback: no-op for actions not handled here
   };
+// For documents that user cannot manage, restrict certain actions to only preview and download.
+  const getActionKeysForDoc = (doc) => {
+    if (doc.canManageTeamDoc) {
+      return undefined;
+    }
+
+    return ["preview", "download"];
+  };
 
   if (viewMode === "list") {
     return (
@@ -121,7 +132,10 @@ export default function DocumentsList({
             onAction={(key) => handleAction(key, doc)}
             onToggleStar={onToggleStar}
             actions={resolvedActions}
-            disableActions={doc.isOwner === false}            showStar={showStar}          />
+            actionKeys={getActionKeysForDoc(doc)}
+            disableActions={false}
+            showStar={showStar}
+          />
         ))}
       </div>
     );
@@ -136,7 +150,10 @@ export default function DocumentsList({
           onAction={(key) => handleAction(key, doc)}
           onToggleStar={onToggleStar}
           actions={resolvedActions}
-          disableActions={doc.isOwner === false}          showStar={showStar}        />
+          actionKeys={getActionKeysForDoc(doc)}
+          disableActions={false}
+          showStar={showStar}
+        />
       ))}
     </div>
   );
