@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { DocumentCard, DocumentRow, DocumentsToolbar } from "../components/documents";
 import { DEFAULT_DOCUMENT_ACTIONS } from "../components/documents/DocumentActionsMenu";
 import DocumentActionModal from "../components/documents/DocumentActionModal";
+import ShareModal from "../components/documents/share/ShareModal";
 import useDocumentActions from "../hooks/useDocumentActions";
 import { usePaginatedMyDocuments } from "../hooks/usePaginatedMyDocuments";
 
@@ -26,7 +27,7 @@ export default function MyDocumentsPage() {
     reload,
     toggleStar,
   } = usePaginatedMyDocuments();
-  const { modalState, loadingAction, handleAction, closeModal, submitModal } = useDocumentActions({
+  const { modalState, loadingAction, handleAction, closeModal, submitModal, shareWithPeople } = useDocumentActions({
     onSuccess: reload,
   });
   const [viewMode, setViewMode] = useState("grid");
@@ -136,8 +137,9 @@ export default function MyDocumentsPage() {
           No documents found.
         </div>
       ) : null}
+      {/* Keep generic modal for rename/move/delete style actions. */}
       <DocumentActionModal
-        open={modalState.open}
+        open={modalState.open && modalState.type !== "share"}
         type={modalState.type}
         title={modalState.title}
         message={modalState.message}
@@ -148,6 +150,14 @@ export default function MyDocumentsPage() {
         loading={loadingAction}
         onClose={closeModal}
         onConfirm={submitModal}
+      />
+      {/* Render dedicated share UI only for share action state. */}
+      <ShareModal
+        open={modalState.open && modalState.type === "share"}
+        document={modalState.doc}
+        loading={loadingAction}
+        onClose={closeModal}
+        onShareWithPeople={shareWithPeople}
       />
     </div>
   );

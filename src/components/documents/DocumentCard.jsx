@@ -37,6 +37,8 @@ export default function DocumentCard({
   menuPushContent = false,
   menuClassName = "",
   denseMenu = false,
+  showStar = true,
+  actionKeys,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuButtonRef = useRef(null);
@@ -52,15 +54,17 @@ export default function DocumentCard({
         </div>
 
         <div className="flex shrink-0 items-center gap-1">
-          <button
-            type="button"
-            disabled={disableActions}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-50 hover:text-amber-500"
-            aria-label={doc.starred ? "Unstar document" : "Star document"}
-            onClick={() => onToggleStar?.(doc.id)}
-          >
-            <Star size={18} className={doc.starred ? "fill-amber-400 text-amber-400" : ""} />
-          </button>
+          {showStar && (
+            <button
+              type="button"
+              disabled={disableActions}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-50 hover:text-amber-500"
+              aria-label={doc.starred ? "Unstar document" : "Star document"}
+              onClick={() => onToggleStar?.(doc.id)}
+            >
+              <Star size={18} className={doc.starred ? "fill-amber-400 text-amber-400" : ""} />
+            </button>
+          )}
 
           <div className="relative">
             <button
@@ -92,6 +96,7 @@ export default function DocumentCard({
               <DocumentActionsMenu
                 doc={doc}
                 dense={denseMenu}
+                actionKeys={actionKeys}
                 actions={actions}
                 disabled={disableActions}
                 onAction={(key, d) => {
@@ -112,7 +117,17 @@ export default function DocumentCard({
           <span>{formatBytes(doc.sizeBytes)}</span>
           <span className="text-slate-300">•</span>
           <span>{formatRelativeTime(doc.updatedAt)}</span>
+            {/* added uploadedBy field in document and showing it in card if available  for team*/} 
+           
+          {doc.uploadedBy && doc.uploadedBy !== "-" && ( 
+            <> 
+              <span className="text-slate-300">•</span> 
+              <span className="truncate max-w-[120px]">By {doc.uploadedBy}</span> 
+            </> 
+          )}
+
         </div>
+             
         <div className="mt-auto flex items-center gap-2 pt-3">
           <span className="inline-flex shrink-0 items-center rounded-md bg-slate-100 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
             {formatLabel}

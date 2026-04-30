@@ -1,5 +1,7 @@
 import { useMemo } from "react";
 import {
+  Eye,
+  Share2,
   Download,
   Pencil,
   FolderInput,
@@ -9,10 +11,13 @@ import {
 } from "lucide-react";
 
 export const DEFAULT_DOCUMENT_ACTIONS = [
+  // Order here is reflected directly in card/row action menus.
+  { key: "preview", label: "Preview", icon: Eye },
   { key: "rename", label: "Rename", icon: Pencil },
   { key: "move", label: "Move to", icon: FolderInput },
   { key: "duplicate", label: "Duplicate", icon: Copy },
   { key: "download", label: "Download", icon: Download },
+  { key: "share", label: "Share", icon: Share2 },
   { key: "trash", label: "Move to trash", icon: Trash2, danger: true },
 ];
 
@@ -52,9 +57,15 @@ export default function DocumentActionsMenu({
   onAction,
   dense = false,
   actions = DEFAULT_DOCUMENT_ACTIONS,
+  actionKeys,
   disabled = false,
 }) {
-  const safeActions = useMemo(() => actions || DEFAULT_DOCUMENT_ACTIONS, [actions]);
+  const safeActions = useMemo(() => {
+    const list = actions || DEFAULT_DOCUMENT_ACTIONS;
+    // actionKeys lets parent screens show a curated subset.
+    if (!Array.isArray(actionKeys) || actionKeys.length === 0) return list;
+    return list.filter((item) => actionKeys.includes(item.key));
+  }, [actions, actionKeys]);
 
   return (
     <div className={dense ? "py-0.5" : "py-1"}>

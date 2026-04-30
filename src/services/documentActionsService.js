@@ -71,3 +71,10 @@ export async function downloadDocument(id, name = "document") {
   anchor.click();
   window.URL.revokeObjectURL(url);
 }
+
+export async function shareDocumentByEmail(id, payload) {
+  return request(`/documents/${id}/share`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}

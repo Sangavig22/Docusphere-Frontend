@@ -70,6 +70,8 @@ export default function DocumentsToolbar({
   onSortKeyChange,
   viewMode,
   onViewModeChange,
+  hideSort = false,
+  hideFilter = false,
 }) {
   const [filterOpen, setFilterOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
@@ -99,47 +101,51 @@ export default function DocumentsToolbar({
       </div>
 
       <div className="flex items-center justify-end gap-2">
-        <MenuButton
-          label="Filter"
-          icon={SlidersHorizontal}
-          open={filterOpen}
-          onToggle={(v) => setFilterOpen(typeof v === "boolean" ? v : !filterOpen)}
-        >
-          <div className="max-h-72 overflow-y-auto py-1">
-            {filterOptions.map((o) => (
-              <MenuItem
-                key={o.key}
-                label={o.label}
-                active={filterType === o.key}
-                onClick={() => {
-                  onFilterTypeChange?.(o.key);
-                  setFilterOpen(false);
-                }}
-              />
-            ))}
-          </div>
-        </MenuButton>
+        {!hideFilter ? (
+          <MenuButton
+            label="Filter"
+            icon={SlidersHorizontal}
+            open={filterOpen}
+            onToggle={(v) => setFilterOpen(typeof v === "boolean" ? v : !filterOpen)}
+          >
+            <div className="max-h-72 overflow-y-auto py-1">
+              {filterOptions.map((o) => (
+                <MenuItem
+                  key={o.key}
+                  label={o.label}
+                  active={filterType === o.key}
+                  onClick={() => {
+                    onFilterTypeChange?.(o.key);
+                    setFilterOpen(false);
+                  }}
+                />
+              ))}
+            </div>
+          </MenuButton>
+        ) : null}
 
-        <MenuButton
-          label="Sort"
-          icon={ArrowDownUp}
-          open={sortOpen}
-          onToggle={(v) => setSortOpen(typeof v === "boolean" ? v : !sortOpen)}
-        >
-          <div className="py-1">
-            {sortOptions.map((o) => (
-              <MenuItem
-                key={o.key}
-                label={o.label}
-                active={sortKey === o.key}
-                onClick={() => {
-                  onSortKeyChange?.(o.key);
-                  setSortOpen(false);
-                }}
-              />
-            ))}
-          </div>
-        </MenuButton>
+        {!hideSort ? (
+          <MenuButton
+            label="Sort"
+            icon={ArrowDownUp}
+            open={sortOpen}
+            onToggle={(v) => setSortOpen(typeof v === "boolean" ? v : !sortOpen)}
+          >
+            <div className="py-1">
+              {sortOptions.map((o) => (
+                <MenuItem
+                  key={o.key}
+                  label={o.label}
+                  active={sortKey === o.key}
+                  onClick={() => {
+                    onSortKeyChange?.(o.key);
+                    setSortOpen(false);
+                  }}
+                />
+              ))}
+            </div>
+          </MenuButton>
+        ) : null}
 
         <div className="ml-1 flex items-center gap-2">
           <IconButton
