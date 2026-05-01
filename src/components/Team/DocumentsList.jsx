@@ -51,6 +51,7 @@ export default function DocumentsList({
   filterType = "all",
   sortKey = "name_asc",
   actions,
+  actionKeys,
   onDelete,
   onAction,
   onToggleStar,
@@ -115,6 +116,8 @@ export default function DocumentsList({
   };
 // For documents that user cannot manage, restrict certain actions to only preview and download.
   const getActionKeysForDoc = (doc) => {
+    if (actionKeys) return actionKeys;
+
     if (doc.canManageTeamDoc) {
       return undefined;
     }

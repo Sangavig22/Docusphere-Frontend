@@ -31,7 +31,7 @@ const resolveDocumentOwnerId = (doc) => {
   return "";
 };
 
-export function useTeamDocuments(teamId) {
+export function useTeamDocuments(teamId, isAdmin = false) {
   const [documents, setDocuments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -43,7 +43,9 @@ export function useTeamDocuments(teamId) {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await teamsApi.getTeamDocuments(teamId);
+      const response = isAdmin
+        ? await teamsApi.getAdminTeamDocuments(teamId)
+        : await teamsApi.getTeamDocuments(teamId);
       const data = response?.data ?? response;
       
       const list = Array.isArray(data) ? data : (data?.items || data?.documents || []);
@@ -66,7 +68,7 @@ export function useTeamDocuments(teamId) {
     } finally {
       setIsLoading(false);
     }
-  }, [teamId]);
+  }, [teamId, isAdmin]);
 
   useEffect(() => {
     fetchDocuments();
@@ -74,13 +76,17 @@ export function useTeamDocuments(teamId) {
 
   const deleteDocument = useCallback(async (documentId) => {
     try {
-      await teamsApi.deleteTeamDocument(teamId, documentId);
+      if (isAdmin) {
+        await teamsApi.deleteAdminDocument(documentId);
+      } else {
+        await teamsApi.deleteTeamDocument(teamId, documentId);
+      }
       setDocuments((prev) => prev.filter((d) => (d.id ?? d._id) !== documentId));
     } catch (err) {
       console.error("Failed to delete document", err);
       throw err;
     }
-  }, [teamId]);
+  }, [teamId, isAdmin]);
 
   const toggleStar = useCallback(
     async (id) => {
