@@ -164,7 +164,8 @@ selectedDestination.startsWith("team:")) {
     }
 
     const restrictedForNonOwner = new Set(["rename", "move", "duplicate", "trash", "delete_permanently", "restore", "share"]);
-    if (doc?.isOwner === false && restrictedForNonOwner.has(actionKey)) {
+// If the document is a team document and user cannot manage it, restrict to only preview and download.
+    if (doc?.isOwner === false && doc?.canManageTeamDoc !== true && restrictedForNonOwner.has(actionKey)) {
       toast.warning("Only owner can manage this document.");
       return;
     }
