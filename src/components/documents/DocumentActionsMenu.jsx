@@ -26,6 +26,12 @@ export const TRASH_ACTIONS = [
   { key: "delete_permanently", label: "Delete permanently", icon: Trash2, danger: true },
 ];
 
+// Admin Team Functions
+export const ADMIN_ACTIONS = [
+  { key: "preview", label: "Preview", icon: Eye },
+  { key: "trash", label: "Delete", icon: Trash2, danger: true },
+];
+
 function Item({ icon: Icon, label, danger = false, onClick, dense = false, disabled = false }) {
   return (
     <button

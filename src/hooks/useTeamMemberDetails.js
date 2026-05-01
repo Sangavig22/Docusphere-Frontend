@@ -6,7 +6,7 @@ import { teamsApi } from '../services/teamsApi';
  * Uses GET /api/teams/:id and GET /api/teams/:id/members.
  * Fallbacks to Admin API if standard fails (or you could pass an isAdmin flag)
  */
-export function useTeamMemberDetails(teamId) {
+export function useTeamMemberDetails(teamId, isAdmin = false) {
   const [teamData, setTeamData] = useState(null);
   const [members, setMembers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -18,11 +18,15 @@ export function useTeamMemberDetails(teamId) {
     setIsLoading(true);
     setError(null);
     try {
-            const tResp = await teamsApi.getTeamById(teamId);
+            const tResp = isAdmin 
+                ? await teamsApi.getAdminTeamById(teamId)
+                : await teamsApi.getTeamById(teamId);
             const tData = tResp?.data ?? tResp;
-            const mResp = await teamsApi.getTeamMembers(teamId);
+            const mResp = isAdmin
+                ? await teamsApi.getAdminTeamMembers(teamId)
+                : await teamsApi.getTeamMembers(teamId);
             const mData = mResp?.data ?? mResp;
-
+// Admin+User
       setTeamData(tData);
       setMembers(Array.isArray(mData) ? mData : []);
     } catch (err) {
@@ -33,15 +37,19 @@ export function useTeamMemberDetails(teamId) {
     } finally {
       setIsLoading(false);
     }
-  }, [teamId]);
+  }, [teamId, isAdmin]);
 
   useEffect(() => {
     fetchDetails();
   }, [fetchDetails]);
 
+  //ADD MEMBER
+
   const addMember = useCallback(async (memberData) => {
       try {
-          const resp = await teamsApi.addMember(teamId, memberData);
+          const resp = isAdmin
+              ? await teamsApi.addAdminMember(teamId, memberData) 
+              : await teamsApi.addMember(teamId, memberData);
           const newMember = resp?.data ?? resp;
           await fetchDetails();
           return newMember;
@@ -51,20 +59,31 @@ export function useTeamMemberDetails(teamId) {
       }
   }, [teamId, fetchDetails]);
 
-  const deleteMember = useCallback(async (memberId) => {
+   const deleteMember = useCallback(async (memberId) => {
     try {
-        await teamsApi.removeMember(teamId, memberId);
+        if (isAdmin) {
+            await teamsApi.removeAdminMember(teamId, memberId);
+        } else {
+            await teamsApi.removeMember(teamId, memberId);
+        }
         await fetchDetails();
-    } catch(err) {
+    } 
+    catch(err) {
         console.error("Failed to remove member", err);
         throw new Error(err.message || "Failed to remove member");
     }
   }, [teamId]);
 
+  //UPDATE ROLE
+
   const updateMemberRole = useCallback(async (member, newRole) => {
       const memberId = member.userId ?? member.id ?? member._id;
       try {
-          await teamsApi.updateMemberRole(teamId, memberId, newRole);
+          if (isAdmin) {
+              await teamsApi.updateAdminMemberRole(teamId, memberId, newRole);
+          } else {
+              await teamsApi.updateMemberRole(teamId, memberId, newRole);
+          }
           // Optimistically update
           setMembers(prev => prev.map(m => {
               const id = m.userId ?? m.id ?? m._id;
@@ -79,9 +98,16 @@ export function useTeamMemberDetails(teamId) {
       }
   }, [teamId]);
 
+  //TRANSFER lEADER
+
   const transferLeader = useCallback(async (newLeaderId) => {
       try {
-          throw new Error("Leader transfer is not available in the current backend API");
+          if (isAdmin) {
+              await teamsApi.transferAdminLeader(teamId, newLeaderId);
+          } else {
+              throw new Error("Leader transfer is only available for administrators");
+          }
+          await fetchDetails();
       } catch(err) {
           console.error("Failed to transfer leader", err);
           throw err;

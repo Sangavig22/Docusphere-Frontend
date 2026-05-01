@@ -19,6 +19,9 @@ import Team from "../pages/Team.jsx";
 import TeamNew from "../pages/TeamNew.jsx";
 import TeamDetail from "../pages/TeamDetail.jsx";
 import SharedDocumentPage from "../pages/SharedDocumentPage";
+import AdminTeamManagementPage from "../pages/AdminTeamManagementPage.jsx";
+import AdminTeamDetailsPage from "../pages/AdminTeamDetailsPage.jsx";
+import AdminMergeTeamsPage from "../pages/AdminMergeTeamsPage.jsx";
 
 
 function withLayout(element, pageTitle, pageSubtitle, type = "dashboard") {
@@ -118,6 +121,42 @@ export const routes = [
       <AdminDashboardPage />,
       "Dashboard",
       "Manage your platform with ease",
+      "admin"
+    ),
+  },
+  {
+    path: "/admin/teams",
+    element: withLayout(
+      <AdminTeamManagementPage />,
+      "Teams",
+      "Manage all teams",
+      "admin"
+    ),
+  },
+  {
+    path: "/admin/merge",
+    element: withLayout(
+      <AdminMergeTeamsPage />,
+      "Merge Teams",
+      "Combine two teams into one",
+      "admin"
+    ),
+  },
+  {
+    path: "/admin/teams/new",
+    element: withLayout(
+      <TeamNew />,
+      "New Team",
+      "Create a new organization team",
+      "admin"
+    ),
+  },
+  {
+    path: "/admin/teams/:teamId",
+    element: withLayout(
+      <AdminTeamDetailsPage />,
+      "Team Details",
+      "Manage team members and documents",
       "admin"
     ),
   },

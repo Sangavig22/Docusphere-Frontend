@@ -7,10 +7,11 @@ function TeamCard({
   onDelete,
   openMenuId,
   setOpenMenuId,
+  isAdmin = false,
 }) {
   const menuRef = useRef(null);
   const isOpen = openMenuId === team.id;
-  const canDeleteTeam = String(team?.currentUserRole || "").toUpperCase() === "LEADER";
+  const canDeleteTeam = isAdmin || String(team?.currentUserRole || "").toUpperCase() === "LEADER";
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -49,7 +50,7 @@ function TeamCard({
 
           {isOpen && (
             <div className="absolute right-0 top-full mt-1 z-10 min-w-[120px] rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
-              
+
               {/* View */}
               <button
                 onClick={(e) => {
