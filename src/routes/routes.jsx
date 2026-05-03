@@ -14,6 +14,15 @@ import OCRSummarization from "../pages/OCRSummarization";
 import MyDocumentsPage from "../pages/MyDocumentsPage";
 import StarredPage from "../pages/StarredPage";
 import RecentPage from "../pages/RecentPage";
+import TrashPage from "../pages/TrashPage";
+import Team from "../pages/Team.jsx";
+import TeamNew from "../pages/TeamNew.jsx";
+import TeamDetail from "../pages/TeamDetail.jsx";
+import SharedDocumentPage from "../pages/SharedDocumentPage";
+import AdminTeamManagementPage from "../pages/AdminTeamManagementPage.jsx";
+import AdminTeamDetailsPage from "../pages/AdminTeamDetailsPage.jsx";
+import AdminMergeTeamsPage from "../pages/AdminMergeTeamsPage.jsx";
+
 
 
 function withLayout(element, pageTitle, pageSubtitle, type = "dashboard") {
@@ -51,6 +60,11 @@ export const routes = [
     path: "/verify-email",
     element: <EmailVerification />,
   },
+   {
+    path: "/share/:token",
+    element: <SharedDocumentPage />,
+  },
+
   {
     path: "/dashboard-selector",
     element: <DashboardSelector />,
@@ -84,6 +98,22 @@ export const routes = [
     path: "/recent",
     element: withLayout(<RecentPage />, "Recent", "Manage and organize all recently opened documents."),
   },
+   {
+    path: "/trash",
+    element: withLayout(<TrashPage />, "Recycle Bin", "Restore or permanently delete documents."),
+  },
+  {
+    path: "/team",
+    element: withLayout(<Team />, "Teams", "Collaborate with your team members"),
+  },
+  {
+    path: "/team/new",
+    element: withLayout(<TeamNew />, "New Team", "Create a new collaborative workspace"),
+  },
+  {
+    path: "/team/:teamId",
+    element: withLayout(<TeamDetail />, "Team Details", "Manage team documents and members"),
+  },
 
 
   // Admin route
@@ -92,7 +122,44 @@ export const routes = [
     element: withLayout(
       <AdminDashboardPage />,
       "Dashboard",
-      "Manage your platform with ease"
+      "Manage your platform with ease",
+      "admin"
+    ),
+  },
+  {
+    path: "/admin/teams",
+    element: withLayout(
+      <AdminTeamManagementPage />,
+      "Teams",
+      "Manage all teams",
+      "admin"
+    ),
+  },
+  {
+    path: "/admin/merge",
+    element: withLayout(
+      <AdminMergeTeamsPage />,
+      "Merge Teams",
+      "Combine two teams into one",
+      "admin"
+    ),
+  },
+  {
+    path: "/admin/teams/new",
+    element: withLayout(
+      <TeamNew />,
+      "New Team",
+      "Create a new organization team",
+      "admin"
+    ),
+  },
+  {
+    path: "/admin/teams/:teamId",
+    element: withLayout(
+      <AdminTeamDetailsPage />,
+      "Team Details",
+      "Manage team members and documents",
+      "admin"
     ),
   },
 ];

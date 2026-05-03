@@ -1,24 +1,14 @@
 import { NavLink } from "react-router-dom";
 import logo_2 from "../../assets/logo_2.jpeg";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { DASHBOARD_MENU, SIDEBAR_STYLES } from "../../config/sidebarConfig";
+import { ChevronLeft, ChevronRight, Shield } from "lucide-react";
+import { DASHBOARD_MENU, ADMIN_MENU, SIDEBAR_STYLES } from "../../config/sidebarConfig";
 import { LAYOUT_COLORS } from "../../config/layoutConfig";
 
-function Sidebar({ collapsed, onToggle, role = "user" }) {
-  // normalize incoming role
-  const normalizedRole = role === "admin" ? "admin" : "user";
-
-  const menu = normalizedRole === "admin" ? ADMIN_MENU : DASHBOARD_MENU;
-  const styles = SIDEBAR_STYLES?.[normalizedRole] ?? {
-  widthCollapsed: "w-20",
-  widthExpanded: "w-64",
-  container: "bg-white border-r border-slate-200 h-screen flex flex-col",
-};
-
-const colors = LAYOUT_COLORS?.[normalizedRole] ?? {
-  sidebarActiveLink: "bg-blue-50 text-blue-600",
-  sidebarHoverLink: "hover:bg-slate-100",
-};
+function Sidebar({ collapsed, onToggle, type = "dashboard" }) {
+  const menu = type === "admin" ? ADMIN_MENU : DASHBOARD_MENU;
+  const styles = SIDEBAR_STYLES[type];
+  const colors = LAYOUT_COLORS[type];
+  
   const { primary: primaryMenu, secondary: secondaryMenu } = menu;
   const widthClass = collapsed ? styles.widthCollapsed : styles.widthExpanded;
 
@@ -31,9 +21,17 @@ const colors = LAYOUT_COLORS?.[normalizedRole] ?? {
             <img src={logo_2} alt="DocuSphere logo" className="h-9 w-9 object-contain" />
           </div>
           {!collapsed && (
-            <span className="text-xl font-semibold text-slate-900">
-              Docu<span className="text-blue-600">Sphere</span>
-            </span>
+            <div className="flex flex-col">
+              <span className="text-xl font-semibold text-slate-900">
+                Docu<span className="text-blue-600">Sphere</span>
+              </span>
+              {type === "admin" && (
+                <span className="flex items-center gap-1 text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-semibold w-fit mt-1">
+                  <Shield size={10} />
+                  Admin
+                </span>
+              )}
+            </div>
           )}
         </div>
         <button
@@ -80,13 +78,29 @@ const colors = LAYOUT_COLORS?.[normalizedRole] ?? {
               const Icon = item.icon;
               return (
                 <li key={item.label}>
-                  <button
-                    title={collapsed ? item.label : ""}
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 ${colors.sidebarHoverLink} transition-colors`}
-                  >
-                    <Icon size={18} />
-                    {!collapsed && <span>{item.label}</span>}
-                  </button>
+                  {item.to ? (
+                    <NavLink
+                      to={item.to}
+                      end
+                      title={collapsed ? item.label : ""}
+                      className={({ isActive }) =>
+                        `w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          isActive ? colors.sidebarActiveLink : `text-slate-600 ${colors.sidebarHoverLink}`
+                        }`
+                      }
+                    >
+                      <Icon size={18} />
+                      {!collapsed && <span>{item.label}</span>}
+                    </NavLink>
+                  ) : (
+                    <button
+                      title={collapsed ? item.label : ""}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 ${colors.sidebarHoverLink} transition-colors`}
+                    >
+                      <Icon size={18} />
+                      {!collapsed && <span>{item.label}</span>}
+                    </button>
+                  )}
                 </li>
               );
             })}

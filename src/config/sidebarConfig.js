@@ -13,9 +13,22 @@ export const DASHBOARD_MENU = {
 
   ],
   secondary: [
-    { label: "Recycle bin", icon: RecycleIcon },
-    { label: "Settings", icon: Settings },
-    { label: "Help & Support", icon: HelpCircle },
+    { label: "Recycle bin", icon: RecycleIcon, to: "/trash" },
+    { label: "Settings", icon: Settings, to: "/setting" },
+    { label: "Help & Support", icon: HelpCircle, to: "/help" },
+  ],
+};
+
+// Admin menu items
+export const ADMIN_MENU = {
+  primary: [
+    { label: "Dashboard", icon: LayoutDashboard, to: "/admin/dashboard" },
+    { label: "Team Management", icon: Users, to: "/admin/teams" },
+    { label: "Merge Teams", icon: GitMerge, to: "/admin/merge" },
+  ],
+  secondary: [
+    { label: "Settings", icon: Settings, to: "/setting" },
+    { label: "Help & Support", icon: HelpCircle, to: "/help" },
   ],
 };
 
@@ -29,5 +42,6 @@ const SHARED_STYLES = {
 // Sidebar styles
 export const SIDEBAR_STYLES = {
   dashboard: SHARED_STYLES,
+  admin: SHARED_STYLES,
 };
 

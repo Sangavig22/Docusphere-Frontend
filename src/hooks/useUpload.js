@@ -38,19 +38,23 @@ export const useUpload = (onComplete) => {
   const [error, setError] = useState("");
   const [speed, setSpeed] = useState("");
 
+
+  // prevent empty upload
   const startUpload = async (selectedFile, ownerId, teamId) => {
     if (!selectedFile) {
       setStatus("error");
       setError("No file selected");
       return;
     }
-
+  
+  // prevent upload of files larger than MAX_FILE_SIZE
     if (selectedFile.size > MAX_FILE_SIZE) {
       setStatus("error");
       setError("File exceeds maximum allowed size");
       return;
     }
 
+  // prevent unauthorized access
     const token = authService.getToken()?.trim();
     if (!token) {
       setStatus("error");
@@ -60,6 +64,7 @@ export const useUpload = (onComplete) => {
 
     const tokenUserId = getUserIdFromToken(token);
     const resolvedOwnerId = String(ownerId || tokenUserId || "").trim();
+    
     // Team id is intentionally not decoded from JWT.
     const teamIdFromStorage = readTeamIdFromStorage();
     const rawTeamId = String(teamId || teamIdFromStorage || "").trim();
@@ -76,6 +81,8 @@ export const useUpload = (onComplete) => {
     const startTime = Date.now();
 
     try {
+      
+      //Initialize upload session and get fileId for chunk uploads
       const totalChunks = Math.ceil(selectedFile.size / CHUNK_SIZE);
       const init = await uploadService.initUpload(selectedFile, {
         ownerId: resolvedOwnerId,
@@ -99,6 +106,8 @@ export const useUpload = (onComplete) => {
       const uploadChunk = async (chunk) => {
         const blob = selectedFile.slice(chunk.start, chunk.end);
 
+
+        // Send to Bakcend Formdata
         const formData = new FormData();
         formData.append("file", blob);
         formData.append("fileId", String(fileId));
@@ -111,6 +120,8 @@ export const useUpload = (onComplete) => {
 
         await uploadService.uploadChunk(formData);
 
+
+        //Update progress  bar  and speed
         chunk.status = "done";
         uploadedBytes += blob.size;
 
@@ -130,6 +141,7 @@ export const useUpload = (onComplete) => {
         const process = () => {
           if (chunks.every((c) => c.status === "done")) return resolve();
 
+          //Maximum parallel uplaods
           while (active < MAX_PARALLEL_UPLOADS) {
             const next = chunks.find((c) => c.status === "pending");
             if (!next) break;
