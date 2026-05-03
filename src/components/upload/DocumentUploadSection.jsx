@@ -38,7 +38,6 @@ export default function DocumentUploadSection({
   return (
     <div className="mx-auto flex w-full max-w-[1080px] flex-1 flex-col">
       <UploadCard title={title} subtitle={subtitle}>
-        
         {/* IDLE */}
         {status === "idle" && (
           <UploadDropzone

@@ -2,6 +2,10 @@ import { useMemo, useState } from "react";
 import { Clock, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { DocumentCard, DocumentRow, DocumentsToolbar } from "../components/documents";
+import { DEFAULT_DOCUMENT_ACTIONS } from "../components/documents/DocumentActionsMenu";
+import DocumentActionModal from "../components/documents/DocumentActionModal";
+import ShareModal from "../components/documents/share/ShareModal";
+import useDocumentActions from "../hooks/useDocumentActions";
 import { usePaginatedMyDocuments } from "../hooks/usePaginatedMyDocuments";
 
 const RECENT_DAYS = 7;
@@ -22,11 +26,12 @@ export default function RecentPage() {
     reload,
     toggleStar,
   } = usePaginatedMyDocuments({ recentDays: RECENT_DAYS, pageSize: RECENT_PAGE_LIMIT });
+  const { modalState, loadingAction, handleAction, closeModal, submitModal, shareWithPeople } = useDocumentActions({
+    onSuccess: reload,
+  });
   const [viewMode, setViewMode] = useState("grid");
 
   const visibleDocs = useMemo(() => documents, [documents]);
-
-  function onAction() {}
 
   return (
     <div className="flex w-full max-w-6xl flex-1 flex-col gap-5">
@@ -65,7 +70,9 @@ export default function RecentPage() {
               key={d.id}
               doc={d}
               onToggleStar={toggleStar}
-              onAction={onAction}
+              onAction={handleAction}
+              actions={DEFAULT_DOCUMENT_ACTIONS}
+              disableActions={d.isOwner === false}
               menuPushContent
               denseMenu
               menuClassName="w-52 p-0"
@@ -79,7 +86,9 @@ export default function RecentPage() {
               key={d.id}
               doc={d}
               onToggleStar={toggleStar}
-              onAction={onAction}
+              onAction={handleAction}
+              actions={DEFAULT_DOCUMENT_ACTIONS}
+              disableActions={d.isOwner === false}
               menuPushContent
               denseMenu
               menuClassName="w-52 p-0"
@@ -119,6 +128,27 @@ export default function RecentPage() {
           No recent documents in the last {RECENT_DAYS} days.
         </div>
       ) : null}
+
+      <DocumentActionModal
+        open={modalState.open && modalState.type !== "share"}
+        type={modalState.type}
+        title={modalState.title}
+        message={modalState.message}
+        value={modalState.value}
+        options={modalState.options}
+        confirmText={modalState.confirmText}
+        confirmVariant={modalState.confirmVariant}
+        loading={loadingAction}
+        onClose={closeModal}
+        onConfirm={submitModal}
+      />
+      <ShareModal
+        open={modalState.open && modalState.type === "share"}
+        document={modalState.doc}
+        loading={loadingAction}
+        onClose={closeModal}
+        onShareWithPeople={shareWithPeople}
+      />
     </div>
   );
 }
