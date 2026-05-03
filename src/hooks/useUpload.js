@@ -46,7 +46,7 @@ export const useUpload = (onComplete) => {
       setError("No file selected");
       return;
     }
-  
+
   // prevent upload of files larger than MAX_FILE_SIZE
     if (selectedFile.size > MAX_FILE_SIZE) {
       setStatus("error");
@@ -64,7 +64,7 @@ export const useUpload = (onComplete) => {
 
     const tokenUserId = getUserIdFromToken(token);
     const resolvedOwnerId = String(ownerId || tokenUserId || "").trim();
-    
+
     // Team id is intentionally not decoded from JWT.
     const teamIdFromStorage = readTeamIdFromStorage();
     const rawTeamId = String(teamId || teamIdFromStorage || "").trim();
@@ -81,7 +81,7 @@ export const useUpload = (onComplete) => {
     const startTime = Date.now();
 
     try {
-      
+
       //Initialize upload session and get fileId for chunk uploads
       const totalChunks = Math.ceil(selectedFile.size / CHUNK_SIZE);
       const init = await uploadService.initUpload(selectedFile, {

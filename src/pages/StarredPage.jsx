@@ -2,6 +2,10 @@ import { useMemo, useState } from "react";
 import { Plus, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { DocumentCard, DocumentRow, DocumentsToolbar } from "../components/documents";
+import { DEFAULT_DOCUMENT_ACTIONS } from "../components/documents/DocumentActionsMenu";
+import DocumentActionModal from "../components/documents/DocumentActionModal";
+import ShareModal from "../components/documents/share/ShareModal";
+import useDocumentActions from "../hooks/useDocumentActions";
 import { usePaginatedMyDocuments } from "../hooks/usePaginatedMyDocuments";
 
 export default function StarredPage() {
@@ -22,11 +26,12 @@ export default function StarredPage() {
     reload,
     toggleStar,
   } = usePaginatedMyDocuments({ starred: true });
+  const { modalState, loadingAction, handleAction, closeModal, submitModal, shareWithPeople } = useDocumentActions({
+    onSuccess: reload,
+  });
   const [viewMode, setViewMode] = useState("grid");
 
   const visibleDocs = useMemo(() => documents, [documents]);
-
-  function onAction() {}
 
   return (
     <div className="flex w-full max-w-6xl flex-1 flex-col gap-5">
@@ -65,7 +70,9 @@ export default function StarredPage() {
               key={d.id}
               doc={d}
               onToggleStar={toggleStar}
-              onAction={onAction}
+              onAction={handleAction}
+              actions={DEFAULT_DOCUMENT_ACTIONS}
+              disableActions={d.isOwner === false}
               menuPushContent
               denseMenu
               menuClassName="w-52 p-0"
@@ -79,7 +86,9 @@ export default function StarredPage() {
               key={d.id}
               doc={d}
               onToggleStar={toggleStar}
-              onAction={onAction}
+              onAction={handleAction}
+              actions={DEFAULT_DOCUMENT_ACTIONS}
+              disableActions={d.isOwner === false}
               menuPushContent
               denseMenu
               menuClassName="w-52 p-0"
@@ -136,6 +145,27 @@ export default function StarredPage() {
           No starred documents yet.
         </div>
       ) : null}
+
+      <DocumentActionModal
+        open={modalState.open && modalState.type !== "share"}
+        type={modalState.type}
+        title={modalState.title}
+        message={modalState.message}
+        value={modalState.value}
+        options={modalState.options}
+        confirmText={modalState.confirmText}
+        confirmVariant={modalState.confirmVariant}
+        loading={loadingAction}
+        onClose={closeModal}
+        onConfirm={submitModal}
+      />
+      <ShareModal
+        open={modalState.open && modalState.type === "share"}
+        document={modalState.doc}
+        loading={loadingAction}
+        onClose={closeModal}
+        onShareWithPeople={shareWithPeople}
+      />
     </div>
   );
 }

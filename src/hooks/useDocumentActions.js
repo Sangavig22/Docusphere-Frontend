@@ -89,18 +89,19 @@ export default function useDocumentActions({ onSuccess } = {}) {
 
   async function handleMove(doc, selectedDestination) {
 
-     let destination; 
-    if (selectedDestination === "personal") { 
-      destination = { teamId: null }; 
-    } else if (typeof selectedDestination === "string" && 
-selectedDestination.startsWith("team:")) { 
-      const teamId = selectedDestination.slice(5).trim(); 
-      if (!teamId) { 
-        throw new Error("Please select a valid team destination."); 
-      } 
-      destination = { teamId }; 
-    } else { 
-      throw new Error("Please select where to move this document."); 
+     let destination;
+    if (selectedDestination === "personal") {
+      destination = { teamId: null };
+    }
+    else if (typeof selectedDestination === "string" &&
+    selectedDestination.startsWith("team:")) {
+      const teamId = selectedDestination.slice(5).trim();
+      if (!teamId) {
+        throw new Error("Please select a valid team destination.");
+      }
+      destination = { teamId };
+    } else {
+      throw new Error("Please select where to move this document.");
     }
 
 
@@ -121,25 +122,25 @@ selectedDestination.startsWith("team:")) {
     }
   }
 
-    async function openMoveModal(doc) { 
-    let normalizedTeams = []; 
-    try { 
-      const payload = await getTeams(); 
-      const root = payload?.data ?? payload; 
-      const teams = Array.isArray(root) 
-        ? root 
-        : Array.isArray(root?.teams) 
-          ? root.teams 
-          : Array.isArray(root?.items) 
-            ? root.items 
-            : []; 
-      normalizedTeams = teams.map((team) => ({ 
-        value: `team:${team.id}`, 
-        label: team.name || team.teamName || "Unnamed team", 
-      })); 
-    } catch { 
-      toast.warning("Could not load teams. You can still move to personal space."); 
-    } 
+    async function openMoveModal(doc) {
+    let normalizedTeams = [];
+    try {
+      const payload = await getTeams();
+      const root = payload?.data ?? payload;
+      const teams = Array.isArray(root)
+        ? root
+        : Array.isArray(root?.teams)
+          ? root.teams
+          : Array.isArray(root?.items)
+            ? root.items
+            : [];
+      normalizedTeams = teams.map((team) => ({
+        value: `team:${team.id}`,
+        label: team.name || team.teamName || "Unnamed team",
+      }));
+    } catch {
+      toast.warning("Could not load teams. You can still move to personal space.");
+    }
 
     const options = isTeamDocument(doc)
       ? [{ value: "personal", label: "Personal space" }, ...normalizedTeams]

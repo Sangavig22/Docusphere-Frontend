@@ -118,16 +118,15 @@ export default function DocumentCard({
           <span className="text-slate-300">•</span>
           <span>{formatRelativeTime(doc.updatedAt)}</span>
             {/* added uploadedBy field in document and showing it in card if available  for team*/} 
-           
-          {doc.uploadedBy && doc.uploadedBy !== "-" && ( 
-            <> 
-              <span className="text-slate-300">•</span> 
-              <span className="truncate max-w-[120px]">By {doc.uploadedBy}</span> 
-            </> 
+
+          {doc.uploadedBy && doc.uploadedBy !== "-" && (
+            <>
+              <span className="text-slate-300">•</span>
+              <span className="truncate max-w-[120px]">By {doc.uploadedBy}</span>
+            </>
           )}
 
         </div>
-             
         <div className="mt-auto flex items-center gap-2 pt-3">
           <span className="inline-flex shrink-0 items-center rounded-md bg-slate-100 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
             {formatLabel}
