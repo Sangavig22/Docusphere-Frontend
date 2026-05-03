@@ -25,7 +25,6 @@ export default function ShareModal({
   const [sending, setSending] = useState(false);
   const [updatingGeneralAccess, setUpdatingGeneralAccess] = useState(false);
   const [invitePermissionOpen, setInvitePermissionOpen] = useState(false);
-  const [generalAccessOpen, setGeneralAccessOpen] = useState(false);
   const [generalPermissionOpen, setGeneralPermissionOpen] = useState(false);
   const [sendStatus, setSendStatus] = useState({ type: "", message: "" });
   const title = useMemo(() => `Share "${document?.name || "Document"}"`, [document?.name]);
@@ -42,7 +41,6 @@ export default function ShareModal({
     setSending(false);
     setUpdatingGeneralAccess(false);
     setInvitePermissionOpen(false);
-    setGeneralAccessOpen(false);
     setGeneralPermissionOpen(false);
     setSendStatus({ type: "", message: "" });
   }, [open]);
@@ -107,7 +105,7 @@ export default function ShareModal({
         // Switching back to invite-only clears previously generated public link in UI.
         setGeneralAccessType("EMAIL_INVITE");
         setPublicLink("");
-        setSendStatus({ type: "success", message: "General access set to invited users only." });
+        setSendStatus({ type: "success", message: "Public link sharing turned off." });
         return "";
       }
 
@@ -133,9 +131,14 @@ export default function ShareModal({
 
   async function handleCopyLink() {
     try {
+      // Invite-only mode has no public URL; do not call the PUBLIC API here or the
+      // backend would enable link sharing and the UI would jump to "Anyone with link".
+      if (generalAccessType === "EMAIL_INVITE") {
+        return;
+      }
+
       let linkToCopy = publicLink;
       if (!linkToCopy) {
-        // Lazily creates/refreshes public link before copy.
         linkToCopy = await handleGeneralAccessUpdate("PUBLIC", generalPermission);
       }
       if (!linkToCopy) {
@@ -210,7 +213,6 @@ export default function ShareModal({
                       onClick={() => {
                         if (loading || sending || updatingGeneralAccess) return;
                         setInvitePermissionOpen((prev) => !prev);
-                        setGeneralAccessOpen(false);
                         setGeneralPermissionOpen(false);
                       }}
                       disabled={loading || sending || updatingGeneralAccess}
@@ -246,125 +248,6 @@ export default function ShareModal({
 
               <SharedUsersList users={recipients} permission={invitePermission} />
 
-              <div>
-                <p className="mb-2 text-base font-semibold text-slate-700">General access</p>
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-start gap-3 min-w-0">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-700">
-                        {generalAccessType === "PUBLIC" ? <Globe size={18} /> : <Lock size={18} />}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="relative">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (loading || sending || updatingGeneralAccess) return;
-                              setGeneralAccessOpen((prev) => !prev);
-                              setInvitePermissionOpen(false);
-                              setGeneralPermissionOpen(false);
-                            }}
-                            disabled={loading || sending || updatingGeneralAccess}
-                            className="inline-flex items-center gap-2 bg-transparent py-1 text-left text-sm font-semibold text-slate-900"
-                          >
-                            <span>{generalAccessType === "PUBLIC" ? "Anyone on the web with link" : "Only people invited"}</span>
-                            <ChevronDown size={14} className="text-slate-500" />
-                          </button>
-                          {generalAccessOpen ? (
-                            <div className="absolute left-0 top-9 z-30 min-w-[250px] rounded-xl border border-slate-200 bg-white p-1 shadow-lg">
-                              {[
-                                { value: "EMAIL_INVITE", label: "Only people invited" },
-                                { value: "PUBLIC", label: "Anyone on the web with link" },
-                              ].map((option) => (
-                                <button
-                                  key={option.value}
-                                  type="button"
-                                  onClick={() => {
-                                    handleGeneralAccessUpdate(option.value, generalPermission);
-                                    setGeneralAccessOpen(false);
-                                  }}
-                                  className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100"
-                                >
-                                  <span>{option.label}</span>
-                                  {generalAccessType === option.value ? <Check size={14} className="text-blue-600" /> : null}
-                                </button>
-                              ))}
-                            </div>
-                          ) : null}
-                        </div>
-                        <p className="text-xs text-slate-500">
-                          {generalAccessType === "PUBLIC"
-                            ? "Anyone with this link can access"
-                            : "Only explicitly invited users can access"}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="relative self-start sm:self-auto">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (loading || sending || updatingGeneralAccess) return;
-                          setGeneralPermissionOpen((prev) => !prev);
-                          setInvitePermissionOpen(false);
-                          setGeneralAccessOpen(false);
-                        }}
-                        disabled={loading || sending || updatingGeneralAccess}
-                        className="inline-flex min-w-[150px] items-center justify-between rounded-lg border border-slate-300 bg-white py-2 pl-3 pr-2 text-sm text-slate-700"
-                      >
-                        <span>{generalPermission === "COMMENT" ? "Can comment" : "Can view"}</span>
-                        <ChevronDown size={14} className="text-slate-500" />
-                      </button>
-                      {generalPermissionOpen ? (
-                        <div className="absolute right-0 top-11 z-30 w-44 rounded-xl border border-slate-200 bg-white p-1 shadow-lg">
-                          {[
-                            { value: "VIEW", label: "Can view" },
-                            { value: "COMMENT", label: "Can comment" },
-                          ].map((option) => (
-                            <button
-                              key={option.value}
-                              type="button"
-                              onClick={() => {
-                                setGeneralPermission(option.value);
-                                if (generalAccessType === "PUBLIC") {
-                                  handleGeneralAccessUpdate("PUBLIC", option.value);
-                                }
-                                setGeneralPermissionOpen(false);
-                              }}
-                              className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100"
-                            >
-                              <span>{option.label}</span>
-                              {generalPermission === option.value ? <Check size={14} className="text-blue-600" /> : null}
-                            </button>
-                          ))}
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-2 flex items-center justify-end gap-2">
-                  {publicLink ? (
-                    <a
-                      href={publicLink}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="truncate text-xs font-medium text-blue-600 underline"
-                      title={publicLink}
-                    >
-                      Open shared link
-                    </a>
-                  ) : null}
-                  <button
-                    type="button"
-                    onClick={handleCopyLink}
-                    disabled={loading || sending || updatingGeneralAccess}
-                    className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    Copy Link
-                  </button>
-                </div>
-              </div>
-
               <div className="flex justify-end">
                 <button
                   type="button"
@@ -375,11 +258,129 @@ export default function ShareModal({
                   {sending ? "Sending..." : "Send"}
                 </button>
               </div>
+
+              <div>
+                <p className="mb-2 text-base font-semibold text-slate-700">General access</p>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex min-w-0 flex-1 items-start gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-700">
+                        {generalAccessType === "PUBLIC" ? <Globe size={18} /> : <Lock size={18} />}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-slate-900">Anyone on the web with link</p>
+                        <p className="text-xs text-slate-500">
+                          {generalAccessType === "PUBLIC" ? "Anyone with this link can access" : "Public link sharing off"}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={generalAccessType === "PUBLIC"}
+                      aria-label="Toggle public link sharing"
+                      disabled={loading || sending || updatingGeneralAccess}
+                      onClick={() => {
+                        if (loading || sending || updatingGeneralAccess) return;
+                        setInvitePermissionOpen(false);
+                        setGeneralPermissionOpen(false);
+                        const next = generalAccessType === "PUBLIC" ? "EMAIL_INVITE" : "PUBLIC";
+                        handleGeneralAccessUpdate(next, generalPermission);
+                      }}
+                      className={[
+                        "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+                        generalAccessType === "PUBLIC" ? "bg-blue-600" : "bg-slate-300",
+                      ].join(" ")}
+                    >
+                      <span
+                        className={[
+                          "pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ease-out",
+                          generalAccessType === "PUBLIC" ? "translate-x-5" : "translate-x-0.5",
+                        ].join(" ")}
+                      />
+                    </button>
+                  </div>
+
+                  {generalAccessType === "PUBLIC" ? (
+                    <>
+                      <div className="mt-3 flex flex-col gap-2 border-t border-slate-200 pt-3 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="text-xs font-medium text-slate-600">People with the link</p>
+                        <div className="relative self-end sm:self-auto">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (loading || sending || updatingGeneralAccess) return;
+                              setGeneralPermissionOpen((prev) => !prev);
+                              setInvitePermissionOpen(false);
+                            }}
+                            disabled={loading || sending || updatingGeneralAccess}
+                            className="inline-flex min-w-[150px] items-center justify-between rounded-lg border border-slate-300 bg-white py-2 pl-3 pr-2 text-sm text-slate-700"
+                          >
+                            <span>{generalPermission === "COMMENT" ? "Can comment" : "Can view"}</span>
+                            <ChevronDown size={14} className="text-slate-500" />
+                          </button>
+                          {generalPermissionOpen ? (
+                            <div className="absolute right-0 top-11 z-30 w-44 rounded-xl border border-slate-200 bg-white p-1 shadow-lg">
+                              {[
+                                { value: "VIEW", label: "Can view" },
+                                { value: "COMMENT", label: "Can comment" },
+                              ].map((option) => (
+                                <button
+                                  key={option.value}
+                                  type="button"
+                                  onClick={() => {
+                                    setGeneralPermission(option.value);
+                                    handleGeneralAccessUpdate("PUBLIC", option.value);
+                                    setGeneralPermissionOpen(false);
+                                  }}
+                                  className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100"
+                                >
+                                  <span>{option.label}</span>
+                                  {generalPermission === option.value ? <Check size={14} className="text-blue-600" /> : null}
+                                </button>
+                              ))}
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+
+                      <div className="mt-3 rounded-lg border border-slate-200 bg-white px-3 py-2">
+                        <p className="mb-2 text-xs font-medium text-slate-600">Public link</p>
+                        <div className="flex flex-wrap items-center justify-end gap-2">
+                          {publicLink ? (
+                            <a
+                              href={publicLink}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="min-w-0 flex-1 truncate text-left text-xs font-medium text-blue-600 underline sm:flex-initial sm:text-right"
+                              title={publicLink}
+                            >
+                              Open public link
+                            </a>
+                          ) : null}
+                          <button
+                            type="button"
+                            onClick={handleCopyLink}
+                            disabled={loading || sending || updatingGeneralAccess}
+                            className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            Copy public link
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  ) : null}
+                </div>
+              </div>
               {sendStatus.message ? (
                 <p
                   className={[
                     "text-sm",
-                    sendStatus.type === "success" ? "text-emerald-600" : "text-rose-600",
+                    sendStatus.type === "success"
+                      ? "text-emerald-600"
+                      : sendStatus.type === "info"
+                        ? "text-slate-600"
+                        : "text-rose-600",
                   ].join(" ")}
                 >
                   {sendStatus.message}
