@@ -42,6 +42,20 @@ export default function DocumentPreviewPage() {
     }
   };
 
+  const formatUpdatedDate = (date) => {
+    if (!date) return "N/A";
+    try {
+      // Handle array format [yyyy, mm, dd...] if backend sends it
+      if (Array.isArray(date)) {
+        return new Date(date[0], date[1] - 1, date[2], date[3] || 0, date[4] || 0).toLocaleString();
+      }
+      const d = new Date(date);
+      return isNaN(d.getTime()) ? "N/A" : d.toLocaleString();
+    } catch (e) {
+      return "N/A";
+    }
+  };
+
   if (loading) {
     return (
       <Layout pageTitle="Loading..." pageSubtitle="Fetching document details">
@@ -52,10 +66,12 @@ export default function DocumentPreviewPage() {
     );
   }
 
+  const fileType = document?.type || document?.name?.split('.').pop();
+
   return (
     <Layout 
       pageTitle={document?.name || "Document Preview"} 
-      pageSubtitle={`Last updated: ${new Date(document?.updatedAt).toLocaleString()}`}
+      pageSubtitle={`Last updated: ${formatUpdatedDate(document?.updatedAt || document?.updated_at)}`}
     >
       <div className="flex flex-col h-full gap-4">
         {/* Toolbar */}
@@ -92,7 +108,7 @@ export default function DocumentPreviewPage() {
             <PreviewViewer 
               fileUrl={document?.fileUrl} 
               fileName={document?.name}
-              fileType={document?.type}
+              fileType={fileType}
             />
           </div>
 

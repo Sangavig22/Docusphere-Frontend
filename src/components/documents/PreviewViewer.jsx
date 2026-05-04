@@ -4,15 +4,17 @@ export default function PreviewViewer({ fileUrl, fileName, fileType }) {
   const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
   const [isLoadingPdf, setIsLoadingPdf] = useState(false);
 
+  const objectUrlRef = React.useRef(null);
+
   useEffect(() => {
-    let objectUrl = null;
     if (fileUrl && fileType?.toLowerCase() === "pdf") {
       setIsLoadingPdf(true);
       fetch(fileUrl)
         .then((res) => res.blob())
         .then((blob) => {
-          objectUrl = URL.createObjectURL(new Blob([blob], { type: "application/pdf" }));
-          setPdfBlobUrl(objectUrl);
+          const url = URL.createObjectURL(new Blob([blob], { type: "application/pdf" }));
+          objectUrlRef.current = url;
+          setPdfBlobUrl(url);
           setIsLoadingPdf(false);
         })
         .catch((err) => {
@@ -23,8 +25,9 @@ export default function PreviewViewer({ fileUrl, fileName, fileType }) {
     }
 
     return () => {
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+        objectUrlRef.current = null;
       }
     };
   }, [fileUrl, fileType]);
