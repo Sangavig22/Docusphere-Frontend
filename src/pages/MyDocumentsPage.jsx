@@ -28,7 +28,13 @@ export default function MyDocumentsPage() {
     toggleStar,
   } = usePaginatedMyDocuments();
   const { modalState, loadingAction, handleAction, closeModal, submitModal, shareWithPeople } = useDocumentActions({
-    onSuccess: reload,
+    onSuccess: (type, doc) => {
+      if (type === "preview" && doc) {
+        navigate(`/documents/${doc.id}/preview`);
+      } else {
+        reload();
+      }
+    },
   });
   const [viewMode, setViewMode] = useState("grid");
   const visibleDocs = useMemo(() => docs, [docs]);

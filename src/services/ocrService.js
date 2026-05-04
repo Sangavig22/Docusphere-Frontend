@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '../config';
+import { API_BASE_URL } from '../config/api';
 import authService from '../services/authService';
 
 export const ocrService = {

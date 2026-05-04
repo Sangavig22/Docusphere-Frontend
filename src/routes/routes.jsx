@@ -22,6 +22,7 @@ import SharedDocumentPage from "../pages/SharedDocumentPage";
 import AdminTeamManagementPage from "../pages/AdminTeamManagementPage.jsx";
 import AdminTeamDetailsPage from "../pages/AdminTeamDetailsPage.jsx";
 import AdminMergeTeamsPage from "../pages/AdminMergeTeamsPage.jsx";
+import DocumentPreviewPage from "../pages/DocumentPreviewPage";
 
 
 
@@ -40,7 +41,7 @@ export const routes = [
     path: "/",
     element: <LandingPage />,
   },
-   {
+  {
     path: "/signup",
     element: <SignUp />,
   },
@@ -48,7 +49,7 @@ export const routes = [
     path: "/signin",
     element: <SignIn />,
   },
-   {
+  {
     path: "/forgot-password",
     element: <ForgotPassword />,
   },
@@ -60,7 +61,7 @@ export const routes = [
     path: "/verify-email",
     element: <EmailVerification />,
   },
-   {
+  {
     path: "/share/:token",
     element: <SharedDocumentPage />,
   },
@@ -75,7 +76,7 @@ export const routes = [
   },
   {
     path: "/uploads",
-    element: withLayout(<UploadPage />, "Uploads", "Drag and drop files or browse to upload." ),
+    element: withLayout(<UploadPage />, "Uploads", "Drag and drop files or browse to upload."),
   },
   {
     path: "/ocr",
@@ -85,11 +86,16 @@ export const routes = [
       "Extract text and summarize documents."
     ),
   },
-   {
+  {
     path: "/documents",
     element: withLayout(<MyDocumentsPage />, "My Documents", "Manage and organize all your documents."),
   },
- 
+  {
+    path: "/documents/:documentId/preview",
+    element: <DocumentPreviewPage />,
+  },
+
+
   {
     path: "/starred",
     element: withLayout(<StarredPage />, "Starred ", "Manage and organize all starred documents."),
@@ -98,7 +104,7 @@ export const routes = [
     path: "/recent",
     element: withLayout(<RecentPage />, "Recent", "Manage and organize all recently opened documents."),
   },
-   {
+  {
     path: "/trash",
     element: withLayout(<TrashPage />, "Recycle Bin", "Restore or permanently delete documents."),
   },

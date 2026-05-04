@@ -27,7 +27,13 @@ export default function RecentPage() {
     toggleStar,
   } = usePaginatedMyDocuments({ recentDays: RECENT_DAYS, pageSize: RECENT_PAGE_LIMIT });
   const { modalState, loadingAction, handleAction, closeModal, submitModal, shareWithPeople } = useDocumentActions({
-    onSuccess: reload,
+    onSuccess: (type, doc) => {
+      if (type === "preview" && doc) {
+        navigate(`/documents/${doc.id}/preview`);
+      } else {
+        reload();
+      }
+    },
   });
   const [viewMode, setViewMode] = useState("grid");
 

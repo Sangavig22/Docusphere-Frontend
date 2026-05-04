@@ -191,6 +191,16 @@ const authService = {
     getUserId() {
         return sessionStorage.getItem(this.USER_ID);
     },
+
+    getCurrentUser() {
+        if (!this.isAuthenticated()) return null;
+        return {
+            id: sessionStorage.getItem(this.USER_ID),
+            email: sessionStorage.getItem(this.USER_EMAIL),
+            fullName: sessionStorage.getItem(this.USER_FULLNAME),
+            role: sessionStorage.getItem(this.USER_ROLE)
+        };
+    },
 };
 
 export default authService;

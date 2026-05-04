@@ -164,6 +164,12 @@ export const useUpload = (onComplete) => {
 
         process();
       });
+      
+      // Ensure it shows 100% at the end
+      setPercent(100);
+      
+      // Small delay so user can see the 100% bar before it transitions
+      await new Promise(r => setTimeout(r, 600));
 
       setStatus("success");
       onComplete?.(selectedFile);

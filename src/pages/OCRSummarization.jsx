@@ -83,6 +83,7 @@ export default function OCRSummarization() {
     setSelectedFile(file);
     
     try {
+      setStatus("processing");
       // 1. Initial Upload Call (Returns Job ID)
       const { jobId } = await ocrService.uploadDocument(file);
       
@@ -92,6 +93,12 @@ export default function OCRSummarization() {
         const status = await ocrService.checkStatus(jobId);
         
         if (status.status === "COMPLETED") {
+          // Notify Step 4 (This makes Step 3 "done" / green)
+          window.dispatchEvent(new CustomEvent("ocr-progress", { detail: { step: 4 } }));
+          
+          // Small delay for UI feel so user sees the last green checkmark
+          await new Promise(r => setTimeout(r, 1000));
+
           setDocumentResults(status.result);
           setStatus("success");
           isDone = true;
@@ -172,6 +179,16 @@ export default function OCRSummarization() {
           onFileSelected={handleFileSelected}
           onUploadComplete={handleUploadComplete}
         />
+      )}
+
+      {/* Processing State — shown during OCR/AI analysis */}
+      {status === "processing" && (
+        <UploadCard title="OCR Summarization" subtitle="Analyzing your document...">
+          <OcrProcessingView 
+            filename={selectedFile?.name || "Document"} 
+            onCancel={resetAll} 
+          />
+        </UploadCard>
       )}
 
       {/* Regenerating State — spinner shown while re-processing */}

@@ -27,7 +27,13 @@ export default function StarredPage() {
     toggleStar,
   } = usePaginatedMyDocuments({ starred: true });
   const { modalState, loadingAction, handleAction, closeModal, submitModal, shareWithPeople } = useDocumentActions({
-    onSuccess: reload,
+    onSuccess: (type, doc) => {
+      if (type === "preview" && doc) {
+        navigate(`/documents/${doc.id}/preview`);
+      } else {
+        reload();
+      }
+    },
   });
   const [viewMode, setViewMode] = useState("grid");
 
