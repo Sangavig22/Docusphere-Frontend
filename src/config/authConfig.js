@@ -1,7 +1,7 @@
 // Authentication configuration
 export const AUTH_CONFIG = {
   tokenKey: "authToken",
-  loginRoute: "/login",
+  loginRoute: "/signin",
   logoutText: "Sign Out",
   fallbackUserName: "User",
 };
