@@ -14,7 +14,7 @@ function QuickActionCard({ title, description, icon, color = "indigo" }) {
       className={`flex flex-col items-start gap-2 rounded-xl px-4 py-3 text-left transition-shadow hover:shadow-md ${colors}`}
     >
       {icon && (
-        <div className="h-9 w-9 rounded-lg bg-white/80 flex items-center justify-center text-current shadow-sm">
+        <div className="h-9 w-9 rounded-lg bg-card/80 flex items-center justify-center text-current shadow-sm">
           {icon}
         </div>
       )}

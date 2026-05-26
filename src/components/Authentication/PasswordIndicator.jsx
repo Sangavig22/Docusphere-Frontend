@@ -54,7 +54,7 @@ const PasswordIndicator = ({ password = "", isFocused = false }) => {
       )}
 
       {password.length > 0 && (
-        <h3 className="text-lg font-semibold text-gray-800 mb-3">
+        <h3 className="text-lg font-semibold text-gray-500 mb-3">
           {allRequirementsMet ? (
             <span style={{ color: "#22c55e" }}>Strong password</span>
           ) : (
@@ -74,11 +74,11 @@ const PasswordIndicator = ({ password = "", isFocused = false }) => {
             {requirement.met ? (
               <Check size={20} className="text-green-500 flex-shrink-0" strokeWidth={3} />
             ) : (
-              <X size={20} className="text-gray-400 flex-shrink-0" strokeWidth={3} />
+              <X size={20} className="text-gray-500 flex-shrink-0" strokeWidth={3} />
             )}
             <span
               className={`font-medium transition-colors ${
-                requirement.met ? "text-green-600" : "text-gray-600"
+                requirement.met ? "text-green-600" : "text-gray-500"
               }`}
             >
               {requirement.label}

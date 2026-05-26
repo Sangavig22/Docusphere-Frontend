@@ -39,26 +39,32 @@ export const routes = [
   {
     path: "/",
     element: <LandingPage />,
+    theme: "light",
   },
    {
     path: "/signup",
     element: <SignUp />,
+    theme: "light",
   },
   {
     path: "/signin",
     element: <SignIn />,
+    theme: "light",
   },
    {
     path: "/forgot-password",
     element: <ForgotPassword />,
+    theme: "light",
   },
   {
     path: "/reset-password",
     element: <ResetPassword />,
+    theme: "light",
   },
   {
     path: "/verify-email",
     element: <EmailVerification />,
+    theme: "light",
   },
    {
     path: "/share/:token",
@@ -68,6 +74,7 @@ export const routes = [
   {
     path: "/dashboard-selector",
     element: <DashboardSelector />,
+    theme: "light",
   },
   {
     path: "/dashboard",

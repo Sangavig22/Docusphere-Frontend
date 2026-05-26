@@ -14,7 +14,7 @@ import { useUser } from "../context/UserContext";
 
 const SettingsPage = () => {
   const settingsInputClass =
-    "mt-0 !max-w-none !transform-none !transition-none hover:!transform-none hover:!translate-y-0 !hover:border-gray-200/30 !hover:bg-white/30 !hover:shadow-2xl [&>input]:!text-base";
+    "mt-0 !max-w-none !transform-none !transition-none hover:!transform-none hover:!translate-y-0 !hover:border-border !hover:bg-card/30 !hover:shadow-2xl [&>input]:!text-base";
 
   const { user, updateUser, refreshUser } = useUser();
 
@@ -248,10 +248,10 @@ const SettingsPage = () => {
       </SettingsBox>
 
       {/* Change Password Box */}
-      <SettingsBox title="Change Password" subtitle="Use a strong password you don't reuse anywhere else." style={{ background: '#fafbfc' }}>
+      <SettingsBox title="Change Password" subtitle="Use a strong password you don't reuse anywhere else.">
         <form onSubmit={handlePasswordUpdate} autoComplete="off">
           <div style={{ marginBottom: 28, width: "calc(50% - 12px)" }}>
-            <label style={{ fontWeight: 600, fontSize: 18, marginBottom: 8, display: 'block' }}>Current password</label>
+            <label style={{ fontWeight: 600, fontSize: 18, marginBottom: 8, display: 'block', color: 'var(--text)' }}>Current password</label>
             <InputField
               type={passwordField.type}
               name="currentPassword"
@@ -267,7 +267,7 @@ const SettingsPage = () => {
           </div>
           <div style={{ display: 'flex', gap: 24, marginBottom: 32 }}>
             <div style={{ flex: 1 }}>
-              <label style={{ fontWeight: 600, fontSize: 18, marginBottom: 8, display: 'block' }}>New password</label>
+              <label style={{ fontWeight: 600, fontSize: 18, marginBottom: 8, display: 'block', color: 'var(--text)' }}>New password</label>
               <InputField
                 type={passwordField.type}
                 name="newPassword"
@@ -283,7 +283,7 @@ const SettingsPage = () => {
               <PasswordIndicator password={passwordForm.newPassword} isFocused={showNew || showConfirm} />
             </div>
             <div style={{ flex: 1 }}>
-              <label style={{ fontWeight: 600, fontSize: 18, marginBottom: 8, display: 'block' }}>Confirm new password</label>
+              <label style={{ fontWeight: 600, fontSize: 18, marginBottom: 8, display: 'block', color: 'var(--text)' }}>Confirm new password</label>
               <InputField
                 type={confirmPasswordField.type}
                 name="confirmPassword"

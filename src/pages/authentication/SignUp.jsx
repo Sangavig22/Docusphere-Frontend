@@ -68,7 +68,6 @@ const SignUp = () => {
         } catch (error) {
           console.error("Sign up error:", error);
           toast.error(error.message || "An error occurred. Please try again.");
-          throw error;
         }
       });
   };
@@ -94,7 +93,7 @@ const SignUp = () => {
         onAppleClick={() => console.log("Apple login")}
       />
 
-      <p className="text-black text-xl mb-4">Or use your email for registration</p>
+      <p className="text-text text-xl mb-4">Or use your email for registration</p>
       <form onSubmit={handleSubmit} className="flex flex-col items-center gap-3 w-full text-center">
         {inputFields.map((field) => {
           const isPasswordField = field.name === "password";

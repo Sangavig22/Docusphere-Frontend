@@ -1,37 +1,79 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import authService from "../services/authService";
 import { routes } from "./routes";
+import { useTheme } from "../context/ThemeContext";
+
+const LIGHT_ONLY_ROUTES = [
+    "/signin",
+    "/signup",
+    "/dashboard-selector",
+    "/verify-email",
+    "/forgot-password",
+    "/reset-password",
+];
+
+function RouteThemeController() {
+    const { theme } = useTheme();
+    const location = useLocation();
+
+    useLayoutEffect(() => {
+        const root = document.documentElement;
+        const forceLight = LIGHT_ONLY_ROUTES.includes(location.pathname);
+        const finalTheme = forceLight ? "light" : theme;
+
+        if (finalTheme === "dark") {
+            root.classList.add("dark");
+        } else {
+            root.classList.remove("dark");
+        }
+
+        root.style.colorScheme = finalTheme;
+        document.body.style.colorScheme = finalTheme;
+    }, [location.pathname, theme]);
+
+    return null;
+}
 
 function AuthGuard() {
-    const [isLoading, setIsLoading] = useState(true);
+    const [loading, setLoading] = useState(true);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [userRole, setUserRole] = useState(null);
+
     const location = useLocation();
 
     useEffect(() => {
-        const initializeAuth = () => {
-            // Restore Remember Me session
-            authService.restoreFromRememberMe();
+        const initializeAuth = async () => {
+            try {
+                const sessionValid = await authService.bootstrapSession();
 
-            const token = authService.getToken();
-            const role = sessionStorage.getItem(authService.USER_ROLE) || localStorage.getItem(authService.REMEMBER_ME_ROLE);
+                setIsAuthenticated(Boolean(sessionValid));
 
-            setIsAuthenticated(!!token);
-            setUserRole(role);
-            setIsLoading(false);
+                setUserRole(sessionValid?.role || null);
+
+            } catch (error) {
+                console.error('Auth bootstrap failed:', error);
+
+                setIsAuthenticated(false);
+                setUserRole(null);
+
+            } finally {
+                setLoading(false);
+            }
         };
 
         initializeAuth();
     }, []);
-    if (isLoading) {
+
+    // WAIT until auth finishes
+    if (loading) {
         return (
-            <div className="w-full h-screen flex items-center justify-center bg-[#05152C]">
-                <div className="animate-spin rounded-full h-16 w-16 border-4 border-white border-t-blue-400" />
+            <div className="p-6 text-center">
+                Loading...
             </div>
         );
     }
-    if (isAuthenticated && (location.pathname === '/' || location.pathname === '/signIn')) {
+    if (isAuthenticated && (location.pathname === '/' || location.pathname === '/signin')) {
         const targetPath = userRole?.toUpperCase() === 'ADMIN' 
             ? '/dashboard-selector' 
             : '/dashboard';
@@ -40,16 +82,19 @@ function AuthGuard() {
     }
 
     return (
-        <Routes>
-            {routes.map((route) => (
-                <Route
-                    key={route.path}
-                    path={route.path}
-                    element={route.element}
-                />
-            ))}
-            <Route path="*" element={<div className="p-6 text-center">404 Not Found</div>} />
-        </Routes>
+        <>
+            <RouteThemeController />
+            <Routes>
+                {routes.map((route) => (
+                    <Route
+                        key={route.path}
+                        path={route.path}
+                        element={route.element}
+                    />
+                ))}
+                <Route path="*" element={<div className="p-6 text-center">404 Not Found</div>} />
+            </Routes>
+        </>
     );
 }
 

@@ -51,7 +51,7 @@ const DashboardSelector = () => {
       <div className="flex flex-col gap-6 items-center justify-center h-full">
         <AuthPageHeading text="Select Dashboard" />
 
-        <p className="text-gray-600 text-lg text-center mb-6">
+        <p className="text-gray-500 text-lg text-center mb-6">
           Choose where you'd like to go:
         </p>
 
@@ -75,7 +75,7 @@ const DashboardSelector = () => {
           )}
         </div>
 
-        <p className="text-gray-400 text-sm mt-8">
+        <p className="text-gray-500 text-sm mt-8">
           Your role will determine which dashboard is available for you.
         </p>
       </div>

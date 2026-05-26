@@ -35,7 +35,7 @@ const ProfilePhotoSection = ({
             width: 120, 
             height: 120, 
             borderRadius: "50%", 
-            background: "linear-gradient(90deg, #114692 0%, #05152C 100%)", 
+            background: "linear-gradient(90deg, var(--primary) 0%, #05152C 100%)", 
             display: "flex", 
             alignItems: "center", 
             justifyContent: "center", 
@@ -63,7 +63,7 @@ const ProfilePhotoSection = ({
             position: "absolute", 
             bottom: 8, 
             left: 8, 
-            background: "#fff", 
+            background: "var(--card)", 
             border: "none", 
             boxShadow: "0 2px 6px #0002", 
             borderRadius: "50%", 
@@ -82,8 +82,8 @@ const ProfilePhotoSection = ({
 
       {/* Right side */}
       <div style={{ flex: 1 }}>
-        <div style={{ fontWeight: 500, marginBottom: 8 }}>Profile photo</div>
-        <div style={{ color: "#888", fontSize: 14, marginBottom: 12 }}>
+        <div style={{ fontWeight: 500, marginBottom: 8, color: "var(--text)" }}>Profile photo</div>
+        <div style={{ color: "var(--muted)", fontSize: 14, marginBottom: 12 }}>
           PNG, JPG up to 5MB.
         </div>
 
@@ -96,8 +96,8 @@ const ProfilePhotoSection = ({
             style={{ 
               padding: "6px 18px", 
               borderRadius: 6, 
-              border: "1px solid #bbb", 
-              background: "#fff", 
+              border: "1px solid var(--border)", 
+              background: "var(--card)", 
               fontWeight: 500, 
               cursor: "pointer", 
               display: "flex", 
@@ -115,8 +115,8 @@ const ProfilePhotoSection = ({
               style={{ 
                 padding: "6px 18px", 
                 borderRadius: 6, 
-                border: "1px solid #bbb", 
-                background: "#fff", 
+                border: "1px solid var(--border)", 
+                background: "var(--card)", 
                 fontWeight: 500, 
                 cursor: "pointer" 
               }}

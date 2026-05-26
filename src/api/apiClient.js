@@ -1,16 +1,35 @@
 import { API_BASE_URL } from '../config/api.js';
 import authService from '../services/authService.js';
 
-export async function request(endpoint, options = {}) {
-  const token = authService.getToken();
+const NON_REFRESH_AUTH_ENDPOINTS = /\/auth\/(signIn|signUp|refresh|logout|forgot-password|reset-password|verify-reset-token|resend-verification-email)/i;
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+async function refreshSession() {
+  const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+    method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-      ...options.headers,
+      Accept: 'application/json',
     },
-    ...options,
+  });
+
+  if (!response.ok) {
+    return false;
+  }
+
+  return true;
+}
+
+export async function request(endpoint, options = {}) {
+  const { headers: customHeaders, skipAuthRefresh = false, ...restOptions } = options;
+
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...restOptions,
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      ...customHeaders,
+    },
   });
   let data = null;
 
@@ -21,16 +40,40 @@ export async function request(endpoint, options = {}) {
   }
 
  if (!response.ok) {
-  const isAuthEndpoint = endpoint.includes('/auth/signIn') || endpoint.includes('/auth/signUp');
-  
-  if (response.status === 401 && !isAuthEndpoint) {
-    authService.signOut();
+  const isAuthEndpoint = NON_REFRESH_AUTH_ENDPOINTS.test(endpoint);
+
+  if (response.status === 401 && !isAuthEndpoint && !skipAuthRefresh) {
+    const refreshed = await refreshSession();
+    if (refreshed) {
+      return request(endpoint, {
+        ...restOptions,
+        headers: customHeaders,
+        skipAuthRefresh: true,
+      });
+    }
+
+    authService.signOut().catch(console.error);
     window.location.href = '/signin';
   }
 
-  throw new Error(
-    data?.message || data?.error || `Request failed (${response.status})`
-  );
+  if (response.status === 401 && !isAuthEndpoint && skipAuthRefresh) {
+    authService.signOut().catch(console.error);
+    window.location.href = '/signin';
+  }
+
+  const errorMessage =
+    (typeof data === 'string' && data) ||
+    data?.message ||
+    data?.detail ||
+    data?.error_description ||
+    data?.error ||
+    response.statusText ||
+    `Request failed (${response.status})`;
+  const error = new Error(errorMessage);
+  error.status = response.status;
+  error.data = data;
+
+  throw error;
 }
 
   return data;
