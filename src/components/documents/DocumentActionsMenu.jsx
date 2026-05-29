@@ -40,10 +40,10 @@ function Item({ icon: Icon, label, danger = false, onClick, dense = false, disab
         "flex w-full items-center gap-2 rounded-lg text-left text-sm transition-colors",
         dense ? "px-2.5 py-1.5" : "px-3 py-2",
         disabled
-          ? "cursor-not-allowed text-slate-400"
+          ? "cursor-not-allowed text-muted"
           : danger
             ? "text-rose-600 hover:bg-rose-50"
-            : "text-slate-700 hover:bg-slate-50",
+            : "text-text hover:bg-card",
       ].join(" ")}
       onClick={onClick}
       disabled={disabled}
@@ -51,7 +51,7 @@ function Item({ icon: Icon, label, danger = false, onClick, dense = false, disab
     >
       <Icon
         size={16}
-        className={disabled ? "text-slate-400" : danger ? "text-rose-600" : "text-slate-500"}
+        className={disabled ? "text-muted" : danger ? "text-rose-600" : "text-muted"}
       />
       <span className="truncate">{label}</span>
     </button>

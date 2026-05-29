@@ -37,8 +37,8 @@ export default function UploadDropzone({
       aria-label="File upload area. Press Enter or Space to browse files."
       className={[
         "flex min-h-[240px] sm:min-h-[300px] md:min-h-[360px] min-w-0 w-full flex-1 flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-blue-300 px-6 py-7 text-center transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:gap-4 sm:px-8 sm:py-10 md:px-10 md:py-12",
-        "bg-white",
-        disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:border-blue-400 hover:bg-slate-50/50",
+        "bg-card",
+        disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:border-blue-400 hover:bg-card/50",
       ].join(" ")}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
@@ -67,10 +67,10 @@ export default function UploadDropzone({
 
       {isOcr ? (
         <div className="flex w-full min-w-0 max-w-md flex-col items-center gap-1.5">
-          <p className="text-base font-medium text-slate-800 sm:text-lg">
+          <p className="text-base font-medium text-text sm:text-lg">
             Upload Document for OCR. Drag and drop or click to select
           </p>
-          <p className="text-sm text-slate-500">Images, scans, or PDFs.</p>
+          <p className="text-sm text-muted">Images, scans, or PDFs.</p>
           <button
             type="button"
             onClick={(e) => {
@@ -85,11 +85,11 @@ export default function UploadDropzone({
         </div>
       ) : (
         <div className="flex w-full min-w-0 max-w-md flex-col items-center gap-1.5">
-          <p className="text-base font-medium text-slate-800 sm:text-lg">Drag & drop files here</p>
-          <p className="text-sm text-slate-600 sm:text-base">
+          <p className="text-base font-medium text-text sm:text-lg">Drag & drop files here</p>
+          <p className="text-sm text-muted sm:text-base">
             or <span className="text-blue-600 underline">browse</span> to upload
           </p>
-          <p className="text-xs text-slate-500 sm:text-sm">Maximum file size: {maxSizeMb}MB</p>
+          <p className="text-xs text-muted sm:text-sm">Maximum file size: {maxSizeMb}MB</p>
         </div>
       )}
     </div>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { downloadSharedDocument, getSharedDocumentByToken } from "../services/documentShareService";
@@ -26,14 +26,20 @@ export default function SharedDocumentPage() {
   const [doc, setDoc] = useState(null);
   const [downloading, setDownloading] = useState(false);
   const hasShownLoadToast = useRef(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  const isLoggedIn = useMemo(() => Boolean(authService.getToken()), []);
   const canComment = doc?.permission === "COMMENT" || doc?.canComment === true;
   const resolvedDocumentId = doc?.documentId || doc?.id;
   const commentAnchorId = "comments";
 
   useEffect(() => {
     let mounted = true;
+    authService.bootstrapSession().then((sessionValid) => {
+      if (mounted) {
+        setIsLoggedIn(Boolean(sessionValid && authService.isAuthenticated()));
+      }
+    });
+
     async function run() {
       setLoading(true);
       setError("");

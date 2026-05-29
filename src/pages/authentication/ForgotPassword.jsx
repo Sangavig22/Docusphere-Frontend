@@ -68,10 +68,10 @@ const ForgotPassword = () => {
         }
         rightContent={
           <div className="w-full max-w-md text-center">
-               <div className="w-full max-w-md bg-gray-50 border border-gray-500 rounded-lg p-5 mb-6">
+               <div className="w-full max-w-md bg-gray-50 border border-gray-200 rounded-lg p-5 mb-6">
               <Mail className="w-16 h-16 text-green-500 mx-auto mb-4" />
-              <h3 className="text-[#05152C] text-xl font-bold mb-2">Link Sent Successfully!</h3>
-              <p className="text-[#05152C] text-medium mb-6">
+              <h3 className="text-text text-xl font-bold mb-2">Link Sent Successfully!</h3>
+              <p className="text-text text-medium mb-6">
                 Click the link in your email to reset your password. The link expires in 30 minutes.
               </p>
               </div>
@@ -83,7 +83,7 @@ const ForgotPassword = () => {
               >
                 Send Another Link
               </PrimaryButton>
-              <p className="text-[#05152C] text-lg mt-3 mb-4 font-medium">
+              <p className="text-text text-lg mt-3 mb-4 font-medium">
                 <AuthLink
                   text="Back to Sign In"
                   onClick={() => navigate('/signIn')}
@@ -104,7 +104,7 @@ const ForgotPassword = () => {
   );
 
   const rightContent = (
-    <form onSubmit={handleSubmit} className="flex flex-col items-center gap-3 w-full text-center border border-white/60 rounded-xl px-8 sm:px-12 py-6 bg-white/80 backdrop-blur-15xl shadow-10xl">
+    <form onSubmit={handleSubmit} className="flex flex-col items-center gap-3 w-full text-center border border-border rounded-xl px-8 sm:px-12 py-6 bg-card/80 backdrop-blur-15xl shadow-10xl">
       <AuthPageHeading text="Forgot Password" />
       <AuthPageSubHeading text="Enter your email address." />
 
@@ -122,7 +122,7 @@ const ForgotPassword = () => {
         />
       ))}
       <PrimaryButton type="submit" loading={isLoading}> SEND RESET LINK </PrimaryButton>
-      <p className="text-[#05152C] text-lg mt-3 mb-12 font-medium">
+      <p className="text-text text-lg mt-3 mb-12 font-medium">
         <AuthLink
           text="Back to login"
           onClick={() => navigate('/signIn')}

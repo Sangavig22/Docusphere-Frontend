@@ -2,7 +2,6 @@ import { useState } from "react";
 import { uploadService } from "../services/uploadService";
 import { UPLOAD_CONSTANTS } from "../constants/uploadConstants";
 import authService from "../services/authService";
-import { getUserIdFromToken } from "../utils/authToken";
 
 const {
   CHUNK_SIZE,
@@ -55,15 +54,14 @@ export const useUpload = (onComplete) => {
     }
 
   // prevent unauthorized access
-    const token = authService.getToken()?.trim();
-    if (!token) {
+    await authService.bootstrapSession();
+    if (!authService.isAuthenticated()) {
       setStatus("error");
-      setError("Missing auth token. Please sign in again.");
+      setError("Missing auth session. Please sign in again.");
       return;
     }
 
-    const tokenUserId = getUserIdFromToken(token);
-    const resolvedOwnerId = String(ownerId || tokenUserId || "").trim();
+    const resolvedOwnerId = String(ownerId || authService.getUserId() || "").trim();
 
     // Team id is intentionally not decoded from JWT.
     const teamIdFromStorage = readTeamIdFromStorage();

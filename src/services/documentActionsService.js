@@ -51,11 +51,11 @@ export async function permanentlyDeleteDocument(id) {
 }
 
 export async function downloadDocument(id, name = "document") {
-  const token = authService.getToken();
   const response = await fetch(`${API_BASE_URL}/documents/${id}/download`, {
     method: "GET",
+    credentials: "include",
     headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      Accept: "application/json",
     },
   });
 

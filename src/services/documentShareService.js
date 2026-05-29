@@ -24,6 +24,7 @@ function buildApiUrl(path) {
 export async function getSharedDocumentByToken(token) {
   const response = await fetch(buildApiUrl(`/api/share/${encodeURIComponent(token)}`), {
     method: "GET",
+    credentials: "include",
     headers: { Accept: "application/json" },
   });
 
@@ -47,7 +48,7 @@ export async function downloadSharedDocument(documentId, token) {
     buildApiUrl(
       `/api/documents/${encodeURIComponent(documentId)}/download?token=${encodeURIComponent(token)}`,
     ),
-    { method: "GET" },
+    { method: "GET", credentials: "include" },
   );
 
   if (!response.ok) {

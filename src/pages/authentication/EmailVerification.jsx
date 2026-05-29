@@ -120,17 +120,17 @@ const EmailVerification = () => {
   const rightContent = (
     <>
       <AuthPageHeading className="mb-14" text="Check your email" />
-      <p className="text-gray-600 text-lg max-w-md text-left mb-4 -mt-2">
+      <p className="text-gray-500 text-lg max-w-md text-left mb-4 -mt-2">
         To start using Docusphere we need you to confirm your account.
       </p>
 
-      <div className="w-full max-w-md bg-gray-50 border border-gray-500 rounded-lg p-5 mb-6">
-        <p className="text-gray-600 text-base mb-4">
+      <div className="w-full max-w-md bg-gray-50 border border-gray-200 rounded-lg p-5 mb-6">
+        <p className="text-gray-500 text-base mb-4">
           Please click the link we sent to the following email:
         </p>
         
         {email ? (
-          <p className="text-gray-900 font-semibold text-lg break-all mb-4">
+          <p className="text-gray-500 font-semibold text-lg break-all mb-4">
             {email}
           </p>
         ) : (
@@ -146,7 +146,7 @@ const EmailVerification = () => {
           </p>
         )}
 
-        <p className="text-gray-600 text-base">
+        <p className="text-gray-500 text-base">
           Not the right email?{" "}
           <AuthLink
             text="Change account"

@@ -66,7 +66,7 @@ export default function LandingPage() {
             </nav>
           </div>
           <div className="text-center">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold leading-tight tracking-tight text-slate-900">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold leading-tight tracking-tight text-text">
               All your documents.
               <span className="block mt-1">One intelligent sphere.</span>
             </h1>
@@ -81,7 +81,7 @@ export default function LandingPage() {
         </section>
 
         <section className="w-full max-w-5xl px-6 mt-10">
-          <div className="rounded-3xl border-2 border-[#05152C] bg-white px-8 py-10 shadow-sm">
+          <div className="rounded-3xl border-2 border-border bg-card px-8 py-10 shadow-sm">
             <h2 className="text-2xl md:text-4xl font-bold  text-center">
               Everything you need to manage documents
             </h2>
@@ -95,12 +95,12 @@ export default function LandingPage() {
                 <div
                   key={t}
                   tabIndex={0}
-                  className="h-full min-h-0 bg-white rounded-2xl border border-[#44ADE9] shadow-xl px-5 py-6 flex flex-col items-center text-center focus:outline-none focus:border transition-all duration-300 hover:shadow-2xl transform hover:-translate-y-1"
+                  className="h-full min-h-0 bg-card rounded-2xl border border-border shadow-xl px-5 py-6 flex flex-col items-center text-center focus:outline-none focus:border transition-all duration-300 hover:shadow-2xl transform hover:-translate-y-1"
                 >
-                  <div className="h-12 w-12 shrink-0 rounded-md bg-[#1A395E] flex items-center justify-center mb-4 ">
-                    <Icon className="text-white" size={22} />
+                  <div className="h-12 w-12 shrink-0 rounded-md bg-surface flex items-center justify-center mb-4 ">
+                    <Icon className="text-text" size={22} />
                   </div>
-                  <h3 className="text-xl font-semibold shrink-0 text-[#05152C]">
+                  <h3 className="text-xl font-semibold shrink-0 text-text">
                     {t}
                   </h3>
                   <p className="mt-2 text-base flex-1 min-h-0">{d}</p>

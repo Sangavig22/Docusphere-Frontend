@@ -9,22 +9,6 @@ import {
   normalizeDocumentType,
 } from "../../utils/documentUtils.js";
 
-function typeStyles(type) {
-  switch (type) {
-    case "pdf":
-      return { bg: "bg-rose-50", fg: "text-rose-600", ring: "ring-rose-100" };
-    case "word":
-      return { bg: "bg-blue-50", fg: "text-blue-600", ring: "ring-blue-100" };
-    case "sheet":
-      return { bg: "bg-emerald-50", fg: "text-emerald-600", ring: "ring-emerald-100" };
-    case "powerpoint":
-      return { bg: "bg-orange-50", fg: "text-orange-600", ring: "ring-orange-100" };
-    case "image":
-      return { bg: "bg-violet-50", fg: "text-violet-600", ring: "ring-violet-100" };
-    default:
-      return { bg: "bg-slate-50", fg: "text-slate-600", ring: "ring-slate-100" };
-  }
-}
 
 export default function DocumentRow({
   doc,
@@ -46,26 +30,26 @@ export default function DocumentRow({
   const styles = useMemo(() => typeStyles(type), [type]);
 
   return (
-    <div className="relative flex items-center gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+    <div className="relative flex items-center gap-4 rounded-2xl border border-border bg-card px-4 py-3 shadow-sm">
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <div className={["flex h-10 w-10 items-center justify-center rounded-xl ring-1", styles.bg, styles.ring].join(" ")}>
           <FileText size={18} className={styles.fg} />
         </div>
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-2">
-            <div className="truncate text-sm font-semibold text-slate-900" title={doc.name}>
+            <div className="truncate text-sm font-semibold text-text" title={doc.name}>
               {doc.name}
             </div>
           </div>
-          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
-            <span className="inline-flex shrink-0 items-center rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
+            <span className="inline-flex shrink-0 items-center rounded-md bg-card px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted">
               {formatLabel}
             </span>
-            <span className="text-slate-300">•</span>
+            <span className="text-muted">•</span>
             <span>{formatRelativeTime(doc.updatedAt)}</span>
             {doc.uploadedBy && doc.uploadedBy !== "-" ? (
               <>
-                <span className="text-slate-300">•</span>
+                <span className="text-muted">•</span>
                 <span className="max-w-[150px] truncate">By {doc.uploadedBy}</span>
               </>
             ) : null}
@@ -73,13 +57,13 @@ export default function DocumentRow({
         </div>
       </div>
 
-      <div className="hidden w-28 text-right text-sm font-medium text-slate-600 sm:block">{formatBytes(doc.sizeBytes)}</div>
+      <div className="hidden w-28 text-right text-sm font-medium text-muted sm:block">{formatBytes(doc.sizeBytes)}</div>
 
       {showStar ? (
         <button
           type="button"
           disabled={disableActions}
-          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-50 hover:text-amber-500"
+          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:bg-card hover:text-amber-500"
           aria-label={doc.starred ? "Unstar document" : "Star document"}
           onClick={() => onToggleStar?.(doc.id)}
         >
@@ -94,7 +78,7 @@ export default function DocumentRow({
           disabled={disableActions}
           className={[
             "inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors",
-            menuOpen ? "bg-slate-100 text-slate-700" : "text-slate-400 hover:bg-slate-50 hover:text-slate-700",
+            menuOpen ? "bg-card text-text" : "text-muted hover:bg-card hover:text-text",
           ].join(" ")}
           aria-label="Open document menu"
           onClick={() => setMenuOpen((v) => !v)}

@@ -38,7 +38,7 @@ export default function MembersTable({
   return (
     <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
       <table className="w-full text-sm">
-        <thead className="bg-slate-50 text-left text-slate-600">
+        <thead className="bg-slate-50 text-left text-slate-600 dark:bg-card dark:text-text">
           <tr>
             <th className="px-4 py-3 font-medium">Name</th>
             <th className="px-4 py-3 font-medium">Email</th>
@@ -59,10 +59,10 @@ export default function MembersTable({
 
           return (
           <tr key={mId} className="border-t border-slate-100">
-            <td className="px-4 py-3 font-medium text-slate-900">{mName}</td>
-            <td className="px-4 py-3 text-slate-700">{mEmail}</td>
-            <td className="px-4 py-3 text-slate-700">{m.role || "Member"}</td>
-            <td className="px-4 py-3 text-slate-700">{m.status || "Active"}</td>
+            <td className="px-4 py-3 font-medium text-text">{mName}</td>
+            <td className="px-4 py-3 text-muted">{mEmail}</td>
+            <td className="px-4 py-3 text-muted">{m.role || "Member"}</td>
+            <td className="px-4 py-3 text-muted">{m.status || "Active"}</td>
             
             {(isAdmin || isUserLeader) && (
               <td className="px-4 py-3 text-right">
