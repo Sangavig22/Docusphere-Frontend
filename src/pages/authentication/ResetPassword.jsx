@@ -107,7 +107,7 @@ const ResetPassword = () => {
   const rightContent = (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col items-center gap-3 w-full text-center border border-white/60 rounded-xl px-8 sm:px-12 py-6 bg-white/80 backdrop-blur-15xl shadow-10xl"
+      className="flex flex-col items-center gap-3 w-full text-center border border-border rounded-xl px-8 sm:px-12 py-6 bg-card/80 backdrop-blur-15xl shadow-10xl"
     >
       <AuthPageHeading text="Reset Password" />
       <AuthPageSubHeading text="Enter a new password." />
@@ -146,7 +146,7 @@ const ResetPassword = () => {
         RESET PASSWORD
       </PrimaryButton>
 
-      <p className="text-[#05152C] text-lg mt-4 mb-12 font-medium">
+      <p className="text-text text-lg mt-4 mb-12 font-medium">
         <AuthLink
           text="Back to login"
           onClick={() => navigate("/signin")}

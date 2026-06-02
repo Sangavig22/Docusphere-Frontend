@@ -161,14 +161,14 @@ export default function ShareModal({
         <div className="absolute inset-0 bg-slate-200/35 backdrop-blur-[1px]" onMouseDown={onClose} />
         <div className="absolute inset-0 flex items-center justify-center p-4">
           <div
-            className="relative w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl"
+            className="relative w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-2xl"
             onMouseDown={(event) => event.stopPropagation()}
           >
             <div className="mb-4 flex items-start justify-between gap-3">
-              <h3 className="text-[16px] font-semibold text-slate-900">{title}</h3>
+              <h3 className="text-[16px] font-semibold text-text">{title}</h3>
               <button
                 type="button"
-                className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100"
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-muted hover:bg-card"
                 onClick={onClose}
                 aria-label="Close"
               >
@@ -201,11 +201,11 @@ export default function ShareModal({
                 error={emailError}
               />
 
-              <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+              <div className="rounded-xl border border-border bg-card px-3 py-2">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-900">Invited people permission</p>
-                    <p className="text-xs text-slate-500">Apply to users in the shared list</p>
+                    <p className="text-sm font-semibold text-text">Invited people permission</p>
+                    <p className="text-xs text-muted">Apply to users in the shared list</p>
                   </div>
                   <div className="relative self-start sm:self-auto">
                     <button
@@ -216,13 +216,13 @@ export default function ShareModal({
                         setGeneralPermissionOpen(false);
                       }}
                       disabled={loading || sending || updatingGeneralAccess}
-                      className="inline-flex min-w-[150px] items-center justify-between rounded-lg border border-slate-300 bg-white py-2 pl-3 pr-2 text-sm text-slate-700"
+                      className="inline-flex min-w-[150px] items-center justify-between rounded-lg border border-border bg-card py-2 pl-3 pr-2 text-sm text-text"
                     >
                       <span>{invitePermission === "COMMENT" ? "Can comment" : "Can view"}</span>
-                      <ChevronDown size={14} className="text-slate-500" />
+                      <ChevronDown size={14} className="text-muted" />
                     </button>
                     {invitePermissionOpen ? (
-                      <div className="absolute right-0 top-11 z-30 w-44 rounded-xl border border-slate-200 bg-white p-1 shadow-lg">
+                      <div className="absolute right-0 top-11 z-30 w-44 rounded-xl border border-border bg-card p-1 shadow-lg">
                         {[
                           { value: "VIEW", label: "Can view" },
                           { value: "COMMENT", label: "Can comment" },
@@ -234,7 +234,7 @@ export default function ShareModal({
                               setInvitePermission(option.value);
                               setInvitePermissionOpen(false);
                             }}
-                            className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100"
+                            className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-text hover:bg-card"
                           >
                             <span>{option.label}</span>
                             {invitePermission === option.value ? <Check size={14} className="text-blue-600" /> : null}
@@ -260,16 +260,16 @@ export default function ShareModal({
               </div>
 
               <div>
-                <p className="mb-2 text-base font-semibold text-slate-700">General access</p>
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <p className="mb-2 text-base font-semibold text-text">General access</p>
+                <div className="rounded-xl border border-border bg-surface p-3">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex min-w-0 flex-1 items-start gap-3">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-700">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-card text-text">
                         {generalAccessType === "PUBLIC" ? <Globe size={18} /> : <Lock size={18} />}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-slate-900">Anyone on the web with link</p>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-sm font-semibold text-text">Anyone on the web with link</p>
+                        <p className="text-xs text-muted">
                           {generalAccessType === "PUBLIC" ? "Anyone with this link can access" : "Public link sharing off"}
                         </p>
                       </div>
@@ -303,8 +303,8 @@ export default function ShareModal({
 
                   {generalAccessType === "PUBLIC" ? (
                     <>
-                      <div className="mt-3 flex flex-col gap-2 border-t border-slate-200 pt-3 sm:flex-row sm:items-center sm:justify-between">
-                        <p className="text-xs font-medium text-slate-600">People with the link</p>
+                        <div className="mt-3 flex flex-col gap-2 border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between">
+                          <p className="text-xs font-medium text-muted">People with the link</p>
                         <div className="relative self-end sm:self-auto">
                           <button
                             type="button"
@@ -314,13 +314,13 @@ export default function ShareModal({
                               setInvitePermissionOpen(false);
                             }}
                             disabled={loading || sending || updatingGeneralAccess}
-                            className="inline-flex min-w-[150px] items-center justify-between rounded-lg border border-slate-300 bg-white py-2 pl-3 pr-2 text-sm text-slate-700"
+                              className="inline-flex min-w-[150px] items-center justify-between rounded-lg border border-border bg-card py-2 pl-3 pr-2 text-sm text-text"
                           >
                             <span>{generalPermission === "COMMENT" ? "Can comment" : "Can view"}</span>
-                            <ChevronDown size={14} className="text-slate-500" />
+                              <ChevronDown size={14} className="text-muted" />
                           </button>
-                          {generalPermissionOpen ? (
-                            <div className="absolute right-0 top-11 z-30 w-44 rounded-xl border border-slate-200 bg-white p-1 shadow-lg">
+                            {generalPermissionOpen ? (
+                              <div className="absolute right-0 top-11 z-30 w-44 rounded-xl border border-border bg-card p-1 shadow-lg">
                               {[
                                 { value: "VIEW", label: "Can view" },
                                 { value: "COMMENT", label: "Can comment" },
@@ -333,7 +333,7 @@ export default function ShareModal({
                                     handleGeneralAccessUpdate("PUBLIC", option.value);
                                     setGeneralPermissionOpen(false);
                                   }}
-                                  className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100"
+                                    className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-text hover:bg-card"
                                 >
                                   <span>{option.label}</span>
                                   {generalPermission === option.value ? <Check size={14} className="text-blue-600" /> : null}
@@ -344,8 +344,8 @@ export default function ShareModal({
                         </div>
                       </div>
 
-                      <div className="mt-3 rounded-lg border border-slate-200 bg-white px-3 py-2">
-                        <p className="mb-2 text-xs font-medium text-slate-600">Public link</p>
+                        <div className="mt-3 rounded-lg border border-border bg-card px-3 py-2">
+                          <p className="mb-2 text-xs font-medium text-muted">Public link</p>
                         <div className="flex flex-wrap items-center justify-end gap-2">
                           {publicLink ? (
                             <a

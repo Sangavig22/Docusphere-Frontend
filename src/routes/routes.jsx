@@ -6,6 +6,7 @@ import EmailVerification from "../pages/authentication/EmailVerification";
 import DashboardSelector from "../pages/authentication/DashboardSelector";
 import ForgotPassword from "../pages/authentication/ForgotPassword";
 import ResetPassword from "../pages/authentication/ResetPassword";
+import SettingsPage from "../pages/SettingsPage.jsx";
 import Layout from "../components/Layout/Layout";
 import Dashboard from "../Pages/Dashboard";
 import UploadPage from "../pages/UploadPage";
@@ -40,26 +41,32 @@ export const routes = [
   {
     path: "/",
     element: <LandingPage />,
+    theme: "light",
   },
   {
     path: "/signup",
     element: <SignUp />,
+    theme: "light",
   },
   {
     path: "/signin",
     element: <SignIn />,
+    theme: "light",
   },
   {
     path: "/forgot-password",
     element: <ForgotPassword />,
+    theme: "light",
   },
   {
     path: "/reset-password",
     element: <ResetPassword />,
+    theme: "light",
   },
   {
     path: "/verify-email",
     element: <EmailVerification />,
+    theme: "light",
   },
   {
     path: "/share/:token",
@@ -69,6 +76,7 @@ export const routes = [
   {
     path: "/dashboard-selector",
     element: <DashboardSelector />,
+    theme: "light",
   },
   {
     path: "/dashboard",
@@ -119,6 +127,11 @@ export const routes = [
   {
     path: "/team/:teamId",
     element: withLayout(<TeamDetail />, "Team Details", "Manage team documents and members"),
+  },
+   {
+    path: "/setting",
+    element: withLayout(<SettingsPage />, "Settings", "Manage your account and preferences."
+    ),
   },
 
 

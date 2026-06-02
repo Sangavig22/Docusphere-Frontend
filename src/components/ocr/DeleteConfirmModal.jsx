@@ -3,7 +3,7 @@ export default function DeleteConfirmModal({ open, fileName, onCancel, onDelete 
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50 px-4">
-      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+      <div className="w-full max-w-md rounded-xl bg-card p-6 shadow-xl">
         <h3 className="text-lg font-semibold text-slate-900">Delete Document</h3>
         <p className="mt-2 text-sm text-slate-600">
           Are you sure you want to delete <span className="font-semibold">{fileName || "this document"}</span>?
