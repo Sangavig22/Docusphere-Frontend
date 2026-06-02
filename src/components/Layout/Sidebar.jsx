@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import logo_2 from "../../assets/logo_2.jpeg";
+import logo from "../../assets/logo.png";
 import { ChevronLeft, ChevronRight, Shield } from "lucide-react";
 import { DASHBOARD_MENU, ADMIN_MENU, SIDEBAR_STYLES } from "../../config/sidebarConfig";
 import { LAYOUT_COLORS } from "../../config/layoutConfig";
@@ -17,9 +17,9 @@ function Sidebar({ collapsed, onToggle, type = "dashboard" }) {
       {/* Logo + collapse toggle */}
       <div className="flex items-center justify-between gap-3 px-4 py-6 border-b border-border">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 flex items-center justify-center">
-            <img src={logo_2} alt="DocuSphere logo" className="h-9 w-9 object-contain" />
-          </div>
+            <div className="h-9 w-9 flex items-center justify-center">
+              <img src={logo} alt="DocuSphere logo" className="h-9 w-9 object-contain" />
+            </div>
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-xl font-semibold text-text">

@@ -18,6 +18,10 @@ const SignIn = () => {
   const navigate = useNavigate();
   const [rememberMe, setRememberMe] = useState(false);
 
+  const googleLogin = () => {
+    authService.startGoogleAuth();
+  };
+
   const { formData, handleChange, isLoading, executeAsync, resetForm } = useForm({
     email: "",
     password: "",
@@ -104,8 +108,10 @@ const SignIn = () => {
     <>
       <AuthPageHeading text="Sign In" />
 
+      
+
       <SocialAuthButtons
-        onGoogleClick={() => console.log("Google login")}
+        onGoogleClick={googleLogin}
         onAppleClick={() => console.log("Apple login")}
       />
 
