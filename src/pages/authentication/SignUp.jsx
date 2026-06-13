@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { signUpFields } from "../../constants/authField";
@@ -23,7 +23,30 @@ const SignUp = () => {
     confirmPassword: "",
   });
 
+  const [oauthPending, setOauthPending] = useState(null);
+
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+
+  const googleLogin = () => {
+    authService.startGoogleAuth();
+  };
+
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem('oauthPendingUser');
+      if (raw) {
+        const data = JSON.parse(raw);
+        setOauthPending(data);
+        // Prefill known fields
+        const email = data?.email || data?.user?.email || data?.profilePictureUrl || '';
+        const fullName = data?.fullName || data?.user?.fullName || data?.name || '';
+        if (email) handleChange({ target: { name: 'email', value: email } });
+        if (fullName) handleChange({ target: { name: 'fullName', value: fullName } });
+      }
+    } catch (e) {
+      // ignore parse errors
+    }
+  }, []);
 
   const inputFields = signUpFields.map((field) => {
     if (field.name === "password") {
@@ -62,6 +85,31 @@ const SignUp = () => {
         try {
           await authService.signUp({ fullName, email, password, confirmPassword });
           authService.saveVerificationEmail(email);
+
+          // If there was an OAuth pending user, attempt to complete linking now.
+          try {
+            const raw = sessionStorage.getItem('oauthPendingUser');
+            if (raw) {
+              const pending = JSON.parse(raw);
+              const linked = await authService.completeOauthSignup(pending);
+              // clear the pending marker regardless; if linking succeeded, server should return session/user
+              sessionStorage.removeItem('oauthPendingUser');
+              if (linked) {
+                toast.success('Google account linked to your new account.');
+                // If server provided auth/session data, save it.
+                try {
+                  const rememberMe = authService.isRememberMeValid();
+                  authService.saveAuth(linked, rememberMe);
+                } catch (e) {
+                  // ignore save failures
+                }
+              }
+            }
+          } catch (e) {
+            // ignore linking errors and continue
+            try { sessionStorage.removeItem('oauthPendingUser'); } catch {};
+          }
+
           toast.success("Account created! Please verify your email.");
           resetForm();
           navigate("/verify-email", { state: { email } });
@@ -88,8 +136,14 @@ const SignUp = () => {
     <>
       <AuthPageHeading text="Sign Up" />
 
+      {oauthPending && (
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
+          We detected a Google sign-in that hasn't been linked to an account yet. Complete sign up to finish linking your Google account.
+        </div>
+      )}
+
       <SocialAuthButtons
-        onGoogleClick={() => console.log("Google login")}
+        onGoogleClick={googleLogin}
         onAppleClick={() => console.log("Apple login")}
       />
 

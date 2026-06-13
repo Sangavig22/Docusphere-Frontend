@@ -33,7 +33,13 @@ function Topbar({
       setProfilePhoto("");
       return;
     }
-    setProfilePhoto(`${photo}?t=${Date.now()}`);
+    if (photo.startsWith('http://') || photo.startsWith('https://')) {
+      const separator = photo.includes('?') ? '&' : '?';
+      setProfilePhoto(`${photo}${separator}t=${Date.now()}`);
+      return;
+    }
+
+    setProfilePhoto(photo);
   }, [contextUser.photo]);
 
   const userRole = sessionStorage.getItem("userRole") || localStorage.getItem("rememberMeRole");
@@ -74,8 +80,13 @@ function Topbar({
         setProfilePhoto("");
         return;
       }
-      const separator = newPhoto.includes('?') ? '&' : '?';
-      setProfilePhoto(`${newPhoto}${separator}t=${Date.now()}`);
+      if (newPhoto.startsWith('http://') || newPhoto.startsWith('https://')) {
+        const separator = newPhoto.includes('?') ? '&' : '?';
+        setProfilePhoto(`${newPhoto}${separator}t=${Date.now()}`);
+        return;
+      }
+
+      setProfilePhoto(newPhoto);
     };
 
     window.addEventListener("user-profile-updated", handleStorageChange);
