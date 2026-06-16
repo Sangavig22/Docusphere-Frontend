@@ -36,9 +36,11 @@ export default function DocumentActionModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-card p-5 shadow-xl">
-        <h3 className="text-lg font-semibold text-text">{title}</h3>
-        {message ? <p className="mt-2 text-sm text-muted">{message}</p> : null}
+      <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
+        <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
+        {message ? (
+          <p className="mt-2 whitespace-pre-line text-sm text-slate-600">{message}</p>
+        ) : null}
 
         {type === "input" ? (
           <input

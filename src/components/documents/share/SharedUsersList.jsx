@@ -1,3 +1,5 @@
+import { getPermissionRole } from "./sharePermissions";
+
 export default function SharedUsersList({ users = [], permission = "VIEW" }) {
   return (
     <section className="rounded-xl border border-slate-200 bg-slate-50 p-3">
@@ -8,7 +10,7 @@ export default function SharedUsersList({ users = [], permission = "VIEW" }) {
         ) : (
           users.map((email) => (
             <li key={email} className="rounded-lg bg-white px-3 py-2 text-sm text-slate-700">
-              {email} ({permission === "COMMENT" ? "Commenter" : "Viewer"})
+              {email} ({getPermissionRole(permission)})
             </li>
           ))
         )}
