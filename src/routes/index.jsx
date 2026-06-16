@@ -100,13 +100,50 @@ function AuthGuard() {
                     <Route
                         key={route.path}
                         path={route.path}
-                        element={route.element}
+                        element={
+                            route.protected ? (
+                                <RequireAuth>
+                                    {route.element}
+                                </RequireAuth>
+                            ) : (
+                                route.element
+                            )
+                        }
                     />
                 ))}
                 <Route path="*" element={<div className="p-6 text-center">404 Not Found</div>} />
             </Routes>
         </>
     );
+}
+
+function RequireAuth({ children }) {
+    const [loading, setLoading] = useState(true);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                const session = await authService.bootstrapSession();
+                if (!mounted) return;
+                setIsAuthenticated(Boolean(session));
+            } catch (e) {
+                if (!mounted) return;
+                setIsAuthenticated(false);
+            } finally {
+                if (mounted) setLoading(false);
+            }
+        })();
+
+        return () => {
+            mounted = false;
+        };
+    }, []);
+
+    if (loading) return <div className="p-6 text-center">Loading...</div>;
+    if (!isAuthenticated) return <Navigate to="/signin" replace />;
+    return children;
 }
 
 export default function AppRoutes() {

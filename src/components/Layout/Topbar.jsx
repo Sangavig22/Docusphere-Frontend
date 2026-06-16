@@ -28,19 +28,23 @@ function Topbar({
   const [profilePhoto, setProfilePhoto] = useState("");
 
   useEffect(() => {
-    const photo = contextUser.photo || authService.getProfilePicture();
-    if (!photo) {
-      setProfilePhoto("");
-      return;
-    }
-    if (photo.startsWith('http://') || photo.startsWith('https://')) {
-      const separator = photo.includes('?') ? '&' : '?';
-      setProfilePhoto(`${photo}${separator}t=${Date.now()}`);
-      return;
-    }
+  const photo =
+    contextUser?.profilePictureUrl ||
+    contextUser?.photo ||
+    contextUser?.picture ||
+    authService.getProfilePicture();
 
-    setProfilePhoto(photo);
-  }, [contextUser.photo]);
+  if (!photo) {
+    setProfilePhoto("");
+    return;
+  }
+
+  setProfilePhoto(photo);
+}, [
+  contextUser?.profilePictureUrl,
+  contextUser?.photo,
+  contextUser?.picture,
+]);
 
   const userRole = sessionStorage.getItem("userRole") || localStorage.getItem("rememberMeRole");
   const isAdmin = role === "admin" || userRole?.toUpperCase() === "ADMIN";
@@ -180,7 +184,7 @@ function Topbar({
 
               <button
                 onClick={handleSignOut}
-                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 font-semibold transition-colors"
+                className="w-full text-left px-4 py-2 text-sm text-red-600 flex items-center gap-2 font-semibold transition-colors"
               >
                 <LogOut size={16} />
                 Sign Out

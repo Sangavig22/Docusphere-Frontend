@@ -31,6 +31,10 @@ const SignUp = () => {
     authService.startGoogleAuth();
   };
 
+  const githubLogin = () => {
+    authService.startGitHubAuth();
+  };
+
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem('oauthPendingUser');
@@ -95,7 +99,7 @@ const SignUp = () => {
               // clear the pending marker regardless; if linking succeeded, server should return session/user
               sessionStorage.removeItem('oauthPendingUser');
               if (linked) {
-                toast.success('Google account linked to your new account.');
+                toast.success('Social account linked to your new account.');
                 // If server provided auth/session data, save it.
                 try {
                   const rememberMe = authService.isRememberMeValid();
@@ -138,13 +142,13 @@ const SignUp = () => {
 
       {oauthPending && (
         <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
-          We detected a Google sign-in that hasn't been linked to an account yet. Complete sign up to finish linking your Google account.
+          We detected a social sign-in that hasn't been linked to an account yet. Complete sign up to finish linking your account.
         </div>
       )}
 
       <SocialAuthButtons
         onGoogleClick={googleLogin}
-        onAppleClick={() => console.log("Apple login")}
+        onGitHubClick={githubLogin}
       />
 
       <p className="text-text text-xl mb-4">Or use your email for registration</p>
