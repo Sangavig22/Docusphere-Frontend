@@ -8,7 +8,9 @@ import {
   Copy,
   RotateCcw,
   Trash2,
+  Shield,
 } from "lucide-react";
+import { isDocumentProtected } from "../../utils/documentProtection";
 
 export const DEFAULT_DOCUMENT_ACTIONS = [
   // Order here is reflected directly in card/row action menus.
@@ -18,6 +20,7 @@ export const DEFAULT_DOCUMENT_ACTIONS = [
   { key: "duplicate", label: "Duplicate", icon: Copy },
   { key: "download", label: "Download", icon: Download },
   { key: "share", label: "Share", icon: Share2 },
+  { key: "secure_file", label: "Secure file", icon: Shield },
   { key: "trash", label: "Move to trash", icon: Trash2, danger: true },
 ];
 
@@ -62,10 +65,16 @@ export default function DocumentActionsMenu({
 }) {
   const safeActions = useMemo(() => {
     const list = actions || DEFAULT_DOCUMENT_ACTIONS;
-    // actionKeys lets parent screens show a curated subset.
-    if (!Array.isArray(actionKeys) || actionKeys.length === 0) return list;
-    return list.filter((item) => actionKeys.includes(item.key));
-  }, [actions, actionKeys]);
+    const withLabels = list.map((item) => {
+      if (item.key !== "secure_file") return item;
+      return {
+        ...item,
+        label: isDocumentProtected(doc) ? "Manage protection" : "Protect file",
+      };
+    });
+    if (!Array.isArray(actionKeys) || actionKeys.length === 0) return withLabels;
+    return withLabels.filter((item) => actionKeys.includes(item.key));
+  }, [actions, actionKeys, doc]);
 
   return (
     <div className={dense ? "py-0.5" : "py-1"}>
@@ -83,4 +92,3 @@ export default function DocumentActionsMenu({
     </div>
   );
 }
-

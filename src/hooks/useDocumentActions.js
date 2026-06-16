@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import {
   downloadDocument,
@@ -11,8 +11,36 @@ import {
   trashDocument,
   shareDocumentByEmail,
 } from "../services/documentActionsService";
+import {
+  changeDocumentPassword,
+  protectDocument,
+  removeDocumentProtection,
+  resetDocumentProtectionPassword,
+  verifyDocumentPassword,
+} from "../services/documentProtectionService";
+import {
+  enrichDocumentProtection,
+  extractIsProtectedFromPayload,
+  hasValidUnlockSession,
+  isDocumentProtected,
+  isInvalidPasswordError,
+  isSecuredDocument,
+  isTeamSpaceMoveDestination,
+  setUnlockSession,
+  clearUnlockSession,
+  withProtectionFlag,
+} from "../utils/documentProtection";
+import { getUnlockSession } from "../utils/unlockSessionStore";
+import {
+  TOAST_ACTION_IDS,
+  completeActionToast,
+  dismissActionToast,
+  showActionLoading,
+  showSingleToast,
+} from "../utils/toastFeedback";
 
 const EMPTY_MODAL = { open: false, type: "confirm", title: "", message: "" };
+const EMPTY_VERIFY = { open: false, doc: null, pendingAction: null, error: "" };
 
 function resolveApiId(doc) {
   return doc?.apiId || doc?.documentId || doc?.fileId || doc?.id;
@@ -62,7 +90,64 @@ function getActionErrorMessage(error, fallback) {
 
 export default function useDocumentActions({ onSuccess } = {}) {
   const [modalState, setModalState] = useState(EMPTY_MODAL);
+  const [verifyState, setVerifyState] = useState(EMPTY_VERIFY);
   const [loadingAction, setLoadingAction] = useState(false);
+  const protectedIdsRef = useRef(new Set());
+
+  function enrichDoc(doc) {
+    const enriched = enrichDocumentProtection(doc, protectedIdsRef.current);
+    if (!enriched || enriched.isOwner != null) return enriched;
+    // Personal lists often omit owner metadata; align with documentsService default.
+    return { ...enriched, isOwner: true };
+  }
+
+  function markProtected(doc) {
+    const docId = resolveApiId(doc);
+    if (docId) protectedIdsRef.current.add(String(docId));
+  }
+
+  function clearProtected(doc) {
+    const docId = resolveApiId(doc);
+    if (docId) protectedIdsRef.current.delete(String(docId));
+  }
+
+  function storeUnlockSession(doc, unlockSession) {
+    const docId = resolveApiId(doc);
+    if (docId && unlockSession) setUnlockSession(docId, unlockSession);
+  }
+
+  function isUnlocked(doc) {
+    const docId = resolveApiId(doc);
+    return Boolean(docId && hasValidUnlockSession(docId));
+  }
+
+  function clearUnlocked(doc) {
+    const docId = resolveApiId(doc);
+    if (docId) clearUnlockSession(docId);
+  }
+
+  function getUnlockToken(doc) {
+    const docId = resolveApiId(doc);
+    if (!docId || !hasValidUnlockSession(docId)) return undefined;
+    return getUnlockSession(docId)?.token;
+  }
+
+  function openPasswordVerify(doc, pendingAction) {
+    setVerifyState({ open: true, doc, pendingAction, error: "" });
+  }
+
+  function requiresPasswordUnlock(doc) {
+    return isDocumentProtected(enrichDoc(doc)) && !isUnlocked(doc);
+  }
+
+  async function runProtectedAction(doc, pendingAction, action) {
+    const enriched = enrichDoc(doc);
+    if (requiresPasswordUnlock(enriched)) {
+      openPasswordVerify(enriched, pendingAction);
+      return;
+    }
+    await action(enriched);
+  }
 
   async function handleRename(doc, nextName) {
     const name = nextName?.trim();
@@ -88,13 +173,13 @@ export default function useDocumentActions({ onSuccess } = {}) {
   }
 
   async function handleMove(doc, selectedDestination) {
-
-     let destination;
+    let destination;
     if (selectedDestination === "personal") {
-      destination = { teamId: null };
-    }
-    else if (typeof selectedDestination === "string" &&
-    selectedDestination.startsWith("team:")) {
+      destination = {};
+    } else if (
+      typeof selectedDestination === "string" &&
+      selectedDestination.startsWith("team:")
+    ) {
       const teamId = selectedDestination.slice(5).trim();
       if (!teamId) {
         throw new Error("Please select a valid team destination.");
@@ -104,11 +189,26 @@ export default function useDocumentActions({ onSuccess } = {}) {
       throw new Error("Please select where to move this document.");
     }
 
-
-    await moveDocument(resolveApiId(doc), destination);
-    toast.success("Document moved successfully.");
+    const docId = resolveApiId(doc);
+    const protectedDoc = isDocumentProtected(doc);
+    await moveDocument(docId, destination);
+    // Move keeps password on the same document row — only clear temporary unlock session.
+    clearUnlocked(doc);
+    if (protectedDoc) {
+      markProtected(doc);
+    }
+    showSingleToast(
+      TOAST_ACTION_IDS.MOVE,
+      protectedDoc
+        ? "Document moved successfully (protection retained)"
+        : "Document moved successfully.",
+    );
     setModalState(EMPTY_MODAL);
-    await onSuccess?.("move", doc);
+    await onSuccess?.("move", {
+      ...withProtectionFlag(enrichDoc(doc), isDocumentProtected(doc)),
+      id: docId,
+      teamId: destination.teamId ?? null,
+    });
   }
 
   async function runWithGuard(action) {
@@ -122,7 +222,48 @@ export default function useDocumentActions({ onSuccess } = {}) {
     }
   }
 
+  async function runProtectionModalAction(action) {
+    setLoadingAction(true);
+    try {
+      await action();
+      return { ok: true };
+    } catch (error) {
+      const raw = String(error?.message || "");
+      const invalidCurrentPassword = isInvalidPasswordError(raw);
+      if (!invalidCurrentPassword) {
+        toast.error(getActionErrorMessage(error, "Action failed. Please try again."));
+      }
+      return {
+        ok: false,
+        invalidCurrentPassword,
+        message: invalidCurrentPassword
+          ? "Current password is incorrect."
+          : getActionErrorMessage(error, "Action failed. Please try again."),
+      };
+    } finally {
+      setLoadingAction(false);
+    }
+  }
+
+  async function showProtectedTeamMoveBlockedModal(doc) {
+    if (isTeamDocument(doc)) {
+      toast.info("Password-protected files cannot be moved into a Team Space.");
+      return;
+    }
+    setModalState({
+      open: true,
+      type: "protected_move_block",
+      doc: enrichDoc(doc),
+    });
+  }
+
     async function openMoveModal(doc) {
+    const enriched = enrichDoc(doc);
+    if (isSecuredDocument(enriched) && !isTeamDocument(enriched)) {
+      await showProtectedTeamMoveBlockedModal(enriched);
+      return;
+    }
+
     let normalizedTeams = [];
     try {
       const payload = await getTeams();
@@ -150,21 +291,136 @@ export default function useDocumentActions({ onSuccess } = {}) {
       open: true,
       type: "select",
       title: "Move document",
-      message: `Choose destination for "${doc.name}".`,
+      message: `Choose destination for ${doc.name}.`,
       doc,
       options,
       confirmText: "Move",
     });
   }
 
+  async function enableDocumentProtection(password) {
+    const doc = modalState.doc;
+    if (!doc) return;
+    await runWithGuard(async () => {
+      const response = await protectDocument(resolveApiId(doc), password);
+      markProtected(doc);
+      const protectedFlag = extractIsProtectedFromPayload(response) ?? true;
+      toast.success("Password protection enabled.");
+      setModalState(EMPTY_MODAL);
+      await onSuccess?.("secure_file", withProtectionFlag(doc, protectedFlag));
+    });
+  }
+
+  async function changeDocumentPasswordHandler({ currentPassword, newPassword }) {
+    const doc = modalState.doc;
+    if (!doc) return { ok: false, message: "Document not found." };
+    if (doc?.isOwner === false) {
+      return { ok: false, message: "Only owner can change this password." };
+    }
+    return runProtectionModalAction(async () => {
+      await changeDocumentPassword(resolveApiId(doc), currentPassword, newPassword);
+      markProtected(doc);
+      clearUnlocked(doc);
+      setModalState((prev) => ({
+        ...prev,
+        doc: withProtectionFlag(enrichDoc(doc), true),
+      }));
+      toast.success("Password updated successfully.");
+      await onSuccess?.("secure_file", withProtectionFlag(doc, true));
+    });
+  }
+
+  async function removeDocumentProtectionHandler(currentPassword) {
+    const doc = modalState.doc;
+    if (!doc) return { ok: false, message: "Document not found." };
+    if (doc?.isOwner === false) {
+      return { ok: false, message: "Only owner can remove protection." };
+    }
+    return runProtectionModalAction(async () => {
+      await verifyDocumentPassword(resolveApiId(doc), currentPassword);
+      await removeDocumentProtection(resolveApiId(doc));
+      clearProtected(doc);
+      clearUnlocked(doc);
+      toast.success("Password protection removed.");
+      setModalState(EMPTY_MODAL);
+      await onSuccess?.("secure_file", withProtectionFlag(doc, false));
+    });
+  }
+
+  async function resetDocumentPasswordHandler({ newPassword }) {
+    const doc = modalState.doc;
+    if (!doc) return { ok: false, message: "Document not found." };
+    if (doc?.isOwner === false) {
+      toast.warning("Only owner can reset this document password.");
+      return { ok: false, message: "Only owner can reset this document password." };
+    }
+    return runProtectionModalAction(async () => {
+      await resetDocumentProtectionPassword(resolveApiId(doc), newPassword);
+      markProtected(doc);
+      clearUnlocked(doc);
+      setModalState(EMPTY_MODAL);
+      toast.success("Password reset successfully.");
+      await onSuccess?.("secure_file", withProtectionFlag(doc, true));
+    });
+  }
+
+  async function submitVerifyPassword(password) {
+    const doc = verifyState.doc;
+    const pendingAction = verifyState.pendingAction;
+    if (!doc) return;
+
+    setLoadingAction(true);
+    try {
+      const { unlockSession } = await verifyDocumentPassword(resolveApiId(doc), password);
+      storeUnlockSession(doc, unlockSession);
+      setVerifyState(EMPTY_VERIFY);
+
+      if (pendingAction === "download") {
+        toast.success("Document unlocked. Download starting...");
+        await downloadDocument(resolveApiId(doc), doc.name, {
+          unlockToken: unlockSession?.token,
+        });
+        return;
+      }
+
+      if (pendingAction === "preview") {
+        toast.success("Document unlocked for 15 minutes.");
+        await onSuccess?.("preview", doc);
+      }
+    } catch (error) {
+      const raw = String(error?.message || "");
+      const invalidPassword = isInvalidPasswordError(raw);
+      const message = invalidPassword
+        ? "Invalid password."
+        : getActionErrorMessage(error, "Unable to verify password.");
+      if (!invalidPassword) {
+        toast.error(message);
+      }
+      setVerifyState((prev) => ({ ...prev, error: message }));
+    } finally {
+      setLoadingAction(false);
+    }
+  }
+
   async function handleAction(actionKey, doc) {
     // Preview is handled by page-level callback to keep this hook reusable.
     if (actionKey === "preview") {
-      await onSuccess?.("preview", doc);
+      await runProtectedAction(doc, "preview", async () => {
+        await onSuccess?.("preview", doc);
+      });
       return;
     }
 
-    const restrictedForNonOwner = new Set(["rename", "move", "duplicate", "trash", "delete_permanently", "restore", "share"]);
+    const restrictedForNonOwner = new Set([
+      "rename",
+      "move",
+      "duplicate",
+      "trash",
+      "delete_permanently",
+      "restore",
+      "share",
+      "secure_file",
+    ]);
     if (doc?.isOwner === false && restrictedForNonOwner.has(actionKey)) {
       toast.warning("Only owner can manage this document.");
       return;
@@ -188,8 +444,22 @@ export default function useDocumentActions({ onSuccess } = {}) {
         open: true,
         type: "share",
         title: "Share document",
-        message: `Manage access for "${doc.name}".`,
+        message: `Manage access for ${doc.name}.`,
         doc,
+      });
+      return;
+    }
+
+    if (actionKey === "secure_file") {
+      if (isTeamDocument(doc)) {
+        toast.info("Password protection is not available for team documents.");
+        return;
+      }
+      setModalState({
+        open: true,
+        type: "secure_file",
+        title: "Secure file",
+        doc: enrichDoc(doc),
       });
       return;
     }
@@ -200,18 +470,36 @@ export default function useDocumentActions({ onSuccess } = {}) {
     }
 
     if (actionKey === "duplicate") {
-      await runWithGuard(async () => {
+      const actionId = TOAST_ACTION_IDS.DUPLICATE;
+      setLoadingAction(true);
+      showActionLoading(actionId, "Duplicating document…");
+      try {
+        const protectedDoc = isDocumentProtected(doc);
         await duplicateDocument(resolveApiId(doc));
-        toast.success("Document duplicated.");
+        completeActionToast(
+          actionId,
+          protectedDoc
+            ? "Document duplicated. Protection is retained."
+            : "Document duplicated successfully.",
+        );
         await onSuccess?.("duplicate", doc);
-      });
+      } catch (error) {
+        dismissActionToast(actionId);
+        toast.error(getActionErrorMessage(error, "Unable to duplicate document."));
+      } finally {
+        setLoadingAction(false);
+      }
       return;
     }
 
     if (actionKey === "download") {
-      await runWithGuard(async () => {
-        await downloadDocument(resolveApiId(doc), doc.name);
-        toast.success("Download started.");
+      await runProtectedAction(doc, "download", async (enrichedDoc) => {
+        await runWithGuard(async () => {
+          await downloadDocument(resolveApiId(enrichedDoc), enrichedDoc.name, {
+            unlockToken: getUnlockToken(enrichedDoc),
+          });
+          toast.success("Download started.");
+        });
       });
       return;
     }
@@ -221,7 +509,7 @@ export default function useDocumentActions({ onSuccess } = {}) {
         open: true,
         type: "confirm",
         title: "Move to Trash?",
-        message: `"${doc.name}" will be moved to recycle bin and can be restored later.`,
+        message: `${doc.name} will be moved to the recycle bin and can be restored later.`,
         doc,
         confirmText: "Move to Trash",
         confirmVariant: "danger",
@@ -255,6 +543,16 @@ export default function useDocumentActions({ onSuccess } = {}) {
     const doc = modalState.doc;
     if (!doc) return;
 
+    if (modalState.type === "protected_move_block") {
+      setModalState({
+        open: true,
+        type: "secure_file",
+        title: "Secure file",
+        doc: enrichDoc(doc),
+      });
+      return;
+    }
+
     await runWithGuard(async () => {
       if (modalState.type === "input") {
         if (modalState.confirmText === "Share") {
@@ -268,7 +566,7 @@ export default function useDocumentActions({ onSuccess } = {}) {
             permission: "COMMENT",
             emails: [email],
           });
-          toast.success("Document shared successfully.");
+          showSingleToast(TOAST_ACTION_IDS.SHARE, "Document shared successfully.");
           setModalState(EMPTY_MODAL);
           await onSuccess?.("share", doc);
           return;
@@ -279,6 +577,11 @@ export default function useDocumentActions({ onSuccess } = {}) {
       }
 
       if (modalState.type === "select") {
+        const enriched = enrichDoc(doc);
+        if (isSecuredDocument(enriched) && isTeamSpaceMoveDestination(value)) {
+          await showProtectedTeamMoveBlockedModal(enriched);
+          return;
+        }
         await handleMove(doc, value);
         return;
       }
@@ -368,12 +671,19 @@ export default function useDocumentActions({ onSuccess } = {}) {
   return useMemo(
     () => ({
       modalState,
+      verifyState,
       loadingAction,
       handleAction,
       closeModal: () => setModalState(EMPTY_MODAL),
+      closeVerifyModal: () => setVerifyState(EMPTY_VERIFY),
       submitModal,
       shareWithPeople,
+      enableDocumentProtection,
+      changeDocumentPassword: changeDocumentPasswordHandler,
+      removeDocumentProtection: removeDocumentProtectionHandler,
+      resetDocumentPassword: resetDocumentPasswordHandler,
+      submitVerifyPassword,
     }),
-    [modalState, loadingAction],
+    [modalState, verifyState, loadingAction],
   );
 }

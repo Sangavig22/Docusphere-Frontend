@@ -15,10 +15,14 @@ export async function renameDocument(id, name) {
   });
 }
 
-export async function moveDocument(id, destination) {
+export async function moveDocument(id, destination = {}) {
+  const payload =
+    destination?.teamId == null || destination?.teamId === ""
+      ? {}
+      : { teamId: String(destination.teamId) };
   return request(`/documents/${id}/move`, {
     method: "PUT",
-    body: JSON.stringify(destination),
+    body: JSON.stringify(payload),
   });
 }
 
@@ -50,14 +54,22 @@ export async function permanentlyDeleteDocument(id) {
   });
 }
 
-export async function downloadDocument(id, name = "document") {
+export async function downloadDocument(id, name = "document", { password, unlockToken } = {}) {
   const token = authService.getToken();
-  const response = await fetch(`${API_BASE_URL}/documents/${id}/download`, {
-    method: "GET",
-    headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  const params = new URLSearchParams();
+  if (password) params.set("password", password);
+  const query = params.toString();
+  const response = await fetch(
+    `${API_BASE_URL}/documents/${id}/download${query ? `?${query}` : ""}`,
+    {
+      method: "GET",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(password ? { "X-Document-Password": password } : {}),
+        ...(unlockToken ? { "X-Unlock-Token": unlockToken } : {}),
+      },
     },
-  });
+  );
 
   if (!response.ok) {
     throw new Error(`Download failed (${response.status})`);

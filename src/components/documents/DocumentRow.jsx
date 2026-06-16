@@ -8,6 +8,7 @@ import {
   formatRelativeTime,
   normalizeDocumentType,
 } from "../../utils/documentUtils.js";
+import DocumentProtectedBadge from "./secure/DocumentProtectedBadge";
 
 function typeStyles(type) {
   switch (type) {
@@ -32,7 +33,7 @@ export default function DocumentRow({
   onAction,
   actions,
   disableActions = false,
-  menuPortal = false,
+  menuPortal = true,
   menuPushContent = false,
   menuClassName = "",
   denseMenu = false,
@@ -44,18 +45,51 @@ export default function DocumentRow({
   const type = useMemo(() => normalizeDocumentType(doc.type), [doc.type]);
   const formatLabel = useMemo(() => formatDocumentFormat(doc.type, doc.name), [doc.type, doc.name]);
   const styles = useMemo(() => typeStyles(type), [type]);
+  const canOpenPreview = typeof onAction === "function";
+
+  function triggerPreview() {
+    if (!canOpenPreview) return;
+    onAction("preview", doc);
+  }
 
   return (
-    <div className="relative flex items-center gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+    <div
+      className={[
+        "relative flex items-center gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm",
+        canOpenPreview ? "cursor-pointer" : "",
+      ].join(" ")}
+      role={canOpenPreview ? "button" : undefined}
+      tabIndex={canOpenPreview ? 0 : undefined}
+      onClick={(event) => {
+        if (!canOpenPreview) return;
+        const target = event.target;
+        if (target instanceof Element && target.closest("button,a,input,label,textarea,select")) return;
+        triggerPreview();
+      }}
+      onKeyDown={(event) => {
+        if (!canOpenPreview) return;
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          triggerPreview();
+        }
+      }}
+    >
       <div className="flex min-w-0 flex-1 items-center gap-3">
-        <div className={["flex h-10 w-10 items-center justify-center rounded-xl ring-1", styles.bg, styles.ring].join(" ")}>
-          <FileText size={18} className={styles.fg} />
+        <div className="relative shrink-0">
+          <div
+            className={[
+              "flex h-10 w-10 items-center justify-center rounded-xl ring-1",
+              styles.bg,
+              styles.ring,
+            ].join(" ")}
+          >
+            <FileText size={18} className={styles.fg} />
+          </div>
+          <DocumentProtectedBadge doc={doc} />
         </div>
         <div className="min-w-0">
-          <div className="flex min-w-0 items-center gap-2">
-            <div className="truncate text-sm font-semibold text-slate-900" title={doc.name}>
-              {doc.name}
-            </div>
+          <div className="truncate text-sm font-semibold text-slate-900" title={doc.name}>
+            {doc.name}
           </div>
           <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
             <span className="inline-flex shrink-0 items-center rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
@@ -73,7 +107,9 @@ export default function DocumentRow({
         </div>
       </div>
 
-      <div className="hidden w-28 text-right text-sm font-medium text-slate-600 sm:block">{formatBytes(doc.sizeBytes)}</div>
+      <div className="hidden w-28 text-right text-sm font-medium text-slate-600 sm:block">
+        {formatBytes(doc.sizeBytes)}
+      </div>
 
       {showStar ? (
         <button
@@ -127,4 +163,3 @@ export default function DocumentRow({
     </div>
   );
 }
-
