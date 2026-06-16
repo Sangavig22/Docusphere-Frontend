@@ -53,7 +53,7 @@ export default function MyDocumentsPage() {
     <div className="flex w-full max-w-6xl flex-1 flex-col gap-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-semibold text-slate-900">All Documents</h2>
+          <h2 className="text-2xl font-semibold text-text">All Documents</h2>
         </div>
         <button
           type="button"
@@ -65,7 +65,7 @@ export default function MyDocumentsPage() {
         </button>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
         <DocumentsToolbar
           query={query}
           onQueryChange={setQuery}
@@ -106,7 +106,7 @@ export default function MyDocumentsPage() {
         </div>
       )}
 
-      <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
+      <div className="flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3 text-sm text-muted shadow-sm">
         <span>
           Page {pagination.page} of {pagination.totalPages} (showing {visibleDocs.length} on this page, {pagination.totalItems} total)
         </span>
@@ -115,7 +115,7 @@ export default function MyDocumentsPage() {
             type="button"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={loading || page <= 1}
-            className="rounded-lg border border-slate-200 px-3 py-1.5 text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg border border-border px-3 py-1.5 text-muted disabled:cursor-not-allowed disabled:opacity-50"
           >
             Previous
           </button>
@@ -123,7 +123,7 @@ export default function MyDocumentsPage() {
             type="button"
             onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
             disabled={loading || page >= pagination.totalPages}
-            className="rounded-lg border border-slate-200 px-3 py-1.5 text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg border border-border px-3 py-1.5 text-muted disabled:cursor-not-allowed disabled:opacity-50"
           >
             Next
           </button>
@@ -131,7 +131,7 @@ export default function MyDocumentsPage() {
       </div>
 
       {loading ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-sm">
+        <div className="rounded-2xl border border-border bg-card p-4 text-sm text-muted shadow-sm">
           Loading documents...
         </div>
       ) : null}
@@ -150,7 +150,7 @@ export default function MyDocumentsPage() {
       ) : null}
 
       {!loading && visibleDocs.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-600 shadow-sm">
+        <div className="rounded-2xl border border-border bg-card p-8 text-center text-sm text-muted shadow-sm">
           No documents found.
         </div>
       ) : null}

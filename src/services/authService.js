@@ -1,22 +1,306 @@
 import { request } from '../api/apiClient.js';
+import { API_BASE_URL } from '../config/api.js';
+import { getProfilePhotoFromToken } from '../utils/authToken.js';
+
+const createNameAvatarDataUrl = (fullName = '') => {
+    const letter = (fullName.trim()[0] || 'u').toUpperCase();
+    const svg = `<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#114692"/><stop offset="100%" stop-color="#05152C"/></linearGradient></defs><rect width="100%" height="100%" rx="60" fill="url(#g)"/><text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" fill="#ffffff" font-family="Arial, sans-serif" font-size="48" font-weight="700">${letter}</text></svg>`;
+    try {
+        return `data:image/svg+xml;base64,${btoa(svg)}`;
+    } catch {
+        return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+    }
+};
+
+const normalizeProfilePhotoUrl = (photoUrl = '') => {
+    if (!photoUrl) return '';
+    const value = String(photoUrl).trim();
+
+    if (value.startsWith('http://') || value.startsWith('https://') ||
+        value.startsWith('data:') || value.startsWith('blob:')) {
+        return value;
+    }
+
+    const cleaned = value.replace(/\\/g, '/');
+    const base = (API_BASE_URL || '').trim().replace(/\/$/, '');
+
+    if (/^https?:\/\//i.test(base)) {
+        return `${base}/${cleaned.replace(/^\/+/, '')}`;
+    }
+
+    return cleaned.startsWith('/') ? cleaned : `/${cleaned}`;
+};
+
+const resolveProfilePhoto = (photo, fullName) => {
+    return normalizeProfilePhotoUrl(photo) || createNameAvatarDataUrl(fullName);
+};
+
+const getTokenProfilePhoto = () => {
+    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || '';
+    return normalizeProfilePhotoUrl(getProfilePhotoFromToken(token));
+};
+
+const readStoredUserSnapshot = () => {
+    const raw = sessionStorage.getItem('currentUser') || localStorage.getItem('currentUser') || '';
+
+    if (!raw) {
+        return null;
+    }
+
+    try {
+        return JSON.parse(raw);
+    } catch {
+        return null;
+    }
+};
+
+const unwrapApiPayload = (payload) => payload?.data ?? payload;
+
+const extractFirstDefined = (source, keys) => {
+    for (const key of keys) {
+        const value = source?.[key];
+        if (value !== undefined && value !== null && String(value).trim() !== '') {
+            return value;
+        }
+    }
+    return '';
+};
+
+const extractFromCommonWrappers = (source, keys) => {
+    const candidates = [
+        source,
+        source?.user,
+        source?.profile,
+        source?.account,
+        source?.principal,
+        source?.attributes,
+        source?.data,
+    ].filter(Boolean);
+
+    for (const candidate of candidates) {
+        const value = extractFirstDefined(candidate, keys);
+        if (value) {
+            return value;
+        }
+    }
+
+    return '';
+};
+
+const findDeepValue = (source, keys, visited = new Set()) => {
+    if (!source || typeof source !== 'object' || visited.has(source)) {
+        return '';
+    }
+
+    visited.add(source);
+
+    const directValue = extractFirstDefined(source, keys);
+    if (directValue) {
+        return directValue;
+    }
+
+    for (const value of Object.values(source)) {
+        if (!value || typeof value !== 'object') {
+            continue;
+        }
+
+        const nestedValue = findDeepValue(value, keys, visited);
+        if (nestedValue) {
+            return nestedValue;
+        }
+    }
+
+    return '';
+};
+
+const readFirstValue = (keys) => {
+    for (const key of keys) {
+        const sessionValue = sessionStorage.getItem(key);
+        if (sessionValue && sessionValue.trim()) return sessionValue.trim();
+
+        const localValue = localStorage.getItem(key);
+        if (localValue && localValue.trim()) return localValue.trim();
+    }
+    return '';
+};
+
+const setStorageValue = (key, value, persistToLocal = false) => {
+    const normalized = value == null ? '' : String(value);
+
+    if (normalized) {
+        sessionStorage.setItem(key, normalized);
+        if (persistToLocal) {
+            localStorage.setItem(key, normalized);
+        }
+        return;
+    }
+
+    sessionStorage.removeItem(key);
+    if (persistToLocal) {
+        localStorage.removeItem(key);
+    }
+};
+
+const normalizeSessionData = (data = {}) => {
+    const source = unwrapApiPayload(data) || {};
+
+    const givenName = extractFromCommonWrappers(source, ['given_name', 'givenName']) || findDeepValue(source, ['given_name', 'givenName']);
+    const familyName = extractFromCommonWrappers(source, ['family_name', 'familyName']) || findDeepValue(source, ['family_name', 'familyName']);
+    const displayName = extractFromCommonWrappers(source, ['fullName', 'full_name', 'name', 'displayName']) || findDeepValue(source, ['fullName', 'full_name', 'name', 'displayName']);
+    const profilePictureUrl = extractFromCommonWrappers(source, [
+        'profilePictureUrl',
+        'profileUrl',
+        'profile_picture_url',
+        'profile_picture',
+        'profileImage',
+        'profileImageUrl',
+        'profilePhotoUrl',
+        'photoUrl',
+        'photo',
+        'picture',
+        'image',
+        'imageUrl',
+        'avatar',
+        'avatarUrl',
+    ]) || findDeepValue(source, [
+        'profilePictureUrl',
+        'profileUrl',
+        'profile_picture_url',
+        'profile_picture',
+        'profileImage',
+        'profileImageUrl',
+        'profilePhotoUrl',
+        'photoUrl',
+        'photo',
+        'picture',
+        'image',
+        'imageUrl',
+        'avatar',
+        'avatarUrl',
+    ]);
+
+    const combinedName = [givenName, familyName].filter(Boolean).join(' ').trim();
+
+    return {
+        fullName: displayName || combinedName || '',
+        email: extractFromCommonWrappers(source, ['email', 'userEmail', 'preferred_username']),
+        role: extractFromCommonWrappers(source, ['role', 'userRole']),
+        userId: extractFromCommonWrappers(source, ['userId', 'id', 'sub', 'uid']),
+        profilePictureUrl,
+        refreshTokenExpiry:
+            extractFromCommonWrappers(source, [
+                'refreshTokenExpiry',
+                'refresh_token_expiry',
+                'refreshTokenExpiresAt',
+                'refreshTokenExpires',
+            ]) ||
+            '',
+    };
+};
+
+let sessionBootstrapPromise = null;
+let manualLogoutPending = false;
+let authSessionVersion = 0;
+const SESSION_CACHE_TIME = 5 * 60 * 1000;
+let verifiedSession = {
+    authenticated: false,
+    user: null,
+    checkedAt: 0,
+    refreshTokenExpiry: '',
+};
+
+const setVerifiedSession = (data) => {
+    const user = normalizeSessionData(data);
+    verifiedSession = {
+        authenticated: true,
+        user,
+        checkedAt: Date.now(),
+        refreshTokenExpiry: user.refreshTokenExpiry,
+    };
+    return user;
+};
+
+const clearVerifiedSession = () => {
+    verifiedSession = {
+        authenticated: false,
+        user: null,
+        checkedAt: Date.now(),
+        refreshTokenExpiry: '',
+    };
+};
+
+const clearAuthStorage = () => {
+    sessionStorage.removeItem('profilePictureUrl');
+    sessionStorage.removeItem('userRole');
+    sessionStorage.removeItem('userEmail');
+    sessionStorage.removeItem('userFullName');
+    sessionStorage.removeItem('userId');
+    sessionStorage.removeItem('userPhoto');
+    sessionStorage.removeItem('refreshTokenExpiry');
+    sessionStorage.removeItem('emailVerificationAttempted');
+    localStorage.removeItem('profilePictureUrl');
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('user');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userFullName');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userPhoto');
+    localStorage.removeItem('currentUser');
+};
+
+const clearRememberMeStorage = () => {
+    localStorage.removeItem('rememberMeEnabled');
+    localStorage.removeItem('rememberMeEmail');
+    localStorage.removeItem('rememberMeRole');
+    localStorage.removeItem('rememberMeFullName');
+    localStorage.removeItem('rememberMeUserId');
+    localStorage.removeItem('refreshTokenExpiry');
+};
+
+const clearManualLogoutFlag = () => {
+    sessionStorage.removeItem('manualLogoutPending');
+};
+
+const getSessionStorageSession = () => {
+    const sessionData = normalizeSessionData({
+        fullName: sessionStorage.getItem('userFullName') || '',
+        email: sessionStorage.getItem('userEmail') || '',
+        role: sessionStorage.getItem('userRole') || '',
+        userId: sessionStorage.getItem('userId') || '',
+        profilePictureUrl:
+            sessionStorage.getItem('profilePictureUrl') ||
+            sessionStorage.getItem('userPhoto') ||
+            '',
+        refreshTokenExpiry: sessionStorage.getItem('refreshTokenExpiry') || '',
+    });
+
+    if (!sessionData.email && !sessionData.userId && !sessionData.fullName && !sessionData.role) {
+        return null;
+    }
+
+    return sessionData;
+};
+
+const emitUserProfileUpdated = () => {
+    window.dispatchEvent(new Event('user-profile-updated'));
+};
 
 const authService = {
-    REMEMBER_ME: 'rememberMeToken',
-    REMEMBER_ME_EXPIRY: 'rememberMeExpiry',
+    REMEMBER_ME_ENABLED: 'rememberMeEnabled',
     REMEMBER_ME_EMAIL: 'rememberMeEmail',
     REMEMBER_ME_ROLE: 'rememberMeRole',
     REMEMBER_ME_FULLNAME: 'rememberMeFullName',
     REMEMBER_ME_USER_ID: 'rememberMeUserId',
-    
-    AUTH_TOKEN: 'authToken',
+
     USER_ROLE: 'userRole',
     USER_EMAIL: 'userEmail',
     USER_FULLNAME: 'userFullName',
     USER_ID: 'userId',
-    
+    USER_PHOTO: 'userPhoto',
+
     VERIFICATION_EMAIL: 'verificationEmail',
-    
-    REMEMBER_ME_DURATION: 7 * 24 * 60 * 60 * 1000, // 7 days 
 
     async signUp(userData) {
         return request('/auth/signUp', {
@@ -25,25 +309,40 @@ const authService = {
         });
     },
 
+    saveVerificationEmail(email) {
+        if (!email) return;
+
+        localStorage.setItem(this.VERIFICATION_EMAIL, email);
+        sessionStorage.removeItem('emailVerificationAttempted');
+    },
+
     async verifyEmail(token) {
-        return request(`/auth/verify-email?token=${encodeURIComponent(token)}`);
+        return request(`/auth/verify-email?token=${encodeURIComponent(token)}`, {
+            method: 'GET',
+        });
     },
 
     async resendVerificationEmail(email) {
-        return request('/auth/resend-verification', {
+        return request('/auth/resend-verification-email', {
             method: 'POST',
             body: JSON.stringify({ email }),
         });
     },
 
     async signIn(email, password, rememberMe = false) {
-        const data = await request('/auth/signIn', {
+        const data = unwrapApiPayload(await request('/auth/signIn', {
             method: 'POST',
-            body: JSON.stringify({ email, password }),
-        });
+            body: JSON.stringify({ email, password, rememberMe }),
+        }));
 
         this.saveAuth(data, rememberMe);
         return data;
+    },
+
+    startGoogleAuth() {
+        manualLogoutPending = false;
+        clearManualLogoutFlag();
+        window.location.href = 'http://localhost:8080/oauth2/authorization/google';
     },
 
     async forgotPassword(email) {
@@ -67,129 +366,364 @@ const authService = {
             body: JSON.stringify({
                 token,
                 newPassword: password,
-                confirmPassword: confirmPassword
+                confirmPassword: confirmPassword,
             }),
         });
     },
 
-    saveAuth(data, rememberMe = false) {
-        if (!data?.token) {
-            return;
+    async completeOauthSignup(oauthPayload) {
+        if (!oauthPayload) return null;
+
+        const candidates = [
+            '/auth/complete-oauth-signup',
+            '/auth/link-oauth',
+            '/auth/link-account',
+        ];
+
+        for (const endpoint of candidates) {
+            try {
+                const resp = await request(endpoint, {
+                    method: 'POST',
+                    body: JSON.stringify({ oauthPayload }),
+                });
+
+                // If server returned a session/user object, return it
+                if (resp) return resp;
+            } catch (err) {
+                // try next endpoint
+                continue;
+            }
         }
 
-        this.signOut();
-        if (rememberMe) {
-            // Store in localStorage with expiry (Remember Me - 7 days)
-            const expiryTime = Date.now() + this.REMEMBER_ME_DURATION;
+        return null;
+    },
 
-            localStorage.setItem(this.REMEMBER_ME, data.token);
-            localStorage.setItem(this.REMEMBER_ME_EXPIRY, expiryTime.toString());
-            localStorage.setItem(this.REMEMBER_ME_EMAIL, data.email || '');
-            localStorage.setItem(this.REMEMBER_ME_ROLE, data.role || '');
-            localStorage.setItem(this.REMEMBER_ME_FULLNAME, data.fullName || '');
-            localStorage.setItem(this.REMEMBER_ME_USER_ID, data.userId || '');
-            
-            // Also set in sessionStorage for immediate use
-            sessionStorage.setItem(this.AUTH_TOKEN, data.token);
-            if (data.role) sessionStorage.setItem(this.USER_ROLE, data.role);
-            if (data.email) sessionStorage.setItem(this.USER_EMAIL, data.email);
-            if (data.fullName) sessionStorage.setItem(this.USER_FULLNAME, data.fullName);
-            if (data.userId) sessionStorage.setItem(this.USER_ID, data.userId);
-        } else {
-            // Store in sessionStorage (temporary session)
-            sessionStorage.setItem(this.AUTH_TOKEN, data.token);
-            if (data.role) sessionStorage.setItem(this.USER_ROLE, data.role);
-            if (data.email) sessionStorage.setItem(this.USER_EMAIL, data.email);
-            if (data.fullName) sessionStorage.setItem(this.USER_FULLNAME, data.fullName);
-            if (data.userId) sessionStorage.setItem(this.USER_ID, data.userId);
+    async changePassword(payload) {
+        const { currentPassword, newPassword, confirmPassword } = payload;
+        return request('/auth/change-password', {
+            method: 'PUT',
+            body: JSON.stringify({
+                currentPassword,
+                newPassword,
+                confirmPassword,
+                confirmNewPassword: confirmPassword,
+            }),
+        });
+    },
+
+    async updateProfile(formData) {
+        const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+            method: 'PUT',
+            credentials: 'include',
+            body: formData,
+        });
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                await this.signOut();
+                throw new Error('Unauthorized');
+            }
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || 'Failed to update profile');
         }
+
+        const data = await response.json();
+        this.saveProfileUpdate(data);
+        return data;
     },
 
-    getToken() {
-        if (this.isRememberMeValid()) {
-            return localStorage.getItem(this.REMEMBER_ME);
+    saveProfileUpdate(updatedUser) {
+        if (!updatedUser) return;
+
+        const normalizedUser = normalizeSessionData(updatedUser);
+        const fullName = normalizedUser.fullName;
+        const rawPhoto = normalizedUser.profilePictureUrl;
+
+        const photoToStore = resolveProfilePhoto(rawPhoto, fullName);
+        const persistToLocal = this.isRememberMeValid();
+
+        setStorageValue(this.USER_FULLNAME, fullName, persistToLocal);
+        setStorageValue(this.USER_EMAIL, normalizedUser.email, persistToLocal);
+        setStorageValue(this.USER_ROLE, normalizedUser.role, persistToLocal);
+        setStorageValue(this.USER_ID, normalizedUser.userId, persistToLocal);
+        setStorageValue(this.USER_PHOTO, photoToStore, persistToLocal);
+
+        const currentUserSnapshot = JSON.stringify({
+            ...normalizedUser,
+            profilePictureUrl: photoToStore,
+        });
+
+        sessionStorage.setItem('currentUser', currentUserSnapshot);
+        if (persistToLocal) {
+            localStorage.setItem('currentUser', currentUserSnapshot);
         }
-        return sessionStorage.getItem(this.AUTH_TOKEN);
-    },
 
-
-    isAuthenticated() {
-        return !!this.getToken();
-    },
-
-    //Check if Remember Me token is still valid
-    isRememberMeValid() {
-        const token = localStorage.getItem(this.REMEMBER_ME);
-        const expiry = localStorage.getItem(this.REMEMBER_ME_EXPIRY);
-
-        if (!token || !expiry) return false;
-
-        if (Date.now() > parseInt(expiry)) {
-            this.clearRememberMe();
-            return false;
+        sessionStorage.setItem('profilePictureUrl', photoToStore);
+        if (persistToLocal) {
+            localStorage.setItem('profilePictureUrl', photoToStore);
         }
-        return true;
+
+        emitUserProfileUpdated();
     },
-    // Restore session from Remember Me on app startup
-    restoreFromRememberMe() {
-        if (this.isRememberMeValid()) {
-            const token = localStorage.getItem(this.REMEMBER_ME);
-            const email = localStorage.getItem(this.REMEMBER_ME_EMAIL);
-            const role = localStorage.getItem(this.REMEMBER_ME_ROLE);
-            const fullName = localStorage.getItem(this.REMEMBER_ME_FULLNAME);
-            const userId = localStorage.getItem(this.REMEMBER_ME_USER_ID);
 
-            sessionStorage.setItem(this.AUTH_TOKEN, token);
-            if (email) sessionStorage.setItem(this.USER_EMAIL, email);
-            if (role) sessionStorage.setItem(this.USER_ROLE, role);
-            if (fullName) sessionStorage.setItem(this.USER_FULLNAME, fullName);
-            if (userId) sessionStorage.setItem(this.USER_ID, userId);
+    getProfilePicture() {
+        const photo = sessionStorage.getItem('profilePictureUrl') ||
+            localStorage.getItem('profilePictureUrl') ||
+            sessionStorage.getItem(this.USER_PHOTO) ||
+            localStorage.getItem(this.USER_PHOTO) ||
+            readStoredUserSnapshot()?.profilePictureUrl ||
+            readStoredUserSnapshot()?.picture ||
+            readStoredUserSnapshot()?.photoUrl ||
+            getTokenProfilePhoto() ||
+            '';
 
-            return true;
+        const normalized = normalizeProfilePhotoUrl(photo);
+
+        if (!normalized) {
+            const fullName = this.getUserFullName();
+            return createNameAvatarDataUrl(fullName);
         }
-        return false;
-    },
-    clearRememberMe() {
-        localStorage.removeItem(this.REMEMBER_ME);
-        localStorage.removeItem(this.REMEMBER_ME_EXPIRY);
-        localStorage.removeItem(this.REMEMBER_ME_EMAIL);
-        localStorage.removeItem(this.REMEMBER_ME_ROLE);
-        localStorage.removeItem(this.REMEMBER_ME_FULLNAME);
-        localStorage.removeItem(this.REMEMBER_ME_USER_ID);
+
+        return normalized;
     },
 
-    saveVerificationEmail(email) {
-        sessionStorage.setItem(this.VERIFICATION_EMAIL, email);
+    getUserFullName() {
+        return readFirstValue([this.USER_FULLNAME, this.REMEMBER_ME_FULLNAME]);
     },
 
-    getVerificationEmail() {
-        return sessionStorage.getItem(this.VERIFICATION_EMAIL);
+    getUserEmail() {
+        return readFirstValue([this.USER_EMAIL, this.REMEMBER_ME_EMAIL]);
     },
 
-    clearVerificationEmail() {
-        sessionStorage.removeItem(this.VERIFICATION_EMAIL);
-    },
-
-    signOut() {
-        sessionStorage.removeItem(this.AUTH_TOKEN);
-        sessionStorage.removeItem(this.USER_ROLE);
-        sessionStorage.removeItem(this.USER_EMAIL);
-        sessionStorage.removeItem(this.USER_FULLNAME);
-        sessionStorage.removeItem(this.USER_ID);
-        sessionStorage.removeItem(this.VERIFICATION_EMAIL);
-
-        this.clearRememberMe();
-    },
-
-    getRememberMeDaysLeft() {
-        const expiry = localStorage.getItem(this.REMEMBER_ME_EXPIRY);
-        if (!expiry) return 0;
-        const daysLeft = Math.ceil((parseInt(expiry) - Date.now()) / (24 * 60 * 60 * 1000));
-        return Math.max(0, daysLeft);
+    getUserRole() {
+        return readFirstValue([this.USER_ROLE, this.REMEMBER_ME_ROLE]);
     },
 
     getUserId() {
-        return sessionStorage.getItem(this.USER_ID);
+        return readFirstValue([this.USER_ID, this.REMEMBER_ME_USER_ID]);
+    },
+
+    getRememberedSession() {
+        if (!this.isRememberMeValid()) return null;
+
+        const fullName = localStorage.getItem(this.REMEMBER_ME_FULLNAME) || '';
+        const email = localStorage.getItem(this.REMEMBER_ME_EMAIL) || '';
+        const role = localStorage.getItem(this.REMEMBER_ME_ROLE) || '';
+        const userId = localStorage.getItem(this.REMEMBER_ME_USER_ID) || '';
+        const refreshTokenExpiry = localStorage.getItem('refreshTokenExpiry') || '';
+        const profilePictureUrl = localStorage.getItem('profilePictureUrl') ||
+            localStorage.getItem(this.USER_PHOTO) ||
+            '';
+
+        if (!email && !userId && !fullName) return null;
+
+        return normalizeSessionData({
+            fullName,
+            email,
+            role,
+            userId,
+            profilePictureUrl,
+            refreshTokenExpiry,
+        });
+    },
+
+    async saveAuth(data, rememberMe = false) {
+        if (!data) return;
+
+        manualLogoutPending = false;
+        clearManualLogoutFlag();
+        clearAuthStorage();
+
+        const sessionData = normalizeSessionData(data);
+        const fullName = sessionData.fullName;
+        const rawPhoto = sessionData.profilePictureUrl;
+
+        const normalizedPhoto = resolveProfilePhoto(rawPhoto, fullName);
+        const persistToLocal = !!rememberMe;
+
+        setStorageValue(this.USER_ROLE, sessionData.role, persistToLocal);
+        setStorageValue(this.USER_EMAIL, sessionData.email, persistToLocal);
+        setStorageValue(this.USER_FULLNAME, fullName, persistToLocal);
+        setStorageValue(this.USER_ID, sessionData.userId, persistToLocal);
+        setStorageValue(this.USER_PHOTO, normalizedPhoto, persistToLocal);
+
+        if (persistToLocal) {
+            localStorage.setItem(this.REMEMBER_ME_ENABLED, 'true');
+            localStorage.setItem(this.REMEMBER_ME_EMAIL, sessionData.email);
+            localStorage.setItem(this.REMEMBER_ME_ROLE, sessionData.role);
+            localStorage.setItem(this.REMEMBER_ME_FULLNAME, fullName);
+            localStorage.setItem(this.REMEMBER_ME_USER_ID, sessionData.userId);
+            localStorage.setItem('profilePictureUrl', normalizedPhoto);
+            localStorage.setItem('currentUser', JSON.stringify({ ...sessionData, profilePictureUrl: normalizedPhoto }));
+            if (sessionData.refreshTokenExpiry) {
+                localStorage.setItem('refreshTokenExpiry', sessionData.refreshTokenExpiry);
+            }
+        } else {
+            this.clearRememberMe();
+        }
+
+        sessionStorage.setItem('profilePictureUrl', normalizedPhoto);
+        sessionStorage.setItem('currentUser', JSON.stringify({ ...sessionData, profilePictureUrl: normalizedPhoto }));
+        setVerifiedSession({ ...sessionData, profilePictureUrl: normalizedPhoto });
+
+        emitUserProfileUpdated();
+    },
+
+    isAuthenticated() {
+        return verifiedSession.authenticated && !this.isManualLogoutPending();
+    },
+
+    async bootstrapSession() {
+        if (this.isManualLogoutPending()) {
+            manualLogoutPending = true;
+            clearVerifiedSession();
+            return null;
+        }
+
+        if (
+            verifiedSession.authenticated &&
+            verifiedSession.user &&
+            Date.now() - verifiedSession.checkedAt < SESSION_CACHE_TIME
+        ) {
+            return verifiedSession.user;
+        }
+
+        if (sessionBootstrapPromise) {
+            return sessionBootstrapPromise;
+        }
+
+        const sessionStorageSession = getSessionStorageSession();
+        if (sessionStorageSession) {
+            return setVerifiedSession(sessionStorageSession);
+        }
+
+        const requestVersion = authSessionVersion;
+
+        sessionBootstrapPromise = (async () => {
+            try {
+                if (manualLogoutPending || requestVersion !== authSessionVersion) {
+                    clearVerifiedSession();
+                    return null;
+                }
+
+                const payload = unwrapApiPayload(await request('/auth/me', {
+                    method: 'GET',
+                    headers: {
+                        Accept: 'application/json',
+                    },
+                }));
+
+                if (payload) {
+                    // If backend indicates this OAuth login corresponds to a new/unregistered user,
+                    // persist the payload for the SignUp flow and treat as unauthenticated so
+                    // the UI can show the signup completion screen.
+                    const isOauthNewUser =
+                        payload?.registered === false ||
+                        payload?.newUser === true ||
+                        payload?.user?.registered === false ||
+                        payload?.user?.newUser === true;
+
+                    if (isOauthNewUser) {
+                        try {
+                            sessionStorage.setItem('oauthPendingUser', JSON.stringify(payload));
+                        } catch (e) {
+                            console.warn('Failed to store oauthPendingUser', e);
+                        }
+
+                        clearVerifiedSession();
+                        emitUserProfileUpdated();
+                        return null;
+                    }
+
+                    const rememberMe = this.isRememberMeValid();
+                    this.saveAuth(payload, rememberMe);
+                    return verifiedSession.user;
+                }
+
+                const rememberedSession = this.getRememberedSession();
+                if (rememberedSession) {
+                    this.saveAuth(rememberedSession, true);
+                    return verifiedSession.user;
+                }
+
+                clearVerifiedSession();
+                return null;
+            } catch (err) {
+                const rememberedSession = this.getRememberedSession();
+                if (rememberedSession) {
+                    this.saveAuth(rememberedSession, true);
+                    return verifiedSession.user;
+                }
+
+                clearVerifiedSession();
+                return null;
+            } finally {
+                sessionBootstrapPromise = null;
+            }
+        })();
+
+        return sessionBootstrapPromise;
+    },
+
+    async validateSession() {
+        return this.bootstrapSession();
+    },
+
+    getRememberMeDaysLeft(refreshTokenExpiry) {
+        if (!refreshTokenExpiry) return 0;
+        const now = new Date().getTime();
+        const expiry = new Date(refreshTokenExpiry).getTime();
+        const daysLeft = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
+        return Math.max(0, daysLeft);
+    },
+
+    async restoreFromRememberMe() {
+        const sessionData = await this.bootstrapSession();
+        return Boolean(sessionData);
+    },
+
+    getVerifiedRefreshTokenExpiry() {
+        return verifiedSession.refreshTokenExpiry || '';
+    },
+
+    isRememberMeValid() {
+        try {
+            const enabled = localStorage.getItem(this.REMEMBER_ME_ENABLED) === 'true';
+            const expiry = localStorage.getItem('refreshTokenExpiry');
+
+            if (!enabled || !expiry) return false;
+
+            return new Date(expiry).getTime() > Date.now();
+        } catch {
+            return false;
+        }
+    },
+
+    clearRememberMe() {
+        clearRememberMeStorage();
+    },
+
+    isManualLogoutPending() {
+        return manualLogoutPending || sessionStorage.getItem('manualLogoutPending') === 'true';
+    },
+
+    async signOut() {
+        manualLogoutPending = true;
+        authSessionVersion += 1;
+
+        try {
+            await request('/auth/logout', {
+                method: 'POST',
+            });
+        } catch (err) {
+            console.error('Logout request failed:', err);
+        }
+
+        clearAuthStorage();
+        sessionStorage.setItem('manualLogoutPending', 'true');
+        this.clearRememberMe();
+        clearVerifiedSession();
+        emitUserProfileUpdated();
     },
 };
 

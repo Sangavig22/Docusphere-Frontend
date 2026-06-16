@@ -36,7 +36,7 @@ export const ADMIN_MENU = {
 const SHARED_STYLES = {
   widthCollapsed: "w-20",
   widthExpanded: "w-64",
-  container: "bg-white h-screen shadow-md flex flex-col transition-all duration-300",
+  container: "bg-card h-screen shadow-md flex flex-col transition-all duration-300",
 };
 
 // Sidebar styles

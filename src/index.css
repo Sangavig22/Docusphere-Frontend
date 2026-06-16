@@ -1,1 +1,63 @@
 @import "tailwindcss";
+
+@layer base {
+	:root {
+		color-scheme: light;
+		--bg: #f8fafc;
+		--surface: #ffffff;
+		--card: #ffffff;
+		--text: #0f172a;
+		--muted: #64748b;
+		--border: #e2e8f0;
+		--primary: #2563eb;
+	}
+
+	.dark {
+		color-scheme: dark;
+		--bg: #020817;
+		--surface: #0f172a;
+		--card: #111827;
+		--text: #f8fafc;
+		--muted: #94a3b8;
+		--border: #1e293b;
+		--primary: #3b82f6;
+	}
+}
+
+html, body, #root {
+	background: var(--bg);
+	color: var(--text);
+}
+
+/* smooth theme transition */
+* {
+	transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Tailwind utilities override for dark theme where utilities use hardcoded colors */
+.dark .bg-white { background-color: var(--surface) !important; }
+.dark .text-gray-500 { color: var(--muted) !important; }
+.dark .text-gray-900 { color: var(--text) !important; }
+.dark .hover\:bg-gray-100:hover { background-color: rgba(255,255,255,0.03) !important; }
+.dark .border-gray-300 { border-color: var(--border) !important; }
+.dark .border-gray-200 { border-color: rgba(255,255,255,0.04) !important; }
+.dark .bg-red-100 { background-color: rgba(255,69,58,0.06) !important; }
+.dark .text-red-600 { color: #ff7b72 !important; }
+.dark .bg-gray-50 { background-color: var(--bg) !important; }
+.dark .bg-gray-100 { background-color: var(--bg) !important; }
+.dark .bg-gray-200 { background-color: rgba(255,255,255,0.02) !important; }
+.dark .text-gray-700 { color: var(--text) !important; }
+.dark .text-gray-800 { color: var(--text) !important; }
+.dark .text-gray-600 { color: var(--muted) !important; }
+.dark .bg-red-50 { background-color: rgba(255,69,58,0.03) !important; }
+
+/* Semantic theme token utilities */
+.bg-card { background-color: var(--card) !important; }
+.text-text { color: var(--text) !important; }
+.text-muted { color: var(--muted) !important; }
+.border-border { border-color: var(--border) !important; }
+
+/* Interactive / variant utilities for semantic tokens */
+.hover\:bg-card:hover { background-color: var(--card) !important; }
+.focus\:border-border:focus { border-color: var(--border) !important; }
+

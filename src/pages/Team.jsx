@@ -86,8 +86,8 @@ function Team() {
 
   if (error) {
     return (
-      <div className="bg-red-50 dark:bg-red-900/20 rounded-2xl border border-red-200 dark:border-red-800 p-6">
-        <p className="text-red-600 dark:text-red-400 font-medium">Error: {error}</p>
+      <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <p className="font-medium text-muted">Error: {error}</p>
       </div>
     );
   }
@@ -97,7 +97,7 @@ function Team() {
       <ToastContainer />
 
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">My Teams</h1>
+        <h1 className="text-2xl font-bold text-text">My Teams</h1>
         <button
           onClick={() => navigate("/team/new")}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl flex items-center gap-2 text-sm font-semibold transition-colors shadow-sm shadow-blue-200"

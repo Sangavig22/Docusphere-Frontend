@@ -6,6 +6,7 @@ import EmailVerification from "../pages/authentication/EmailVerification";
 import DashboardSelector from "../pages/authentication/DashboardSelector";
 import ForgotPassword from "../pages/authentication/ForgotPassword";
 import ResetPassword from "../pages/authentication/ResetPassword";
+import SettingsPage from "../pages/SettingsPage.jsx";
 import Layout from "../components/Layout/Layout";
 import Dashboard from "../Pages/Dashboard";
 import UploadPage from "../pages/UploadPage";
@@ -19,6 +20,9 @@ import Team from "../pages/Team.jsx";
 import TeamNew from "../pages/TeamNew.jsx";
 import TeamDetail from "../pages/TeamDetail.jsx";
 import SharedDocumentPage from "../pages/SharedDocumentPage";
+import AdminTeamManagementPage from "../pages/AdminTeamManagementPage.jsx";
+import AdminTeamDetailsPage from "../pages/AdminTeamDetailsPage.jsx";
+import AdminMergeTeamsPage from "../pages/AdminMergeTeamsPage.jsx";
 
 
 function withLayout(element, pageTitle, pageSubtitle, type = "dashboard") {
@@ -35,26 +39,32 @@ export const routes = [
   {
     path: "/",
     element: <LandingPage />,
+    theme: "light",
   },
    {
     path: "/signup",
     element: <SignUp />,
+    theme: "light",
   },
   {
     path: "/signin",
     element: <SignIn />,
+    theme: "light",
   },
    {
     path: "/forgot-password",
     element: <ForgotPassword />,
+    theme: "light",
   },
   {
     path: "/reset-password",
     element: <ResetPassword />,
+    theme: "light",
   },
   {
     path: "/verify-email",
     element: <EmailVerification />,
+    theme: "light",
   },
    {
     path: "/share/:token",
@@ -64,6 +74,7 @@ export const routes = [
   {
     path: "/dashboard-selector",
     element: <DashboardSelector />,
+    theme: "light",
   },
   {
     path: "/dashboard",
@@ -110,6 +121,11 @@ export const routes = [
     path: "/team/:teamId",
     element: withLayout(<TeamDetail />, "Team Details", "Manage team documents and members"),
   },
+   {
+    path: "/setting",
+    element: withLayout(<SettingsPage />, "Settings", "Manage your account and preferences."
+    ),
+  },
 
   // Admin route
   {
@@ -118,6 +134,42 @@ export const routes = [
       <AdminDashboardPage />,
       "Dashboard",
       "Manage your platform with ease",
+      "admin"
+    ),
+  },
+  {
+    path: "/admin/teams",
+    element: withLayout(
+      <AdminTeamManagementPage />,
+      "Teams",
+      "Manage all teams",
+      "admin"
+    ),
+  },
+  {
+    path: "/admin/merge",
+    element: withLayout(
+      <AdminMergeTeamsPage />,
+      "Merge Teams",
+      "Combine two teams into one",
+      "admin"
+    ),
+  },
+  {
+    path: "/admin/teams/new",
+    element: withLayout(
+      <TeamNew />,
+      "New Team",
+      "Create a new organization team",
+      "admin"
+    ),
+  },
+  {
+    path: "/admin/teams/:teamId",
+    element: withLayout(
+      <AdminTeamDetailsPage />,
+      "Team Details",
+      "Manage team members and documents",
       "admin"
     ),
   },

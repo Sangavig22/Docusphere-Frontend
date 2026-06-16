@@ -13,12 +13,14 @@ import AuthPageLeftContent from "../../components/Authentication/AuthPageLeftCon
 import authService from "../../services/authService";
 import { ROLES } from "../../constants/roleConstants";
 import useForm from "../../hooks/useForm";
-import { useRememberMe } from "../../hooks/useRememberMe";
 
 const SignIn = () => {
   const navigate = useNavigate();
-  const { isRestoringSession } = useRememberMe();
   const [rememberMe, setRememberMe] = useState(false);
+
+  const googleLogin = () => {
+    authService.startGoogleAuth();
+  };
 
   const { formData, handleChange, isLoading, executeAsync, resetForm } = useForm({
     email: "",
@@ -54,9 +56,14 @@ const SignIn = () => {
 
       } catch (error) {
         console.error("Sign in error:", error);
-        const errorMsg = error.message || "An error occurred. Please try again.";
+            const errorMsg =
+              error?.data?.message ||
+              error?.data?.error ||
+              error?.message ||
+              "An error occurred. Please try again.";
+            const normalizedError = errorMsg.toLowerCase();
 
-        if (errorMsg.includes('not registered') || errorMsg.includes('Email not registered')) {
+            if (normalizedError.includes('not registered')) {
           toast.error(
             <span>
               Email not registered.{" "}
@@ -68,7 +75,11 @@ const SignIn = () => {
               />
             </span>
           );
-        } else if (errorMsg.includes('incorrect') || errorMsg.includes('Invalid') || errorMsg.includes('password')) {
+        } else if (
+          normalizedError.includes('incorrect') ||
+          normalizedError.includes('invalid') ||
+          normalizedError.includes('password')
+        ) {
           toast.error("Invalid email or password. Please try again.");
         } else {
           toast.error(errorMsg);
@@ -87,28 +98,24 @@ const SignIn = () => {
       <SecondaryButton
         type="button"
         onClick={() => navigate('/signup')}
-        disabled={isRestoringSession}
       >
         SIGN UP
       </SecondaryButton>
     </>
   );
 
-  const rightContent = isRestoringSession ? (
-    <div className="flex flex-col items-center justify-center h-96 gap-4">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      <p className="text-gray-600">Restoring your session...</p>
-    </div>
-  ) : (
+  const rightContent = (
     <>
       <AuthPageHeading text="Sign In" />
 
+      
+
       <SocialAuthButtons
-        onGoogleClick={() => console.log("Google login")}
+        onGoogleClick={googleLogin}
         onAppleClick={() => console.log("Apple login")}
       />
 
-      <p className="text-black text-xl mb-4">Or use your account</p>
+      <p className="text-text text-xl mb-4">Or use your account</p>
 
       <form
         onSubmit={handleSubmit}
@@ -134,8 +141,8 @@ const SignIn = () => {
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="w-4 h-4 rounded accent-[#05152C]"
-              style={{ accentColor: '#05152C' }}
+              className="w-4 h-4 rounded accent-[var(--primary)]"
+              style={{ accentColor: 'var(--primary)' }}
             />
             <span className="font-medium text-lg sm:text-xl text-[#05152C]">
               Remember me
@@ -147,8 +154,8 @@ const SignIn = () => {
           />
         </div>
 
-        <PrimaryButton type="submit" loading={isLoading || isRestoringSession}>
-          {isRestoringSession ? "Restoring session..." : "SIGN IN"}
+        <PrimaryButton type="submit" loading={isLoading}>
+          SIGN IN
         </PrimaryButton>
       </form>
     </>

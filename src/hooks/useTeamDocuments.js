@@ -8,7 +8,30 @@ import authService from '../services/authService';
  * Fetches documents for a specific team.
  * Replaces useDocumentMock
  */
-export function useTeamDocuments(teamId) {
+// The function to resolve the document owner ID from various possible fields in the document object.
+const resolveDocumentOwnerId = (doc) => {
+  const candidates = [
+    doc?.ownerId,
+    doc?.ownerUserId,
+    doc?.uploadedById,
+    doc?.createdById,
+    doc?.creatorId,
+    doc?.userId,
+    doc?.createdBy?.id,
+    doc?.createdBy?.userId,
+    doc?.uploadedBy?.id,
+    doc?.uploadedBy?.userId,
+  ];
+
+  for (const candidate of candidates) {
+    const value = candidate == null ? "" : String(candidate).trim();
+    if (value) return value;
+  }
+
+  return "";
+};
+
+export function useTeamDocuments(teamId, isAdmin = false) {
   const [documents, setDocuments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,16 +43,21 @@ export function useTeamDocuments(teamId) {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await teamsApi.getTeamDocuments(teamId);
+      const response = isAdmin
+        ? await teamsApi.getAdminTeamDocuments(teamId)
+        : await teamsApi.getTeamDocuments(teamId);
       const data = response?.data ?? response;
       
       const list = Array.isArray(data) ? data : (data?.items || data?.documents || []);
       const currentUserId = authService.getUserId();
-      // Mark each document with isOwner flag for action menu enable/disable
-      const enrichedList = list.map(doc => ({
-        ...doc,
-        isOwner: String(doc.ownerId || doc.userId) === String(currentUserId),
-      }));
+      // Mark each document with isOwner flag for action menu enable/disable.
+      const enrichedList = list.map((doc) => {
+        const ownerId = resolveDocumentOwnerId(doc);
+        return {
+          ...doc,
+          isOwner: ownerId !== "" && String(ownerId) === String(currentUserId),
+        };
+      });
       setDocuments(enrichedList);
       documentsRef.current = enrichedList;
     } catch (err) {
@@ -40,7 +68,7 @@ export function useTeamDocuments(teamId) {
     } finally {
       setIsLoading(false);
     }
-  }, [teamId]);
+  }, [teamId, isAdmin]);
 
   useEffect(() => {
     fetchDocuments();
@@ -48,13 +76,17 @@ export function useTeamDocuments(teamId) {
 
   const deleteDocument = useCallback(async (documentId) => {
     try {
-      await teamsApi.deleteTeamDocument(teamId, documentId);
+      if (isAdmin) {
+        await teamsApi.deleteAdminDocument(documentId);
+      } else {
+        await teamsApi.deleteTeamDocument(teamId, documentId);
+      }
       setDocuments((prev) => prev.filter((d) => (d.id ?? d._id) !== documentId));
     } catch (err) {
       console.error("Failed to delete document", err);
       throw err;
     }
-  }, [teamId]);
+  }, [teamId, isAdmin]);
 
   const toggleStar = useCallback(
     async (id) => {

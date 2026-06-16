@@ -24,6 +24,7 @@ function buildApiUrl(path) {
 export async function getSharedDocumentByToken(token) {
   const response = await fetch(buildApiUrl(`/api/share/${encodeURIComponent(token)}`), {
     method: "GET",
+    credentials: "include",
     headers: { Accept: "application/json" },
   });
 

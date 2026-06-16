@@ -6,7 +6,6 @@ import {
 } from "../constants/documents";
 import { API_BASE_URL } from "../config/api";
 import authService from "./authService";
-import { getUserIdFromToken } from "../utils/authToken";
 
 const CURRENT_USER_STORAGE_KEY = "currentUser";
 
@@ -174,10 +173,6 @@ function getNumericUserIdForStar() {
   const fromCurrentUser = String(currentUser?.userId ?? currentUser?.id ?? "").trim();
   if (/^\d+$/.test(fromCurrentUser)) return fromCurrentUser;
 
-  const token = authService.getToken();
-  const fromToken = String(getUserIdFromToken(token) || "").trim();
-  if (/^\d+$/.test(fromToken)) return fromToken;
-
   return "";
 }
 
@@ -215,8 +210,8 @@ export async function fetchMyDocuments({
   scope,
   signal,
 } = {}) {
-  const token = authService.getToken();
-  if (!token) throw new Error("Please sign in to view documents.");
+  await authService.bootstrapSession();
+  if (!authService.isAuthenticated()) throw new Error("Please sign in to view documents.");
 
   const sort = DOCUMENT_SORT_MAP[sortKey] ?? DOCUMENT_SORT_MAP.updated_desc;
   const params = new URLSearchParams();
@@ -254,9 +249,9 @@ export async function fetchMyDocuments({
   const url = buildApiUrl(listPath);
   const response = await fetch(url, {
     signal,
+    credentials: "include",
     headers: {
       Accept: "application/json",
-      Authorization: `Bearer ${token}`,
     },
   });
 
@@ -286,8 +281,8 @@ export async function fetchMyDocuments({
 }
 
 export async function starDocument(documentId, { userId } = {}) {
-  const token = authService.getToken();
-  if (!token) throw new Error("Please sign in again.");
+  await authService.bootstrapSession();
+  if (!authService.isAuthenticated()) throw new Error("Please sign in again.");
 
   const provided = String(userId || "").trim();
   const resolvedUserId = /^\d+$/.test(provided) ? provided : getNumericUserIdForStar();
@@ -300,9 +295,9 @@ export async function starDocument(documentId, { userId } = {}) {
   );
   const response = await fetch(url, {
     method: "POST",
+    credentials: "include",
     headers: {
       Accept: "application/json",
-      Authorization: `Bearer ${token}`,
     },
   });
 
@@ -318,8 +313,8 @@ export async function starDocument(documentId, { userId } = {}) {
 }
 
 export async function unstarDocument(documentId, { userId } = {}) {
-  const token = authService.getToken();
-  if (!token) throw new Error("Please sign in again.");
+  await authService.bootstrapSession();
+  if (!authService.isAuthenticated()) throw new Error("Please sign in again.");
 
   const provided = String(userId || "").trim();
   const resolvedUserId = /^\d+$/.test(provided) ? provided : getNumericUserIdForStar();
@@ -332,9 +327,9 @@ export async function unstarDocument(documentId, { userId } = {}) {
   );
   const response = await fetch(url, {
     method: "DELETE",
+    credentials: "include",
     headers: {
       Accept: "application/json",
-      Authorization: `Bearer ${token}`,
     },
   });
 

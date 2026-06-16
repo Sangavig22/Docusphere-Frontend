@@ -2,28 +2,31 @@ import { useEffect, useState, useCallback } from 'react';
 import authService from '../services/authService';
 
 export function useRememberMe() {
-    const [isRestoringSession, setIsRestoringSession] = useState(true);
+    const [isRestoringSession, setIsRestoringSession] = useState(false);
     const [rememberMeDaysLeft, setRememberMeDaysLeft] = useState(0);
-    const [hasRememberMeToken, setHasRememberMeToken] = useState(false);
+    const [hasRememberMeSession, setHasRememberMeSession] = useState(false);
 
-    // Restore session on mount
+    // Restore session from server on mount
     useEffect(() => {
-        try {
-            const restored = authService.restoreFromRememberMe();
-            
-            if (restored) {
-                const daysLeft = authService.getRememberMeDaysLeft();
-                setRememberMeDaysLeft(daysLeft);
-                setHasRememberMeToken(true);
-            } else {
-                setRememberMeDaysLeft(0);
-                setHasRememberMeToken(false);
+        const restoreSession = async () => {
+            try {
+                const sessionValid = await authService.bootstrapSession();
+                if (sessionValid) {
+                    const daysLeft = authService.getRememberMeDaysLeft(authService.getVerifiedRefreshTokenExpiry());
+                    setRememberMeDaysLeft(daysLeft);
+                    setHasRememberMeSession(true);
+                } else {
+                    setHasRememberMeSession(false);
+                }
+            } catch (error) {
+                console.error('Failed to restore remember me session:', error);
+                setHasRememberMeSession(false);
+            } finally {
+                setIsRestoringSession(false);
             }
-        } catch (error) {
-            console.error('Failed to restore remember me session:', error);
-        } finally {
-            setIsRestoringSession(false);
-        }
+        };
+
+        restoreSession();
     }, []);
 
     // Handle "Remember Me" checkbox change
@@ -31,7 +34,7 @@ export function useRememberMe() {
         if (!rememberMe) {
             authService.clearRememberMe();
             setRememberMeDaysLeft(0);
-            setHasRememberMeToken(false);
+            setHasRememberMeSession(false);
         }
         return rememberMe; 
     }, []);
@@ -39,19 +42,30 @@ export function useRememberMe() {
     const clearRememberMe = useCallback(() => {
         authService.clearRememberMe();
         setRememberMeDaysLeft(0);
-        setHasRememberMeToken(false);
+        setHasRememberMeSession(false);
     }, []);
 
-    const refreshDaysLeft = useCallback(() => {
-        const days = authService.getRememberMeDaysLeft();
-        setRememberMeDaysLeft(days);
-        setHasRememberMeToken(authService.isRememberMeValid());
+    const refreshDaysLeft = useCallback(async () => {
+        try {
+            const sessionValid = await authService.bootstrapSession();
+            if (sessionValid) {
+                const daysLeft = authService.getRememberMeDaysLeft(authService.getVerifiedRefreshTokenExpiry());
+                setRememberMeDaysLeft(daysLeft);
+                setHasRememberMeSession(true);
+            } else {
+                setRememberMeDaysLeft(0);
+                setHasRememberMeSession(false);
+            }
+        } catch (error) {
+            console.error('Failed to refresh days left:', error);
+            setHasRememberMeSession(false);
+        }
     }, []);
 
     return {
         isRestoringSession,
         rememberMeDaysLeft,
-        hasRememberMeToken,
+        hasRememberMeSession,
         handleRememberMeChange,
         clearRememberMe,
         refreshDaysLeft,

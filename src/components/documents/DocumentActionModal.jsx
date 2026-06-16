@@ -71,7 +71,7 @@ export default function DocumentActionModal({
             type="button"
             disabled={loading}
             onClick={onClose}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+            className="rounded-lg border border-border px-3 py-2 text-sm text-text hover:bg-card"
           >
             {cancelText}
           </button>

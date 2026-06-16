@@ -23,7 +23,7 @@ function typeStyles(type) {
     case "image":
       return { bg: "bg-violet-50", fg: "text-violet-600", ring: "ring-violet-100" };
     default:
-      return { bg: "bg-slate-50", fg: "text-slate-600", ring: "ring-slate-100" };
+      return { bg: "bg-surface", fg: "text-muted", ring: "ring-slate-100" };
   }
 }
 
@@ -93,7 +93,7 @@ export default function DocumentCard({
             <button
               type="button"
               disabled={disableActions}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-50 hover:text-amber-500"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted transition-colors hover:bg-card hover:text-amber-500"
               aria-label={doc.starred ? "Unstar document" : "Star document"}
               onClick={() => onToggleStar?.(doc.id)}
             >
@@ -108,7 +108,7 @@ export default function DocumentCard({
               disabled={disableActions}
               className={[
                 "inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors",
-                menuOpen ? "bg-slate-100 text-slate-700" : "text-slate-400 hover:bg-slate-50 hover:text-slate-700",
+                menuOpen ? "bg-card text-text" : "text-muted hover:bg-card hover:text-text",
               ].join(" ")}
               aria-label="Open document menu"
               onClick={() => setMenuOpen((v) => !v)}
@@ -142,16 +142,16 @@ export default function DocumentCard({
       </div>
 
       <div className="mt-3 flex min-w-0 flex-1 flex-col">
-        <h3 className="truncate pr-2 text-sm font-semibold text-slate-900" title={doc.name}>
+        <h3 className="truncate pr-2 text-sm font-semibold text-text" title={doc.name}>
           {doc.name}
         </h3>
-        <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
+        <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
           <span>{formatBytes(doc.sizeBytes)}</span>
-          <span className="text-slate-300">•</span>
+          <span className="text-muted">•</span>
           <span>{formatRelativeTime(doc.updatedAt)}</span>
           {doc.uploadedBy && doc.uploadedBy !== "-" ? (
             <>
-              <span className="text-slate-300">•</span>
+              <span className="text-muted">•</span>
               <span className="truncate max-w-[120px]">By {doc.uploadedBy}</span>
             </>
           ) : null}

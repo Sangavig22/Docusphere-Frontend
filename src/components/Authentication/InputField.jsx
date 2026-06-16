@@ -19,7 +19,7 @@ const InputField = ({
     type === "password" ? (showPassword ? "text" : "password") : type;
 
   return (
-    <div className={`flex items-center mt-3 w-full max-w-md bg-white/30 backdrop-blur-xl border border-gray-200/30 hover:border-blue-400/50 h-14 rounded-2xl overflow-hidden pl-4 sm:pl-6 gap-3 shadow-2xl hover:bg-white/40 hover:shadow-lg transition-all duration-300 ease-in-out transform hover:-translate-y-1 ${className}`}>
+    <div className={`flex items-center mt-3 w-full max-w-md bg-card/30 backdrop-blur-xl border border-border hover:border-blue-400/50 h-14 rounded-2xl overflow-hidden pl-4 sm:pl-6 gap-3 shadow-2xl hover:bg-card/40 hover:shadow-lg transition-all duration-300 ease-in-out transform hover:-translate-y-1 ${className}`}>
       {Icon && <Icon size={20} />}
       <input
         type={inputType}
@@ -34,16 +34,16 @@ const InputField = ({
           focus:outline-none 
           focus:border-transparent 
           bg-transparent 
-          placeholder-black 
-          text-black 
+          placeholder:text-muted 
+          text-text 
           font-medium 
           text-lg
           "
         style={{
           // Chrome adds blue background on autofill - this overrides it to transparent
           WebkitBoxShadow: '0 0 0 1000px transparent inset !important',
-          // Keep text color black when autofilled
-          WebkitTextFillColor: 'black !important',
+          // Keep text color aligned with the active theme when autofilled
+          WebkitTextFillColor: 'var(--text) !important',
           transition: 'background-color 5000s ease-in-out 0s',
           backgroundColor: 'transparent !important'
         }}
@@ -52,7 +52,7 @@ const InputField = ({
         <button
           type="button"
           onClick={() => setShowPassword(!showPassword)}
-          className="absolute right-4 top-1/2 -translate-y-1/2 text-black hover:text-gray-700 transition-colors"
+          className="absolute right-4 top-1/2 -translate-y-1/2 text-text hover:text-muted transition-colors"
         >
           {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
         </button>
