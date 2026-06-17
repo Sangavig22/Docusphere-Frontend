@@ -26,7 +26,7 @@ export default function EditDocumentModal({ open, document, onCancel, onSave }) 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50 px-4 py-6">
       <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
-        <h3 className="text-lg font-semibold text-slate-900">Edit Document</h3>
+        <h3 className="text-lg font-semibold text-slate-900">Document Details</h3>
 
         <div className="mt-5 grid gap-4">
           <label className="grid gap-1">
@@ -65,14 +65,7 @@ export default function EditDocumentModal({ open, document, onCancel, onSave }) 
             className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
           >
             Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-          >
-            Save Changes
-          </button>
+          </button>         
         </div>
       </div>
     </div>

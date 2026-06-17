@@ -63,6 +63,7 @@ export async function downloadDocument(id, name = "document", { password, unlock
     `${API_BASE_URL}/documents/${id}/download${query ? `?${query}` : ""}`,
     {
       method: "GET",
+      credentials: "include",
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(password ? { "X-Document-Password": password } : {}),
@@ -98,6 +99,7 @@ export async function updateDocument(id, file) {
 
   const response = await fetch(`${API_BASE_URL}/documents/${id}/edit`, {
     method: "POST",
+    credentials: "include",
     headers: {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },

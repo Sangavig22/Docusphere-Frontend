@@ -24,6 +24,7 @@ import AdminTeamManagementPage from "../pages/AdminTeamManagementPage.jsx";
 import AdminTeamDetailsPage from "../pages/AdminTeamDetailsPage.jsx";
 import AdminMergeTeamsPage from "../pages/AdminMergeTeamsPage.jsx";
 import DocumentPreviewPage from "../pages/DocumentPreviewPage";
+import DocumentEditorPage from "../pages/DocumentEditorPage";
 
 
 
@@ -113,6 +114,10 @@ export const routes = [
   {
     path: "/documents/:documentId/preview",
     element: <DocumentPreviewPage />,
+  },
+  {
+    path: "/editor/:documentId",
+    element: <DocumentEditorPage />,
   },
 
 
