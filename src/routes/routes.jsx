@@ -40,49 +40,59 @@ export const routes = [
     path: "/",
     element: <LandingPage />,
     theme: "light",
+    protected: false,
   },
    {
     path: "/signup",
     element: <SignUp />,
     theme: "light",
+    protected: false,
   },
   {
     path: "/signin",
     element: <SignIn />,
     theme: "light",
+    protected: false,
   },
    {
     path: "/forgot-password",
     element: <ForgotPassword />,
     theme: "light",
+    protected: false,
   },
   {
     path: "/reset-password",
     element: <ResetPassword />,
     theme: "light",
+    protected: false,
   },
   {
     path: "/verify-email",
     element: <EmailVerification />,
     theme: "light",
+    protected: false,
   },
    {
     path: "/share/:token",
     element: <SharedDocumentPage />,
+    protected: false,
   },
 
   {
     path: "/dashboard-selector",
     element: <DashboardSelector />,
     theme: "light",
+    protected: true,
   },
   {
     path: "/dashboard",
     element: withLayout(<Dashboard />, "Dashboard", "Overview of your workspace"),
+    protected: true,
   },
   {
     path: "/uploads",
     element: withLayout(<UploadPage />, "Uploads", "Drag and drop files or browse to upload." ),
+    protected: true,
   },
   {
     path: "/ocr",
@@ -91,40 +101,49 @@ export const routes = [
       "OCR Summarization",
       "Extract text and summarize documents."
     ),
+    protected: true,
   },
    {
     path: "/documents",
     element: withLayout(<MyDocumentsPage />, "My Documents", "Manage and organize all your documents."),
+    protected: true,
   },
  
   {
     path: "/starred",
     element: withLayout(<StarredPage />, "Starred ", "Manage and organize all starred documents."),
+    protected: true,
   },
   {
     path: "/recent",
     element: withLayout(<RecentPage />, "Recent", "Manage and organize all recently opened documents."),
+    protected: true,
   },
    {
     path: "/trash",
     element: withLayout(<TrashPage />, "Recycle Bin", "Restore or permanently delete documents."),
+    protected: true,
   },
   {
     path: "/team",
     element: withLayout(<Team />, "Teams", "Collaborate with your team members"),
+    protected: true,
   },
   {
     path: "/team/new",
     element: withLayout(<TeamNew />, "New Team", "Create a new collaborative workspace"),
+    protected: true,
   },
   {
     path: "/team/:teamId",
     element: withLayout(<TeamDetail />, "Team Details", "Manage team documents and members"),
+    protected: true,
   },
    {
     path: "/setting",
     element: withLayout(<SettingsPage />, "Settings", "Manage your account and preferences."
     ),
+    protected: true,
   },
 
   // Admin route
@@ -136,6 +155,7 @@ export const routes = [
       "Manage your platform with ease",
       "admin"
     ),
+    protected: true,
   },
   {
     path: "/admin/teams",
@@ -145,6 +165,7 @@ export const routes = [
       "Manage all teams",
       "admin"
     ),
+    protected: true,
   },
   {
     path: "/admin/merge",
@@ -154,6 +175,7 @@ export const routes = [
       "Combine two teams into one",
       "admin"
     ),
+    protected: true,
   },
   {
     path: "/admin/teams/new",
@@ -163,6 +185,7 @@ export const routes = [
       "Create a new organization team",
       "admin"
     ),
+    protected: true,
   },
   {
     path: "/admin/teams/:teamId",
@@ -172,5 +195,6 @@ export const routes = [
       "Manage team members and documents",
       "admin"
     ),
+    protected: true,
   },
 ];

@@ -1,7 +1,7 @@
 import { API_BASE_URL } from '../config/api.js';
 import authService from '../services/authService.js';
 
-const NON_REFRESH_AUTH_ENDPOINTS = /\/auth\/(signIn|signUp|refresh|logout|forgot-password|reset-password|verify-reset-token|resend-verification-email)/i;
+const NON_REFRESH_AUTH_ENDPOINTS = /\/auth\/(signIn|signUp|refresh|logout|forgot-password|reset-password|verify-reset-token|resend-verification-email|me)/i;
 
 async function refreshSession() {
   const response = await fetch(`${API_BASE_URL}/auth/refresh`, {

@@ -1,5 +1,6 @@
 import { request } from '../api/apiClient.js';
 import { API_BASE_URL } from '../config/api.js';
+import { BACKEND_URL } from '../config/authConfig.js';
 import { getProfilePhotoFromToken } from '../utils/authToken.js';
 
 const createNameAvatarDataUrl = (fullName = '') => {
@@ -339,10 +340,33 @@ const authService = {
         return data;
     },
 
+    // Resolve API base URL from environment or current origin (handles '/api' fallback).
+    _resolveApiBase() {
+        try {
+            const envBase = (import.meta.env.VITE_API_BASE_URL || '').trim();
+            if (envBase) {
+                if (envBase.startsWith('/')) {
+                    return `${window.location.origin.replace(/\/$/, '')}${envBase.replace(/\/$/, '')}`;
+                }
+                return envBase.replace(/\/$/, '');
+            }
+        } catch {
+        }
+
+        return `${window.location.origin.replace(/\/$/, '')}/api`;
+    },
+
     startGoogleAuth() {
         manualLogoutPending = false;
         clearManualLogoutFlag();
-        window.location.href = 'http://localhost:8080/oauth2/authorization/google';
+        window.location.href = `${BACKEND_URL}/auth/google`;
+    },
+
+    startGitHubAuth() {
+        manualLogoutPending = false;
+        clearManualLogoutFlag();
+        // Always use backend-initiated authorization start to preserve previous behavior.
+        window.location.href = `${BACKEND_URL}/auth/github`;
     },
 
     async forgotPassword(email) {
@@ -389,7 +413,7 @@ const authService = {
 
                 // If server returned a session/user object, return it
                 if (resp) return resp;
-            } catch (err) {
+            } catch {
                 // try next endpoint
                 continue;
             }
@@ -436,20 +460,27 @@ const authService = {
         if (!updatedUser) return;
 
         const normalizedUser = normalizeSessionData(updatedUser);
-        const fullName = normalizedUser.fullName;
+        const fullName = normalizedUser.fullName || this.getUserFullName();
+        const email = normalizedUser.email || this.getUserEmail();
+        const role = normalizedUser.role || this.getUserRole();
+        const userId = normalizedUser.userId || this.getUserId();
         const rawPhoto = normalizedUser.profilePictureUrl;
 
         const photoToStore = resolveProfilePhoto(rawPhoto, fullName);
         const persistToLocal = this.isRememberMeValid();
 
         setStorageValue(this.USER_FULLNAME, fullName, persistToLocal);
-        setStorageValue(this.USER_EMAIL, normalizedUser.email, persistToLocal);
-        setStorageValue(this.USER_ROLE, normalizedUser.role, persistToLocal);
-        setStorageValue(this.USER_ID, normalizedUser.userId, persistToLocal);
+        setStorageValue(this.USER_EMAIL, email, persistToLocal);
+        setStorageValue(this.USER_ROLE, role, persistToLocal);
+        setStorageValue(this.USER_ID, userId, persistToLocal);
         setStorageValue(this.USER_PHOTO, photoToStore, persistToLocal);
 
         const currentUserSnapshot = JSON.stringify({
             ...normalizedUser,
+            fullName,
+            email,
+            role,
+            userId,
             profilePictureUrl: photoToStore,
         });
 
@@ -478,6 +509,12 @@ const authService = {
             '';
 
         const normalized = normalizeProfilePhotoUrl(photo);
+
+        // Add cache buster to external URLs to prevent expired images
+        if (normalized && (normalized.startsWith('http://') || normalized.startsWith('https://'))) {
+            const sep = normalized.includes('?') ? '&' : '?';
+            return `${normalized}${sep}t=${Math.floor(Date.now() / 3600000)}`;
+        }
 
         if (!normalized) {
             const fullName = this.getUserFullName();
@@ -511,9 +548,6 @@ const authService = {
         const role = localStorage.getItem(this.REMEMBER_ME_ROLE) || '';
         const userId = localStorage.getItem(this.REMEMBER_ME_USER_ID) || '';
         const refreshTokenExpiry = localStorage.getItem('refreshTokenExpiry') || '';
-        const profilePictureUrl = localStorage.getItem('profilePictureUrl') ||
-            localStorage.getItem(this.USER_PHOTO) ||
-            '';
 
         if (!email && !userId && !fullName) return null;
 
@@ -522,7 +556,7 @@ const authService = {
             email,
             role,
             userId,
-            profilePictureUrl,
+            profilePictureUrl: '', // Don't use cached image URLs - fetch fresh from server
             refreshTokenExpiry,
         });
     },
@@ -580,21 +614,8 @@ const authService = {
             return null;
         }
 
-        if (
-            verifiedSession.authenticated &&
-            verifiedSession.user &&
-            Date.now() - verifiedSession.checkedAt < SESSION_CACHE_TIME
-        ) {
-            return verifiedSession.user;
-        }
-
         if (sessionBootstrapPromise) {
             return sessionBootstrapPromise;
-        }
-
-        const sessionStorageSession = getSessionStorageSession();
-        if (sessionStorageSession) {
-            return setVerifiedSession(sessionStorageSession);
         }
 
         const requestVersion = authSessionVersion;
@@ -614,9 +635,6 @@ const authService = {
                 }));
 
                 if (payload) {
-                    // If backend indicates this OAuth login corresponds to a new/unregistered user,
-                    // persist the payload for the SignUp flow and treat as unauthenticated so
-                    // the UI can show the signup completion screen.
                     const isOauthNewUser =
                         payload?.registered === false ||
                         payload?.newUser === true ||
@@ -648,7 +666,7 @@ const authService = {
 
                 clearVerifiedSession();
                 return null;
-            } catch (err) {
+            } catch {
                 const rememberedSession = this.getRememberedSession();
                 if (rememberedSession) {
                     this.saveAuth(rememberedSession, true);
@@ -712,7 +730,7 @@ const authService = {
         authSessionVersion += 1;
 
         try {
-            await request('/auth/logout', {
+            await request('/auth/signOut', {
                 method: 'POST',
             });
         } catch (err) {
