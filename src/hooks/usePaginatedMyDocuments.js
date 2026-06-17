@@ -5,10 +5,15 @@ import {
   DEFAULT_DOCUMENTS_SORT,
 } from "../constants/documents";
 import { fetchMyDocuments, starDocument, unstarDocument } from "../services/documentsService";
-import { matchesDocumentFilter } from "../utils/documentUtils";
+import { matchesDocumentFilter } from "../utils/documentUtils.js";
+
+function isPersonalSpaceDocument(doc) {
+  const teamId = doc?.teamId ?? doc?.teamID ?? doc?.team?.id;
+  return teamId == null || String(teamId).trim() === "";
+}
 
 export function usePaginatedMyDocuments(options = {}) {
-  const { starred, recentDays, scope, pageSize = DOCUMENTS_PAGE_SIZE } = options;
+  const { starred, recentDays, scope, pageSize = DOCUMENTS_PAGE_SIZE, personalOnly = false } = options;
   const [query, setQuery] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [sortKey, setSortKey] = useState(DEFAULT_DOCUMENTS_SORT);
@@ -50,10 +55,13 @@ export function usePaginatedMyDocuments(options = {}) {
           scope,
           signal: controller.signal,
         });
-        const docs =
+        let docs =
           filterType && filterType !== "all" && !BACKEND_SINGLE_TYPE_FILTERS.has(filterType)
             ? result.documents.filter((doc) => matchesDocumentFilter(doc.type, filterType, doc.name))
             : result.documents;
+        if (personalOnly) {
+          docs = docs.filter(isPersonalSpaceDocument);
+        }
         setDocuments(docs);
         setPagination(result.pagination);
       } catch (err) {

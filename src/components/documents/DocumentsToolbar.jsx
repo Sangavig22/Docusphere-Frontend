@@ -11,7 +11,7 @@ function IconButton({ active = false, label, onClick, children }) {
         "inline-flex h-10 w-10 items-center justify-center rounded-xl border transition-colors",
         active
           ? "border-blue-200 bg-blue-50 text-blue-700"
-          : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50",
+          : "border-border bg-card text-muted hover:bg-card",
       ].join(" ")}
       aria-label={label}
       onClick={onClick}
@@ -30,7 +30,7 @@ function MenuButton({ label, icon: Icon, open, onToggle, children }) {
           "inline-flex h-10 w-10 items-center justify-center rounded-xl border transition-colors",
           open
             ? "border-blue-200 bg-blue-50 text-blue-700"
-            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50",
+            : "border-border bg-card text-muted hover:bg-card",
         ].join(" ")}
         aria-label={label}
         onClick={onToggle}
@@ -50,7 +50,7 @@ function MenuItem({ active, label, onClick }) {
       type="button"
       className={[
         "flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors",
-        active ? "bg-blue-50 text-blue-700" : "text-slate-700 hover:bg-slate-50",
+        active ? "bg-blue-50 text-blue-700" : "text-text hover:bg-card",
       ].join(" ")}
       onClick={onClick}
       role="menuitem"
@@ -70,6 +70,8 @@ export default function DocumentsToolbar({
   onSortKeyChange,
   viewMode,
   onViewModeChange,
+  hideSort = false,
+  hideFilter = false,
 }) {
   const [filterOpen, setFilterOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
@@ -89,57 +91,61 @@ export default function DocumentsToolbar({
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="relative w-full sm:max-w-md">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
         <input
           value={query}
           onChange={(e) => onQueryChange?.(e.target.value)}
           placeholder="Search..."
-          className="h-11 w-full rounded-2xl border border-slate-200 bg-white pl-9 pr-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+          className="h-11 w-full rounded-2xl border border-border bg-card pl-9 pr-3 text-sm outline-none placeholder:text-muted focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
         />
       </div>
 
       <div className="flex items-center justify-end gap-2">
-        <MenuButton
-          label="Filter"
-          icon={SlidersHorizontal}
-          open={filterOpen}
-          onToggle={(v) => setFilterOpen(typeof v === "boolean" ? v : !filterOpen)}
-        >
-          <div className="max-h-72 overflow-y-auto py-1">
-            {filterOptions.map((o) => (
-              <MenuItem
-                key={o.key}
-                label={o.label}
-                active={filterType === o.key}
-                onClick={() => {
-                  onFilterTypeChange?.(o.key);
-                  setFilterOpen(false);
-                }}
-              />
-            ))}
-          </div>
-        </MenuButton>
+        {!hideFilter ? (
+          <MenuButton
+            label="Filter"
+            icon={SlidersHorizontal}
+            open={filterOpen}
+            onToggle={(v) => setFilterOpen(typeof v === "boolean" ? v : !filterOpen)}
+          >
+            <div className="max-h-72 overflow-y-auto py-1">
+              {filterOptions.map((o) => (
+                <MenuItem
+                  key={o.key}
+                  label={o.label}
+                  active={filterType === o.key}
+                  onClick={() => {
+                    onFilterTypeChange?.(o.key);
+                    setFilterOpen(false);
+                  }}
+                />
+              ))}
+            </div>
+          </MenuButton>
+        ) : null}
 
-        <MenuButton
-          label="Sort"
-          icon={ArrowDownUp}
-          open={sortOpen}
-          onToggle={(v) => setSortOpen(typeof v === "boolean" ? v : !sortOpen)}
-        >
-          <div className="py-1">
-            {sortOptions.map((o) => (
-              <MenuItem
-                key={o.key}
-                label={o.label}
-                active={sortKey === o.key}
-                onClick={() => {
-                  onSortKeyChange?.(o.key);
-                  setSortOpen(false);
-                }}
-              />
-            ))}
-          </div>
-        </MenuButton>
+        {!hideSort ? (
+          <MenuButton
+            label="Sort"
+            icon={ArrowDownUp}
+            open={sortOpen}
+            onToggle={(v) => setSortOpen(typeof v === "boolean" ? v : !sortOpen)}
+          >
+            <div className="py-1">
+              {sortOptions.map((o) => (
+                <MenuItem
+                  key={o.key}
+                  label={o.label}
+                  active={sortKey === o.key}
+                  onClick={() => {
+                    onSortKeyChange?.(o.key);
+                    setSortOpen(false);
+                  }}
+                />
+              ))}
+            </div>
+          </MenuButton>
+        ) : null}
 
         <div className="ml-1 flex items-center gap-2">
           <IconButton

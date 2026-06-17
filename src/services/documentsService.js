@@ -6,7 +6,6 @@ import {
 } from "../constants/documents";
 import { API_BASE_URL } from "../config/api";
 import authService from "./authService";
-import { getUserIdFromToken } from "../utils/authToken";
 
 const CURRENT_USER_STORAGE_KEY = "currentUser";
 
@@ -37,8 +36,79 @@ function buildApiUrl(pathWithOptionalQuery) {
   return `${base}${path}`;
 }
 
+function getCurrentUserIdCandidates() {
+  const ids = new Set();
+  const add = (value) => {
+    const normalized = String(value ?? "").trim();
+    if (normalized) ids.add(normalized);
+  };
+
+  if (typeof window !== "undefined") {
+    add(window.localStorage.getItem("userId"));
+    add(window.sessionStorage.getItem("userId"));
+    const currentUserRaw =
+      window.localStorage.getItem(CURRENT_USER_STORAGE_KEY) ||
+      window.sessionStorage.getItem(CURRENT_USER_STORAGE_KEY) ||
+      "";
+    const currentUser = currentUserRaw ? safeJsonParse(currentUserRaw) : null;
+    add(currentUser?.userId);
+    add(currentUser?.id);
+    add(currentUser?.sub);
+  }
+
+  const token = authService.getToken();
+  add(getUserIdFromToken(token));
+
+  return Array.from(ids);
+}
+
+function resolveIsOwner(raw) {
+  if (raw?.isOwner === true || raw?.isOwner === false) return Boolean(raw.isOwner);
+  if (raw?.owner === true || raw?.owner === false) return Boolean(raw.owner);
+
+  const ownerId =
+    raw?.ownerId ??
+    raw?.owner_id ??
+    raw?.userId ??
+    raw?.user_id ??
+    raw?.createdById ??
+    raw?.created_by_id ??
+    raw?.createdBy ??
+    raw?.created_by ??
+    null;
+
+  const currentUserIds = getCurrentUserIdCandidates();
+  if (ownerId != null && currentUserIds.length > 0) {
+    const ownerKey = String(ownerId).trim();
+    return currentUserIds.some((id) => id === ownerKey);
+  }
+
+  // Personal document lists usually omit owner metadata; treat as owner unless explicitly shared.
+  return true;
+}
+
 function normalizeDoc(raw) {
   if (!raw) return null;
+
+  const statusValue = String(raw.status ?? raw.documentStatus ?? "").toLowerCase();
+  const deletedAt = raw.deletedAt ?? raw.deleted_at ?? raw.trashedAt ?? raw.trashed_at ?? null;
+  const isTrashed =
+    Boolean(raw.trashed ?? raw.deleted ?? raw.inTrash ?? raw.isTrashed ?? raw.isDeleted) ||
+    Boolean(deletedAt) ||
+    statusValue === "trash" ||
+    statusValue === "trashed" ||
+    statusValue === "deleted";
+
+  const isProtected = Boolean(
+    raw.isProtected ??
+      raw.protected ??
+      raw.passwordProtected ??
+      raw.hasPassword ??
+      raw.isPasswordProtected ??
+      raw.secured,
+  );
+
+  const teamId = raw.teamId ?? raw.team_id ?? raw.team?.id ?? null;
 
   return {
     id: raw.id ?? raw._id ?? raw.documentId,
@@ -48,6 +118,12 @@ function normalizeDoc(raw) {
     updatedAt: raw.updatedAt ?? raw.updated_at ?? raw.modifiedAt ?? new Date().toISOString(),
     category: raw.category ?? raw.folder ?? "",
     starred: Boolean(raw.starred),
+    isTrashed,
+    deletedAt,
+    isProtected,
+    secured: isProtected,
+    isOwner: resolveIsOwner(raw),
+    teamId: teamId == null || teamId === "" ? null : String(teamId),
   };
 }
 
@@ -97,10 +173,6 @@ function getNumericUserIdForStar() {
   const fromCurrentUser = String(currentUser?.userId ?? currentUser?.id ?? "").trim();
   if (/^\d+$/.test(fromCurrentUser)) return fromCurrentUser;
 
-  const token = authService.getToken();
-  const fromToken = String(getUserIdFromToken(token) || "").trim();
-  if (/^\d+$/.test(fromToken)) return fromToken;
-
   return "";
 }
 
@@ -138,8 +210,8 @@ export async function fetchMyDocuments({
   scope,
   signal,
 } = {}) {
-  const token = authService.getToken();
-  if (!token) throw new Error("Please sign in to view documents.");
+  await authService.bootstrapSession();
+  if (!authService.isAuthenticated()) throw new Error("Please sign in to view documents.");
 
   const sort = DOCUMENT_SORT_MAP[sortKey] ?? DOCUMENT_SORT_MAP.updated_desc;
   const params = new URLSearchParams();
@@ -156,18 +228,30 @@ export async function fetchMyDocuments({
   if (typeof starred === "boolean") params.set("starred", String(starred));
 
   // Backend currently validates these directly. Include only when explicitly set.
-  if (scope && scope !== "all") params.set("scope", scope);
+  if (scope && scope !== "all") {
+    params.set("scope", scope);
+    if (scope === "trash") {
+      // Send common trash filters to support different backend contracts.
+      params.set("trashed", "true");
+      params.set("deleted", "true");
+      params.set("inTrash", "true");
+    }
+  }
   if (Number.isFinite(Number(recentDays)) && Number(recentDays) > 0) {
     params.set("recentDays", String(Number(recentDays)));
   }
 
   const endpoint = DOCUMENTS_ENDPOINT.startsWith("/") ? DOCUMENTS_ENDPOINT : `/${DOCUMENTS_ENDPOINT}`;
-  const url = buildApiUrl(`${endpoint}?${params.toString()}`);
+  const listPath =
+    scope === "trash"
+      ? `/api/documents/trash?page=${Math.max(0, page - 1)}&size=${pageSize}`
+      : `${endpoint}?${params.toString()}`;
+  const url = buildApiUrl(listPath);
   const response = await fetch(url, {
     signal,
+    credentials: "include",
     headers: {
       Accept: "application/json",
-      Authorization: `Bearer ${token}`,
     },
   });
 
@@ -180,12 +264,25 @@ export async function fetchMyDocuments({
   }
 
   const payload = await response.json();
-  return parseListPayload(payload);
+  const parsed = parseListPayload(payload);
+
+  if (scope === "trash") {
+    return {
+      ...parsed,
+      documents: parsed.documents.filter((doc) => doc.isTrashed),
+    };
+  }
+
+  // Keep active lists clean if backend returns mixed data.
+  return {
+    ...parsed,
+    documents: parsed.documents.filter((doc) => !doc.isTrashed),
+  };
 }
 
 export async function starDocument(documentId, { userId } = {}) {
-  const token = authService.getToken();
-  if (!token) throw new Error("Please sign in again.");
+  await authService.bootstrapSession();
+  if (!authService.isAuthenticated()) throw new Error("Please sign in again.");
 
   const provided = String(userId || "").trim();
   const resolvedUserId = /^\d+$/.test(provided) ? provided : getNumericUserIdForStar();
@@ -198,9 +295,9 @@ export async function starDocument(documentId, { userId } = {}) {
   );
   const response = await fetch(url, {
     method: "POST",
+    credentials: "include",
     headers: {
       Accept: "application/json",
-      Authorization: `Bearer ${token}`,
     },
   });
 
@@ -216,8 +313,8 @@ export async function starDocument(documentId, { userId } = {}) {
 }
 
 export async function unstarDocument(documentId, { userId } = {}) {
-  const token = authService.getToken();
-  if (!token) throw new Error("Please sign in again.");
+  await authService.bootstrapSession();
+  if (!authService.isAuthenticated()) throw new Error("Please sign in again.");
 
   const provided = String(userId || "").trim();
   const resolvedUserId = /^\d+$/.test(provided) ? provided : getNumericUserIdForStar();
@@ -230,9 +327,9 @@ export async function unstarDocument(documentId, { userId } = {}) {
   );
   const response = await fetch(url, {
     method: "DELETE",
+    credentials: "include",
     headers: {
       Accept: "application/json",
-      Authorization: `Bearer ${token}`,
     },
   });
 

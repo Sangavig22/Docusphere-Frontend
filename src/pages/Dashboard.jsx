@@ -13,7 +13,23 @@ const iconMap = {
 };
 
 function Dashboard() {
-  const { counts } = useDashboardData();
+  const { counts, isLoading, error } = useDashboardData();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 p-6 rounded-2xl border border-red-200">
+        <p className="text-red-600">Error loading dashboard: {error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -5,9 +5,7 @@ const INIT_UPLOAD_ENDPOINT = "/documents/init-upload";
 const UPLOAD_CHUNK_ENDPOINT = "/documents/upload-chunk";
 
 function buildAuthHeaders(extraHeaders = {}) {
-  const token = authService.getToken();
   return {
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...extraHeaders,
   };
 }
@@ -70,9 +68,9 @@ function extractBackendErrorMessage(parsed) {
 export const uploadService = {
   async initUpload(file, metadata = {}) {
     let res;
-    const token = authService.getToken();
-    if (!token) {
-      throw new Error("Missing auth token. Please sign in again before uploading.");
+    await authService.bootstrapSession();
+    if (!authService.isAuthenticated()) {
+      throw new Error("Missing auth session. Please sign in again before uploading.");
     }
     const totalChunks =
       Number(metadata.totalChunks) > 0 ? Number(metadata.totalChunks) : undefined;
@@ -88,6 +86,7 @@ export const uploadService = {
       try {
         res = await fetch(url, {
           method: "POST",
+          credentials: "include",
           headers: buildAuthHeaders({ "Content-Type": "application/json" }),
           body: JSON.stringify({
             fileName: file.name,
@@ -128,9 +127,9 @@ export const uploadService = {
 
   async uploadChunk(formData) {
     let res;
-    const token = authService.getToken();
-    if (!token) {
-      throw new Error("Missing auth token. Please sign in again before uploading.");
+    await authService.bootstrapSession();
+    if (!authService.isAuthenticated()) {
+      throw new Error("Missing auth session. Please sign in again before uploading.");
     }
     const candidateUrls = buildUploadCandidateUrls(`/api${UPLOAD_CHUNK_ENDPOINT}`);
     let lastNetworkError = "";
@@ -139,6 +138,7 @@ export const uploadService = {
       try {
         res = await fetch(url, {
           method: "POST",
+          credentials: "include",
           headers: buildAuthHeaders(),
           body: formData,
         });

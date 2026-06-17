@@ -1,37 +1,90 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState, useCallback } from "react";
 import authService from "../services/authService";
 import { routes } from "./routes";
+import { useTheme } from "../context/ThemeContext";
 
-function AuthGuard() {
-    const [isLoading, setIsLoading] = useState(true);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [userRole, setUserRole] = useState(null);
+const LIGHT_ONLY_ROUTES = [
+    "/",
+    "/signin",
+    "/signup",
+    "/dashboard-selector",
+    "/verify-email",
+    "/forgot-password",
+    "/reset-password",
+];
+
+function RouteThemeController() {
+    const { theme } = useTheme();
     const location = useLocation();
 
+    useLayoutEffect(() => {
+        const root = document.documentElement;
+        const forceLight = LIGHT_ONLY_ROUTES.includes(location.pathname);
+        const finalTheme = forceLight ? "light" : theme;
+
+        if (finalTheme === "dark") {
+            root.classList.add("dark");
+        } else {
+            root.classList.remove("dark");
+        }
+
+        root.style.colorScheme = finalTheme;
+        document.body.style.colorScheme = finalTheme;
+    }, [location.pathname, theme]);
+
+    return null;
+}
+
+function AuthGuard() {
+    const [loading, setLoading] = useState(true);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [userRole, setUserRole] = useState(null);
+
+    const location = useLocation();
+
+    const initializeAuth = useCallback(async () => {
+        try {
+            const sessionValid = await authService.bootstrapSession();
+
+            setIsAuthenticated(Boolean(sessionValid));
+            setUserRole(sessionValid?.role || null);
+        } catch (error) {
+            console.error('Auth bootstrap failed:', error);
+
+            setIsAuthenticated(false);
+            setUserRole(null);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
     useEffect(() => {
-        const initializeAuth = () => {
-            // Restore Remember Me session
-            authService.restoreFromRememberMe();
+        initializeAuth();
 
-            const token = authService.getToken();
-            const role = sessionStorage.getItem(authService.USER_ROLE) || localStorage.getItem(authService.REMEMBER_ME_ROLE);
-
-            setIsAuthenticated(!!token);
-            setUserRole(role);
-            setIsLoading(false);
+        const handleAuthChange = () => {
+            setLoading(true);
+            initializeAuth();
         };
 
-        initializeAuth();
-    }, []);
-    if (isLoading) {
+        window.addEventListener('user-profile-updated', handleAuthChange);
+        window.addEventListener('storage', handleAuthChange);
+
+        return () => {
+            window.removeEventListener('user-profile-updated', handleAuthChange);
+            window.removeEventListener('storage', handleAuthChange);
+        };
+    }, [initializeAuth]);
+
+    // WAIT until auth finishes
+    if (loading) {
         return (
-            <div className="w-full h-screen flex items-center justify-center bg-[#05152C]">
-                <div className="animate-spin rounded-full h-16 w-16 border-4 border-white border-t-blue-400" />
+            <div className="p-6 text-center">
+                Loading...
             </div>
         );
     }
-    if (isAuthenticated && (location.pathname === '/' || location.pathname === '/signIn')) {
+    if (isAuthenticated && (location.pathname === '/' || location.pathname === '/signin')) {
         const targetPath = userRole?.toUpperCase() === 'ADMIN' 
             ? '/dashboard-selector' 
             : '/dashboard';
@@ -40,17 +93,57 @@ function AuthGuard() {
     }
 
     return (
-        <Routes>
-            {routes.map((route) => (
-                <Route
-                    key={route.path}
-                    path={route.path}
-                    element={route.element}
-                />
-            ))}
-            <Route path="*" element={<div className="p-6 text-center">404 Not Found</div>} />
-        </Routes>
+        <>
+            <RouteThemeController />
+            <Routes>
+                {routes.map((route) => (
+                    <Route
+                        key={route.path}
+                        path={route.path}
+                        element={
+                            route.protected ? (
+                                <RequireAuth>
+                                    {route.element}
+                                </RequireAuth>
+                            ) : (
+                                route.element
+                            )
+                        }
+                    />
+                ))}
+                <Route path="*" element={<div className="p-6 text-center">404 Not Found</div>} />
+            </Routes>
+        </>
     );
+}
+
+function RequireAuth({ children }) {
+    const [loading, setLoading] = useState(true);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                const session = await authService.bootstrapSession();
+                if (!mounted) return;
+                setIsAuthenticated(Boolean(session));
+            } catch (e) {
+                if (!mounted) return;
+                setIsAuthenticated(false);
+            } finally {
+                if (mounted) setLoading(false);
+            }
+        })();
+
+        return () => {
+            mounted = false;
+        };
+    }, []);
+
+    if (loading) return <div className="p-6 text-center">Loading...</div>;
+    if (!isAuthenticated) return <Navigate to="/signin" replace />;
+    return children;
 }
 
 export default function AppRoutes() {

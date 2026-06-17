@@ -111,7 +111,6 @@ export function matchesDocumentFilter(docType, filterType, docName = "") {
 
   return false;
 }
-
 export function formatDocumentFormat(type, name) {
   const rawName = (name ?? "").toString().trim();
   const extensionFromName = rawName.includes(".") ? rawName.split(".").pop()?.toLowerCase() : "";
@@ -129,4 +128,3 @@ export function formatDocumentFormat(type, name) {
   if (normalized === "pdf") return "PDF";
   return "FILE";
 }
-

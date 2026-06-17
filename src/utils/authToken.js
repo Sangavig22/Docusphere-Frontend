@@ -1,4 +1,5 @@
 const TOKEN_USER_ID_FIELDS = ["userId", "uid", "sub"];
+const TOKEN_PHOTO_FIELDS = ["picture", "photo", "photoUrl", "profilePictureUrl", "avatar", "avatarUrl"];
 
 function safeJsonParse(value) {
   try {
@@ -30,6 +31,18 @@ export function getUserIdFromToken(token) {
   for (const key of TOKEN_USER_ID_FIELDS) {
     const value = payload?.[key];
     if (value) return String(value).trim();
+  }
+
+  return "";
+}
+
+export function getProfilePhotoFromToken(token) {
+  const payload = decodeJwtPayload(token);
+  if (!payload) return "";
+
+  for (const key of TOKEN_PHOTO_FIELDS) {
+    const value = payload?.[key];
+    if (value && String(value).trim()) return String(value).trim();
   }
 
   return "";

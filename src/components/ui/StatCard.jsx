@@ -75,7 +75,7 @@ function StatCard({
 
   // Dashboard variant (simple cards) - same compact size
   return (
-    <div className={`${baseStyles} bg-white border-slate-100 flex items-center gap-4`}>
+    <div className={`${baseStyles} bg-card border-border flex items-center gap-4`}>
       {icon && (
         <div className="h-12 w-12 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 flex-shrink-0">
           {isIconString ? (
@@ -86,11 +86,11 @@ function StatCard({
         </div>
       )}
       <div className="flex-1">
-        <h4 className="text-xs font-semibold tracking-wide text-slate-400 uppercase">
+        <h4 className="text-xs font-semibold tracking-wide text-muted uppercase">
           {title}
         </h4>
-        <p className="text-2xl font-bold text-slate-900 mt-1">{value}</p>
-        <p className="text-xs text-slate-500 mt-1">{subtitle}</p>
+        <p className="text-2xl font-bold text-text mt-1">{value}</p>
+        <p className="text-xs text-muted mt-1">{subtitle}</p>
       </div>
     </div>
   );
