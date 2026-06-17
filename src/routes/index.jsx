@@ -1,10 +1,11 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState, useCallback } from "react";
 import authService from "../services/authService";
 import { routes } from "./routes";
 import { useTheme } from "../context/ThemeContext";
 
 const LIGHT_ONLY_ROUTES = [
+    "/",
     "/signin",
     "/signup",
     "/dashboard-selector",
@@ -42,28 +43,38 @@ function AuthGuard() {
 
     const location = useLocation();
 
+    const initializeAuth = useCallback(async () => {
+        try {
+            const sessionValid = await authService.bootstrapSession();
+
+            setIsAuthenticated(Boolean(sessionValid));
+            setUserRole(sessionValid?.role || null);
+        } catch (error) {
+            console.error('Auth bootstrap failed:', error);
+
+            setIsAuthenticated(false);
+            setUserRole(null);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
     useEffect(() => {
-        const initializeAuth = async () => {
-            try {
-                const sessionValid = await authService.bootstrapSession();
+        initializeAuth();
 
-                setIsAuthenticated(Boolean(sessionValid));
-
-                setUserRole(sessionValid?.role || null);
-
-            } catch (error) {
-                console.error('Auth bootstrap failed:', error);
-
-                setIsAuthenticated(false);
-                setUserRole(null);
-
-            } finally {
-                setLoading(false);
-            }
+        const handleAuthChange = () => {
+            setLoading(true);
+            initializeAuth();
         };
 
-        initializeAuth();
-    }, []);
+        window.addEventListener('user-profile-updated', handleAuthChange);
+        window.addEventListener('storage', handleAuthChange);
+
+        return () => {
+            window.removeEventListener('user-profile-updated', handleAuthChange);
+            window.removeEventListener('storage', handleAuthChange);
+        };
+    }, [initializeAuth]);
 
     // WAIT until auth finishes
     if (loading) {
@@ -89,13 +100,50 @@ function AuthGuard() {
                     <Route
                         key={route.path}
                         path={route.path}
-                        element={route.element}
+                        element={
+                            route.protected ? (
+                                <RequireAuth>
+                                    {route.element}
+                                </RequireAuth>
+                            ) : (
+                                route.element
+                            )
+                        }
                     />
                 ))}
                 <Route path="*" element={<div className="p-6 text-center">404 Not Found</div>} />
             </Routes>
         </>
     );
+}
+
+function RequireAuth({ children }) {
+    const [loading, setLoading] = useState(true);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                const session = await authService.bootstrapSession();
+                if (!mounted) return;
+                setIsAuthenticated(Boolean(session));
+            } catch (e) {
+                if (!mounted) return;
+                setIsAuthenticated(false);
+            } finally {
+                if (mounted) setLoading(false);
+            }
+        })();
+
+        return () => {
+            mounted = false;
+        };
+    }, []);
+
+    if (loading) return <div className="p-6 text-center">Loading...</div>;
+    if (!isAuthenticated) return <Navigate to="/signin" replace />;
+    return children;
 }
 
 export default function AppRoutes() {

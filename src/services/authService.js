@@ -1,5 +1,7 @@
 import { request } from '../api/apiClient.js';
 import { API_BASE_URL } from '../config/api.js';
+import { BACKEND_URL } from '../config/authConfig.js';
+import { getProfilePhotoFromToken } from '../utils/authToken.js';
 
 const createNameAvatarDataUrl = (fullName = '') => {
     const letter = (fullName.trim()[0] || 'u').toUpperCase();
@@ -34,7 +36,83 @@ const resolveProfilePhoto = (photo, fullName) => {
     return normalizeProfilePhotoUrl(photo) || createNameAvatarDataUrl(fullName);
 };
 
+const getTokenProfilePhoto = () => {
+    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || '';
+    return normalizeProfilePhotoUrl(getProfilePhotoFromToken(token));
+};
+
+const readStoredUserSnapshot = () => {
+    const raw = sessionStorage.getItem('currentUser') || localStorage.getItem('currentUser') || '';
+
+    if (!raw) {
+        return null;
+    }
+
+    try {
+        return JSON.parse(raw);
+    } catch {
+        return null;
+    }
+};
+
 const unwrapApiPayload = (payload) => payload?.data ?? payload;
+
+const extractFirstDefined = (source, keys) => {
+    for (const key of keys) {
+        const value = source?.[key];
+        if (value !== undefined && value !== null && String(value).trim() !== '') {
+            return value;
+        }
+    }
+    return '';
+};
+
+const extractFromCommonWrappers = (source, keys) => {
+    const candidates = [
+        source,
+        source?.user,
+        source?.profile,
+        source?.account,
+        source?.principal,
+        source?.attributes,
+        source?.data,
+    ].filter(Boolean);
+
+    for (const candidate of candidates) {
+        const value = extractFirstDefined(candidate, keys);
+        if (value) {
+            return value;
+        }
+    }
+
+    return '';
+};
+
+const findDeepValue = (source, keys, visited = new Set()) => {
+    if (!source || typeof source !== 'object' || visited.has(source)) {
+        return '';
+    }
+
+    visited.add(source);
+
+    const directValue = extractFirstDefined(source, keys);
+    if (directValue) {
+        return directValue;
+    }
+
+    for (const value of Object.values(source)) {
+        if (!value || typeof value !== 'object') {
+            continue;
+        }
+
+        const nestedValue = findDeepValue(value, keys, visited);
+        if (nestedValue) {
+            return nestedValue;
+        }
+    }
+
+    return '';
+};
 
 const readFirstValue = (keys) => {
     for (const key of keys) {
@@ -67,22 +145,56 @@ const setStorageValue = (key, value, persistToLocal = false) => {
 const normalizeSessionData = (data = {}) => {
     const source = unwrapApiPayload(data) || {};
 
+    const givenName = extractFromCommonWrappers(source, ['given_name', 'givenName']) || findDeepValue(source, ['given_name', 'givenName']);
+    const familyName = extractFromCommonWrappers(source, ['family_name', 'familyName']) || findDeepValue(source, ['family_name', 'familyName']);
+    const displayName = extractFromCommonWrappers(source, ['fullName', 'full_name', 'name', 'displayName']) || findDeepValue(source, ['fullName', 'full_name', 'name', 'displayName']);
+    const profilePictureUrl = extractFromCommonWrappers(source, [
+        'profilePictureUrl',
+        'profileUrl',
+        'profile_picture_url',
+        'profile_picture',
+        'profileImage',
+        'profileImageUrl',
+        'profilePhotoUrl',
+        'photoUrl',
+        'photo',
+        'picture',
+        'image',
+        'imageUrl',
+        'avatar',
+        'avatarUrl',
+    ]) || findDeepValue(source, [
+        'profilePictureUrl',
+        'profileUrl',
+        'profile_picture_url',
+        'profile_picture',
+        'profileImage',
+        'profileImageUrl',
+        'profilePhotoUrl',
+        'photoUrl',
+        'photo',
+        'picture',
+        'image',
+        'imageUrl',
+        'avatar',
+        'avatarUrl',
+    ]);
+
+    const combinedName = [givenName, familyName].filter(Boolean).join(' ').trim();
+
     return {
-        fullName: source.fullName || source.full_name || '',
-        email: source.email || source.userEmail || '',
-        role: source.role || source.userRole || '',
-        userId: source.userId || source.id || '',
-        profilePictureUrl:
-            source.profilePictureUrl ||
-            source.profile_picture_url ||
-            source.profile_picture ||
-            source.photo ||
-            source.avatarUrl || '',
+        fullName: displayName || combinedName || '',
+        email: extractFromCommonWrappers(source, ['email', 'userEmail', 'preferred_username']),
+        role: extractFromCommonWrappers(source, ['role', 'userRole']),
+        userId: extractFromCommonWrappers(source, ['userId', 'id', 'sub', 'uid']),
+        profilePictureUrl,
         refreshTokenExpiry:
-            source.refreshTokenExpiry ||
-            source.refresh_token_expiry ||
-            source.refreshTokenExpiresAt ||
-            source.refreshTokenExpires ||
+            extractFromCommonWrappers(source, [
+                'refreshTokenExpiry',
+                'refresh_token_expiry',
+                'refreshTokenExpiresAt',
+                'refreshTokenExpires',
+            ]) ||
             '',
     };
 };
@@ -120,6 +232,12 @@ const clearVerifiedSession = () => {
 
 const clearAuthStorage = () => {
     sessionStorage.removeItem('profilePictureUrl');
+    sessionStorage.removeItem('userRole');
+    sessionStorage.removeItem('userEmail');
+    sessionStorage.removeItem('userFullName');
+    sessionStorage.removeItem('userId');
+    sessionStorage.removeItem('userPhoto');
+    sessionStorage.removeItem('refreshTokenExpiry');
     sessionStorage.removeItem('emailVerificationAttempted');
     localStorage.removeItem('profilePictureUrl');
     localStorage.removeItem('authToken');
@@ -130,6 +248,7 @@ const clearAuthStorage = () => {
     localStorage.removeItem('userFullName');
     localStorage.removeItem('userId');
     localStorage.removeItem('userPhoto');
+    localStorage.removeItem('currentUser');
 };
 
 const clearRememberMeStorage = () => {
@@ -143,6 +262,26 @@ const clearRememberMeStorage = () => {
 
 const clearManualLogoutFlag = () => {
     sessionStorage.removeItem('manualLogoutPending');
+};
+
+const getSessionStorageSession = () => {
+    const sessionData = normalizeSessionData({
+        fullName: sessionStorage.getItem('userFullName') || '',
+        email: sessionStorage.getItem('userEmail') || '',
+        role: sessionStorage.getItem('userRole') || '',
+        userId: sessionStorage.getItem('userId') || '',
+        profilePictureUrl:
+            sessionStorage.getItem('profilePictureUrl') ||
+            sessionStorage.getItem('userPhoto') ||
+            '',
+        refreshTokenExpiry: sessionStorage.getItem('refreshTokenExpiry') || '',
+    });
+
+    if (!sessionData.email && !sessionData.userId && !sessionData.fullName && !sessionData.role) {
+        return null;
+    }
+
+    return sessionData;
 };
 
 const emitUserProfileUpdated = () => {
@@ -201,6 +340,35 @@ const authService = {
         return data;
     },
 
+    // Resolve API base URL from environment or current origin (handles '/api' fallback).
+    _resolveApiBase() {
+        try {
+            const envBase = (import.meta.env.VITE_API_BASE_URL || '').trim();
+            if (envBase) {
+                if (envBase.startsWith('/')) {
+                    return `${window.location.origin.replace(/\/$/, '')}${envBase.replace(/\/$/, '')}`;
+                }
+                return envBase.replace(/\/$/, '');
+            }
+        } catch {
+        }
+
+        return `${window.location.origin.replace(/\/$/, '')}/api`;
+    },
+
+    startGoogleAuth() {
+        manualLogoutPending = false;
+        clearManualLogoutFlag();
+        window.location.href = `${BACKEND_URL}/auth/google`;
+    },
+
+    startGitHubAuth() {
+        manualLogoutPending = false;
+        clearManualLogoutFlag();
+        // Always use backend-initiated authorization start to preserve previous behavior.
+        window.location.href = `${BACKEND_URL}/auth/github`;
+    },
+
     async forgotPassword(email) {
         return request('/auth/forgot-password', {
             method: 'POST',
@@ -225,6 +393,33 @@ const authService = {
                 confirmPassword: confirmPassword,
             }),
         });
+    },
+
+    async completeOauthSignup(oauthPayload) {
+        if (!oauthPayload) return null;
+
+        const candidates = [
+            '/auth/complete-oauth-signup',
+            '/auth/link-oauth',
+            '/auth/link-account',
+        ];
+
+        for (const endpoint of candidates) {
+            try {
+                const resp = await request(endpoint, {
+                    method: 'POST',
+                    body: JSON.stringify({ oauthPayload }),
+                });
+
+                // If server returned a session/user object, return it
+                if (resp) return resp;
+            } catch {
+                // try next endpoint
+                continue;
+            }
+        }
+
+        return null;
     },
 
     async changePassword(payload) {
@@ -264,22 +459,35 @@ const authService = {
     saveProfileUpdate(updatedUser) {
         if (!updatedUser) return;
 
-        const fullName = updatedUser.full_name || updatedUser.fullName || '';
-        const rawPhoto = updatedUser.profile_picture_url ||
-            updatedUser.profilePictureUrl ||
-            updatedUser.profile_picture ||
-            updatedUser.profilePicture ||
-            updatedUser.photo ||
-            updatedUser.avatarUrl || '';
+        const normalizedUser = normalizeSessionData(updatedUser);
+        const fullName = normalizedUser.fullName || this.getUserFullName();
+        const email = normalizedUser.email || this.getUserEmail();
+        const role = normalizedUser.role || this.getUserRole();
+        const userId = normalizedUser.userId || this.getUserId();
+        const rawPhoto = normalizedUser.profilePictureUrl;
 
         const photoToStore = resolveProfilePhoto(rawPhoto, fullName);
         const persistToLocal = this.isRememberMeValid();
 
         setStorageValue(this.USER_FULLNAME, fullName, persistToLocal);
-        setStorageValue(this.USER_EMAIL, updatedUser.email || updatedUser.userEmail || '', persistToLocal);
-        setStorageValue(this.USER_ROLE, updatedUser.role || updatedUser.userRole || '', persistToLocal);
-        setStorageValue(this.USER_ID, updatedUser.userId || updatedUser.id || '', persistToLocal);
+        setStorageValue(this.USER_EMAIL, email, persistToLocal);
+        setStorageValue(this.USER_ROLE, role, persistToLocal);
+        setStorageValue(this.USER_ID, userId, persistToLocal);
         setStorageValue(this.USER_PHOTO, photoToStore, persistToLocal);
+
+        const currentUserSnapshot = JSON.stringify({
+            ...normalizedUser,
+            fullName,
+            email,
+            role,
+            userId,
+            profilePictureUrl: photoToStore,
+        });
+
+        sessionStorage.setItem('currentUser', currentUserSnapshot);
+        if (persistToLocal) {
+            localStorage.setItem('currentUser', currentUserSnapshot);
+        }
 
         sessionStorage.setItem('profilePictureUrl', photoToStore);
         if (persistToLocal) {
@@ -294,9 +502,19 @@ const authService = {
             localStorage.getItem('profilePictureUrl') ||
             sessionStorage.getItem(this.USER_PHOTO) ||
             localStorage.getItem(this.USER_PHOTO) ||
+            readStoredUserSnapshot()?.profilePictureUrl ||
+            readStoredUserSnapshot()?.picture ||
+            readStoredUserSnapshot()?.photoUrl ||
+            getTokenProfilePhoto() ||
             '';
 
         const normalized = normalizeProfilePhotoUrl(photo);
+
+        // Add cache buster to external URLs to prevent expired images
+        if (normalized && (normalized.startsWith('http://') || normalized.startsWith('https://'))) {
+            const sep = normalized.includes('?') ? '&' : '?';
+            return `${normalized}${sep}t=${Math.floor(Date.now() / 3600000)}`;
+        }
 
         if (!normalized) {
             const fullName = this.getUserFullName();
@@ -330,9 +548,6 @@ const authService = {
         const role = localStorage.getItem(this.REMEMBER_ME_ROLE) || '';
         const userId = localStorage.getItem(this.REMEMBER_ME_USER_ID) || '';
         const refreshTokenExpiry = localStorage.getItem('refreshTokenExpiry') || '';
-        const profilePictureUrl = localStorage.getItem('profilePictureUrl') ||
-            localStorage.getItem(this.USER_PHOTO) ||
-            '';
 
         if (!email && !userId && !fullName) return null;
 
@@ -341,7 +556,7 @@ const authService = {
             email,
             role,
             userId,
-            profilePictureUrl,
+            profilePictureUrl: '', // Don't use cached image URLs - fetch fresh from server
             refreshTokenExpiry,
         });
     },
@@ -373,6 +588,7 @@ const authService = {
             localStorage.setItem(this.REMEMBER_ME_FULLNAME, fullName);
             localStorage.setItem(this.REMEMBER_ME_USER_ID, sessionData.userId);
             localStorage.setItem('profilePictureUrl', normalizedPhoto);
+            localStorage.setItem('currentUser', JSON.stringify({ ...sessionData, profilePictureUrl: normalizedPhoto }));
             if (sessionData.refreshTokenExpiry) {
                 localStorage.setItem('refreshTokenExpiry', sessionData.refreshTokenExpiry);
             }
@@ -381,6 +597,7 @@ const authService = {
         }
 
         sessionStorage.setItem('profilePictureUrl', normalizedPhoto);
+        sessionStorage.setItem('currentUser', JSON.stringify({ ...sessionData, profilePictureUrl: normalizedPhoto }));
         setVerifiedSession({ ...sessionData, profilePictureUrl: normalizedPhoto });
 
         emitUserProfileUpdated();
@@ -397,14 +614,6 @@ const authService = {
             return null;
         }
 
-        if (
-            verifiedSession.authenticated &&
-            verifiedSession.user &&
-            Date.now() - verifiedSession.checkedAt < SESSION_CACHE_TIME
-        ) {
-            return verifiedSession.user;
-        }
-
         if (sessionBootstrapPromise) {
             return sessionBootstrapPromise;
         }
@@ -413,6 +622,11 @@ const authService = {
 
         sessionBootstrapPromise = (async () => {
             try {
+                if (manualLogoutPending || requestVersion !== authSessionVersion) {
+                    clearVerifiedSession();
+                    return null;
+                }
+
                 const payload = unwrapApiPayload(await request('/auth/me', {
                     method: 'GET',
                     headers: {
@@ -420,12 +634,25 @@ const authService = {
                     },
                 }));
 
-                if (manualLogoutPending || requestVersion !== authSessionVersion) {
-                    clearVerifiedSession();
-                    return null;
-                }
-
                 if (payload) {
+                    const isOauthNewUser =
+                        payload?.registered === false ||
+                        payload?.newUser === true ||
+                        payload?.user?.registered === false ||
+                        payload?.user?.newUser === true;
+
+                    if (isOauthNewUser) {
+                        try {
+                            sessionStorage.setItem('oauthPendingUser', JSON.stringify(payload));
+                        } catch (e) {
+                            console.warn('Failed to store oauthPendingUser', e);
+                        }
+
+                        clearVerifiedSession();
+                        emitUserProfileUpdated();
+                        return null;
+                    }
+
                     const rememberMe = this.isRememberMeValid();
                     this.saveAuth(payload, rememberMe);
                     return verifiedSession.user;
@@ -439,9 +666,7 @@ const authService = {
 
                 clearVerifiedSession();
                 return null;
-            } catch (err) {
-                console.error('Session bootstrap failed:', err);
-
+            } catch {
                 const rememberedSession = this.getRememberedSession();
                 if (rememberedSession) {
                     this.saveAuth(rememberedSession, true);
@@ -505,7 +730,7 @@ const authService = {
         authSessionVersion += 1;
 
         try {
-            await request('/auth/logout', {
+            await request('/auth/signOut', {
                 method: 'POST',
             });
         } catch (err) {
@@ -516,6 +741,7 @@ const authService = {
         sessionStorage.setItem('manualLogoutPending', 'true');
         this.clearRememberMe();
         clearVerifiedSession();
+        emitUserProfileUpdated();
     },
 
     getCurrentUser() {

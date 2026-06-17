@@ -18,6 +18,14 @@ const SignIn = () => {
   const navigate = useNavigate();
   const [rememberMe, setRememberMe] = useState(false);
 
+  const googleLogin = () => {
+    authService.startGoogleAuth();
+  };
+
+  const githubLogin = () => {
+    authService.startGitHubAuth();
+  };
+
   const { formData, handleChange, isLoading, executeAsync, resetForm } = useForm({
     email: "",
     password: "",
@@ -104,9 +112,11 @@ const SignIn = () => {
     <>
       <AuthPageHeading text="Sign In" />
 
+      
+
       <SocialAuthButtons
-        onGoogleClick={() => console.log("Google login")}
-        onAppleClick={() => console.log("Apple login")}
+        onGoogleClick={googleLogin}
+        onGitHubClick={githubLogin}
       />
 
       <p className="text-text text-xl mb-4">Or use your account</p>

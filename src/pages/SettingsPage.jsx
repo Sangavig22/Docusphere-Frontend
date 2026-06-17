@@ -132,18 +132,21 @@ const SettingsPage = () => {
   // Save changes
   const handleSave = async (e) => {
     e.preventDefault();
+    const isPhotoRemoved = !selectedFile && (editProfile.photo === null || editProfile.photo === "");
     const formData = new FormData();
     formData.append("fullName", editProfile.name || "");
     if (selectedFile) {
       formData.append("profilePicture", selectedFile);
+    } else if (isPhotoRemoved) {
+      formData.append("removeProfilePicture", "true");
     }
 
     try {
-      const updatedUser = await authService.updateProfile(formData);
+      await authService.updateProfile(formData);
 
       // If user removed photo (no selected file and photo cleared in form),
       // force a local update so the UI reflects the removal immediately.
-      if (!selectedFile && (editProfile.photo === null || editProfile.photo === "")) {
+      if (isPhotoRemoved) {
         authService.saveProfileUpdate({ full_name: editProfile.name || authService.getUserFullName(), profile_picture_url: '' });
         const forcedPhoto = authService.getProfilePicture();
         setEditProfile((prev) => ({ ...prev, photo: forcedPhoto, name: editProfile.name || authService.getUserFullName() }));

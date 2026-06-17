@@ -43,12 +43,18 @@ export async function getSharedDocumentByToken(token) {
   return data?.data ?? data;
 }
 
-export async function downloadSharedDocument(documentId, token) {
+export async function downloadSharedDocument(documentId, token, { password } = {}) {
+  const params = new URLSearchParams({
+    token,
+  });
+  if (password) params.set("password", password);
+
   const response = await fetch(
-    buildApiUrl(
-      `/api/documents/${encodeURIComponent(documentId)}/download?token=${encodeURIComponent(token)}`,
-    ),
-    { method: "GET", credentials: "include" },
+    buildApiUrl(`/api/documents/${encodeURIComponent(documentId)}/download?${params.toString()}`),
+    {
+      method: "GET",
+      headers: password ? { "X-Document-Password": password } : {},
+    },
   );
 
   if (!response.ok) {

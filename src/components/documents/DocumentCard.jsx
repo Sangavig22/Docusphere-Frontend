@@ -8,7 +8,7 @@ import {
   formatRelativeTime,
   normalizeDocumentType,
 } from "../../utils/documentUtils.js";
-
+import DocumentProtectedBadge from "./secure/DocumentProtectedBadge";
 
 function typeStyles(type) {
   switch (type) {
@@ -33,7 +33,7 @@ export default function DocumentCard({
   onAction,
   actions,
   disableActions = false,
-  menuPortal = false,
+  menuPortal = true,
   menuPushContent = false,
   menuClassName = "",
   denseMenu = false,
@@ -45,12 +45,47 @@ export default function DocumentCard({
   const type = useMemo(() => normalizeDocumentType(doc.type), [doc.type]);
   const formatLabel = useMemo(() => formatDocumentFormat(doc.type, doc.name), [doc.type, doc.name]);
   const styles = typeStyles(type);
+  const canOpenPreview = typeof onAction === "function";
+
+  function triggerPreview() {
+    if (!canOpenPreview) return;
+    onAction("preview", doc);
+  }
 
   return (
-    <div className="group relative flex h-full min-h-[170px] flex-col rounded-2xl border border-border bg-card p-4 shadow-sm transition-[border-color,box-shadow] hover:border-border hover:shadow-md">
+    <div
+      className={[
+        "group relative flex h-full min-h-[170px] flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-[border-color,box-shadow] hover:border-slate-300 hover:shadow-md",
+        canOpenPreview ? "cursor-pointer" : "",
+      ].join(" ")}
+      role={canOpenPreview ? "button" : undefined}
+      tabIndex={canOpenPreview ? 0 : undefined}
+      onClick={(event) => {
+        if (!canOpenPreview) return;
+        const target = event.target;
+        if (target instanceof Element && target.closest("button,a,input,label,textarea,select")) return;
+        triggerPreview();
+      }}
+      onKeyDown={(event) => {
+        if (!canOpenPreview) return;
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          triggerPreview();
+        }
+      }}
+    >
       <div className="flex items-start justify-between gap-3">
-        <div className={["flex h-11 w-11 items-center justify-center rounded-xl ring-1", styles.bg, styles.ring].join(" ")}>
-          <FileText className={styles.fg} size={20} />
+        <div className="relative shrink-0">
+          <div
+            className={[
+              "flex h-11 w-11 items-center justify-center rounded-xl ring-1",
+              styles.bg,
+              styles.ring,
+            ].join(" ")}
+          >
+            <FileText className={styles.fg} size={20} />
+          </div>
+          <DocumentProtectedBadge doc={doc} />
         </div>
 
         <div className="flex shrink-0 items-center gap-1">
@@ -88,10 +123,7 @@ export default function DocumentCard({
               side={menuPortal ? "bottom" : "auto"}
               pushContent={menuPushContent}
               scrollable={!menuPortal}
-              className={[
-                menuPortal ? "" : "right-0 top-10",
-                menuClassName,
-              ].join(" ")}
+              className={[menuPortal ? "" : "right-0 top-10", menuClassName].join(" ")}
             >
               <DocumentActionsMenu
                 doc={doc}
@@ -117,18 +149,15 @@ export default function DocumentCard({
           <span>{formatBytes(doc.sizeBytes)}</span>
           <span className="text-muted">•</span>
           <span>{formatRelativeTime(doc.updatedAt)}</span>
-            {/* added uploadedBy field in document and showing it in card if available  for team*/} 
-
-          {doc.uploadedBy && doc.uploadedBy !== "-" && (
+          {doc.uploadedBy && doc.uploadedBy !== "-" ? (
             <>
               <span className="text-muted">•</span>
               <span className="truncate max-w-[120px]">By {doc.uploadedBy}</span>
             </>
-          )}
-
+          ) : null}
         </div>
-        <div className="mt-auto flex items-center gap-2 pt-3">
-          <span className="inline-flex shrink-0 items-center rounded-md bg-card px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
+        <div className="mt-auto pt-3">
+          <span className="inline-flex shrink-0 items-center rounded-md bg-slate-100 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
             {formatLabel}
           </span>
         </div>

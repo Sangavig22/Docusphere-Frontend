@@ -36,6 +36,57 @@ function buildApiUrl(pathWithOptionalQuery) {
   return `${base}${path}`;
 }
 
+function getCurrentUserIdCandidates() {
+  const ids = new Set();
+  const add = (value) => {
+    const normalized = String(value ?? "").trim();
+    if (normalized) ids.add(normalized);
+  };
+
+  if (typeof window !== "undefined") {
+    add(window.localStorage.getItem("userId"));
+    add(window.sessionStorage.getItem("userId"));
+    const currentUserRaw =
+      window.localStorage.getItem(CURRENT_USER_STORAGE_KEY) ||
+      window.sessionStorage.getItem(CURRENT_USER_STORAGE_KEY) ||
+      "";
+    const currentUser = currentUserRaw ? safeJsonParse(currentUserRaw) : null;
+    add(currentUser?.userId);
+    add(currentUser?.id);
+    add(currentUser?.sub);
+  }
+
+  const token = authService.getToken();
+  add(getUserIdFromToken(token));
+
+  return Array.from(ids);
+}
+
+function resolveIsOwner(raw) {
+  if (raw?.isOwner === true || raw?.isOwner === false) return Boolean(raw.isOwner);
+  if (raw?.owner === true || raw?.owner === false) return Boolean(raw.owner);
+
+  const ownerId =
+    raw?.ownerId ??
+    raw?.owner_id ??
+    raw?.userId ??
+    raw?.user_id ??
+    raw?.createdById ??
+    raw?.created_by_id ??
+    raw?.createdBy ??
+    raw?.created_by ??
+    null;
+
+  const currentUserIds = getCurrentUserIdCandidates();
+  if (ownerId != null && currentUserIds.length > 0) {
+    const ownerKey = String(ownerId).trim();
+    return currentUserIds.some((id) => id === ownerKey);
+  }
+
+  // Personal document lists usually omit owner metadata; treat as owner unless explicitly shared.
+  return true;
+}
+
 function normalizeDoc(raw) {
   if (!raw) return null;
 
@@ -48,6 +99,17 @@ function normalizeDoc(raw) {
     statusValue === "trashed" ||
     statusValue === "deleted";
 
+  const isProtected = Boolean(
+    raw.isProtected ??
+      raw.protected ??
+      raw.passwordProtected ??
+      raw.hasPassword ??
+      raw.isPasswordProtected ??
+      raw.secured,
+  );
+
+  const teamId = raw.teamId ?? raw.team_id ?? raw.team?.id ?? null;
+
   return {
     id: raw.id ?? raw._id ?? raw.documentId,
     name: raw.name ?? raw.fileName ?? "Untitled",
@@ -58,6 +120,10 @@ function normalizeDoc(raw) {
     starred: Boolean(raw.starred),
     isTrashed,
     deletedAt,
+    isProtected,
+    secured: isProtected,
+    isOwner: resolveIsOwner(raw),
+    teamId: teamId == null || teamId === "" ? null : String(teamId),
   };
 }
 

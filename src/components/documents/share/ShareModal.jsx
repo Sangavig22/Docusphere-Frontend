@@ -1,8 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { toast } from "react-toastify";
 import { Check, ChevronDown, Globe, Lock } from "lucide-react";
 import EmailInput, { isValidEmail } from "./EmailInput";
 import SharedUsersList from "./SharedUsersList";
+import {
+  getPermissionLabel,
+  INVITE_PERMISSION_OPTIONS,
+  PUBLIC_PERMISSION_OPTIONS,
+} from "./sharePermissions";
+import { isDocumentProtected } from "../../../utils/documentProtection";
+import { TOAST_ACTION_IDS, showSingleToast } from "../../../utils/toastFeedback";
 
 function uniqueEmails(list) {
   return Array.from(new Set(list.map((email) => email.trim().toLowerCase())));
@@ -27,7 +33,7 @@ export default function ShareModal({
   const [invitePermissionOpen, setInvitePermissionOpen] = useState(false);
   const [generalPermissionOpen, setGeneralPermissionOpen] = useState(false);
   const [sendStatus, setSendStatus] = useState({ type: "", message: "" });
-  const title = useMemo(() => `Share "${document?.name || "Document"}"`, [document?.name]);
+  const documentName = useMemo(() => document?.name || "Document", [document?.name]);
 
   useEffect(() => {
     if (!open) return;
@@ -84,13 +90,12 @@ export default function ShareModal({
         permission: invitePermission,
         emails: deduped,
       });
-      toast.success("Document shared successfully");
+      showSingleToast(TOAST_ACTION_IDS.SHARE, "Document shared successfully.");
       setRecipients(deduped);
       setEmailDraft("");
       setEmailError("");
-      setSendStatus({ type: "success", message: "Document shared successfully." });
+      setSendStatus({ type: "", message: "" });
     } catch {
-      toast.error("Failed to share document");
       setSendStatus({ type: "error", message: "Failed to share document. Please try again." });
     } finally {
       setSending(false);
@@ -105,7 +110,7 @@ export default function ShareModal({
         // Switching back to invite-only clears previously generated public link in UI.
         setGeneralAccessType("EMAIL_INVITE");
         setPublicLink("");
-        setSendStatus({ type: "success", message: "Public link sharing turned off." });
+        setSendStatus({ type: "", message: "" });
         return "";
       }
 
@@ -117,11 +122,10 @@ export default function ShareModal({
       setGeneralAccessType("PUBLIC");
       setGeneralPermission(nextPermission);
       setPublicLink(nextLink);
-      toast.success("General access updated");
-      setSendStatus({ type: "success", message: "General access updated successfully." });
+      showSingleToast(TOAST_ACTION_IDS.GENERAL_ACCESS, "General access updated.");
+      setSendStatus({ type: "", message: "" });
       return nextLink;
     } catch {
-      toast.error("Failed to update general access");
       setSendStatus({ type: "error", message: "Failed to update general access." });
       return "";
     } finally {
@@ -142,15 +146,13 @@ export default function ShareModal({
         linkToCopy = await handleGeneralAccessUpdate("PUBLIC", generalPermission);
       }
       if (!linkToCopy) {
-        toast.warning("No public link available.");
         setSendStatus({ type: "error", message: "No public link available to copy." });
         return;
       }
       await navigator.clipboard.writeText(linkToCopy);
-      toast.success("Link copied to clipboard");
-      setSendStatus({ type: "success", message: "Link copied to clipboard." });
+      showSingleToast(TOAST_ACTION_IDS.COPY_LINK, "Link copied to clipboard.");
+      setSendStatus({ type: "", message: "" });
     } catch {
-      toast.error("Unable to copy link");
       setSendStatus({ type: "error", message: "Unable to copy link." });
     }
   }
@@ -165,7 +167,12 @@ export default function ShareModal({
             onMouseDown={(event) => event.stopPropagation()}
           >
             <div className="mb-4 flex items-start justify-between gap-3">
-              <h3 className="text-[16px] font-semibold text-text">{title}</h3>
+              <div className="min-w-0">
+                <h3 className="text-[16px] font-semibold text-slate-900">Share</h3>
+                <p className="mt-0.5 truncate text-sm text-slate-500" title={documentName}>
+                  {documentName}
+                </p>
+              </div>
               <button
                 type="button"
                 className="flex h-9 w-9 items-center justify-center rounded-xl text-muted hover:bg-card"
@@ -190,6 +197,11 @@ export default function ShareModal({
             </div>
 
             <div className="space-y-4">
+              {isDocumentProtected(document) ? (
+                <p className="text-xs text-slate-600">
+                  Shared users will need the document password to access preview or download.
+                </p>
+              ) : null}
               <EmailInput
                 value={emailDraft}
                 onChange={(value) => {
@@ -218,15 +230,12 @@ export default function ShareModal({
                       disabled={loading || sending || updatingGeneralAccess}
                       className="inline-flex min-w-[150px] items-center justify-between rounded-lg border border-border bg-card py-2 pl-3 pr-2 text-sm text-text"
                     >
-                      <span>{invitePermission === "COMMENT" ? "Can comment" : "Can view"}</span>
-                      <ChevronDown size={14} className="text-muted" />
+                      <span>{getPermissionLabel(invitePermission)}</span>
+                      <ChevronDown size={14} className="text-slate-500" />
                     </button>
                     {invitePermissionOpen ? (
-                      <div className="absolute right-0 top-11 z-30 w-44 rounded-xl border border-border bg-card p-1 shadow-lg">
-                        {[
-                          { value: "VIEW", label: "Can view" },
-                          { value: "COMMENT", label: "Can comment" },
-                        ].map((option) => (
+                      <div className="absolute right-0 top-11 z-30 w-44 rounded-xl border border-slate-200 bg-white p-1 shadow-lg">
+                        {INVITE_PERMISSION_OPTIONS.map((option) => (
                           <button
                             key={option.value}
                             type="button"
@@ -244,6 +253,11 @@ export default function ShareModal({
                     ) : null}
                   </div>
                 </div>
+                {invitePermission === "EDIT" ? (
+                  <p className="mt-2 text-xs text-slate-500">
+                    Edit access allows invited users to modify document content.
+                  </p>
+                ) : null}
               </div>
 
               <SharedUsersList users={recipients} permission={invitePermission} />
@@ -316,15 +330,12 @@ export default function ShareModal({
                             disabled={loading || sending || updatingGeneralAccess}
                               className="inline-flex min-w-[150px] items-center justify-between rounded-lg border border-border bg-card py-2 pl-3 pr-2 text-sm text-text"
                           >
-                            <span>{generalPermission === "COMMENT" ? "Can comment" : "Can view"}</span>
-                              <ChevronDown size={14} className="text-muted" />
+                            <span>{getPermissionLabel(generalPermission)}</span>
+                            <ChevronDown size={14} className="text-slate-500" />
                           </button>
-                            {generalPermissionOpen ? (
-                              <div className="absolute right-0 top-11 z-30 w-44 rounded-xl border border-border bg-card p-1 shadow-lg">
-                              {[
-                                { value: "VIEW", label: "Can view" },
-                                { value: "COMMENT", label: "Can comment" },
-                              ].map((option) => (
+                          {generalPermissionOpen ? (
+                            <div className="absolute right-0 top-11 z-30 w-44 rounded-xl border border-slate-200 bg-white p-1 shadow-lg">
+                              {PUBLIC_PERMISSION_OPTIONS.map((option) => (
                                 <button
                                   key={option.value}
                                   type="button"

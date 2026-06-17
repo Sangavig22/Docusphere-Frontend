@@ -28,13 +28,23 @@ function Topbar({
   const [profilePhoto, setProfilePhoto] = useState("");
 
   useEffect(() => {
-    const photo = contextUser.photo || authService.getProfilePicture();
-    if (!photo) {
-      setProfilePhoto("");
-      return;
-    }
-    setProfilePhoto(`${photo}?t=${Date.now()}`);
-  }, [contextUser.photo]);
+  const photo =
+    contextUser?.profilePictureUrl ||
+    contextUser?.photo ||
+    contextUser?.picture ||
+    authService.getProfilePicture();
+
+  if (!photo) {
+    setProfilePhoto("");
+    return;
+  }
+
+  setProfilePhoto(photo);
+}, [
+  contextUser?.profilePictureUrl,
+  contextUser?.photo,
+  contextUser?.picture,
+]);
 
   const userRole = sessionStorage.getItem("userRole") || localStorage.getItem("rememberMeRole");
   const isAdmin = role === "admin" || userRole?.toUpperCase() === "ADMIN";
@@ -74,8 +84,13 @@ function Topbar({
         setProfilePhoto("");
         return;
       }
-      const separator = newPhoto.includes('?') ? '&' : '?';
-      setProfilePhoto(`${newPhoto}${separator}t=${Date.now()}`);
+      if (newPhoto.startsWith('http://') || newPhoto.startsWith('https://')) {
+        const separator = newPhoto.includes('?') ? '&' : '?';
+        setProfilePhoto(`${newPhoto}${separator}t=${Date.now()}`);
+        return;
+      }
+
+      setProfilePhoto(newPhoto);
     };
 
     window.addEventListener("user-profile-updated", handleStorageChange);
@@ -169,7 +184,7 @@ function Topbar({
 
               <button
                 onClick={handleSignOut}
-                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 font-semibold transition-colors"
+                className="w-full text-left px-4 py-2 text-sm text-red-600 flex items-center gap-2 font-semibold transition-colors"
               >
                 <LogOut size={16} />
                 Sign Out
