@@ -50,7 +50,7 @@ export default function SharedDocumentPage() {
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [verifyError, setVerifyError] = useState("");
 
-  const isLoggedIn = useMemo(() => Boolean(authService.getToken()), []);
+  const isLoggedIn = useMemo(() => authService.isAuthenticated(), []);
   const canComment = doc?.permission === "COMMENT" || doc?.canComment === true;
   const resolvedDocumentId = resolveSharedDocumentId(doc) || resolveDocumentId(doc);
   const commentAnchorId = "comments";

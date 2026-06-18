@@ -1,6 +1,5 @@
 import { request } from "../api/apiClient.js";
 import { API_BASE_URL } from "../config/api.js";
-import authService from "./authService.js";
 import { parseUnlockSessionFromResponse } from "../utils/documentProtection.js";
 
 function buildApiUrl(path) {
@@ -81,16 +80,15 @@ export async function resetDocumentProtectionPassword(id, newPassword) {
 export async function verifySharedDocumentPassword(shareToken, documentId, password) {
   const encodedId = encodeURIComponent(documentId);
   const params = new URLSearchParams({ token: shareToken });
-  const authToken = authService.getToken();
 
   const response = await fetch(
     buildApiUrl(`/api/documents/${encodedId}/verify-password?${params.toString()}`),
     {
       method: "POST",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
-        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
       },
       body: JSON.stringify({ password }),
     },

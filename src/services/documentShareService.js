@@ -53,6 +53,7 @@ export async function downloadSharedDocument(documentId, token, { password } = {
     buildApiUrl(`/api/documents/${encodeURIComponent(documentId)}/download?${params.toString()}`),
     {
       method: "GET",
+      credentials: "include",
       headers: password ? { "X-Document-Password": password } : {},
     },
   );
