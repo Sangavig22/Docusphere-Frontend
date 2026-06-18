@@ -264,6 +264,26 @@ const clearManualLogoutFlag = () => {
     sessionStorage.removeItem('manualLogoutPending');
 };
 
+const getSessionStorageSession = () => {
+    const sessionData = normalizeSessionData({
+        fullName: sessionStorage.getItem('userFullName') || '',
+        email: sessionStorage.getItem('userEmail') || '',
+        role: sessionStorage.getItem('userRole') || '',
+        userId: sessionStorage.getItem('userId') || '',
+        profilePictureUrl:
+            sessionStorage.getItem('profilePictureUrl') ||
+            sessionStorage.getItem('userPhoto') ||
+            '',
+        refreshTokenExpiry: sessionStorage.getItem('refreshTokenExpiry') || '',
+    });
+
+    if (!sessionData.email && !sessionData.userId && !sessionData.fullName && !sessionData.role) {
+        return null;
+    }
+
+    return sessionData;
+};
+
 const emitUserProfileUpdated = () => {
     window.dispatchEvent(new Event('user-profile-updated'));
 };
@@ -331,7 +351,6 @@ const authService = {
                 return envBase.replace(/\/$/, '');
             }
         } catch {
-            // Fall back to default api path if resolution fails.
         }
 
         return `${window.location.origin.replace(/\/$/, '')}/api`;
@@ -723,20 +742,6 @@ const authService = {
         this.clearRememberMe();
         clearVerifiedSession();
         emitUserProfileUpdated();
-    },
-
-    getCurrentUser() {
-        if (!this.isAuthenticated()) return null;
-        return {
-            id: sessionStorage.getItem(this.USER_ID),
-            email: sessionStorage.getItem(this.USER_EMAIL),
-            fullName: sessionStorage.getItem(this.USER_FULLNAME),
-            role: sessionStorage.getItem(this.USER_ROLE)
-        };
-    },
-
-    getToken() {
-        return localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || '';
     },
 };
 

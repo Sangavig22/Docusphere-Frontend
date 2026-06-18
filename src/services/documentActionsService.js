@@ -90,16 +90,12 @@ export async function shareDocumentByEmail(id, payload) {
 }
 
 export async function updateDocument(id, file) {
-  const token = authService.getToken();
   const formData = new FormData();
   formData.append("file", file);
 
   const response = await fetch(`${API_BASE_URL}/documents/${id}/edit`, {
     method: "POST",
     credentials: "include",
-    headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
     body: formData,
   });
 

@@ -58,9 +58,8 @@ export default function DocumentEditorPage() {
     );
   }
 
-  const currentUser = authService.getCurrentUser();
-  const currentUserId = currentUser?.id;
-  const currentUserGlobalRole = currentUser?.role;
+  const currentUserId = authService.getUserId();
+  const currentUserGlobalRole = authService.getUserRole();
 
   const hasEditPermission = canEditDocument(
     document,

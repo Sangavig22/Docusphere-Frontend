@@ -161,9 +161,8 @@ export default function DocumentPreviewPage() {
 
   const fileType = document?.type || document?.name?.split('.').pop();
 
-  const currentUser = authService.getCurrentUser();
-  const currentUserId = currentUser?.id;
-  const currentUserGlobalRole = currentUser?.role;
+  const currentUserId = authService.getUserId();
+  const currentUserGlobalRole = authService.getUserRole();
   const canEdit = canEditDocument(document, currentUserId, currentUserGlobalRole, userTeamRole);
 
   return (
