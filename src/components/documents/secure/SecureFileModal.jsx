@@ -253,6 +253,7 @@ export default function SecureFileModal({
                 error={error}
                 disabled={busy}
                 autoFocus
+                autoComplete="new-password"
                 onSubmit={handleEnableProtection}
               />
               <PasswordStrengthHint password={password} />
@@ -292,6 +293,7 @@ export default function SecureFileModal({
                   if (error) setError("");
                 }}
                 disabled={busy}
+                autoComplete="new-password"
               />
               <PasswordInput
                 id="secure-file-confirm-password"
@@ -302,6 +304,7 @@ export default function SecureFileModal({
                   if (error) setError("");
                 }}
                 disabled={busy}
+                autoComplete="new-password"
                 onSubmit={handleChangePassword}
               />
               <PasswordStrengthHint password={password} />
@@ -457,6 +460,7 @@ export default function SecureFileModal({
                 }}
                 disabled={busy}
                 autoFocus
+                autoComplete="new-password"
               />
               <PasswordInput
                 id="secure-file-reset-confirm-password"
@@ -468,6 +472,7 @@ export default function SecureFileModal({
                 }}
                 error={error}
                 disabled={busy}
+                autoComplete="new-password"
                 onSubmit={handleResetPassword}
               />
               <PasswordStrengthHint password={password} />
