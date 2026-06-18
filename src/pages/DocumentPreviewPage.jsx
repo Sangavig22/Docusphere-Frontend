@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { ChevronLeft, Download, FileText, Clock, ExternalLink, Pencil } from "lucide-react";
+import { ChevronLeft, Download, FileText, Clock, ExternalLink, Pencil, Lock } from "lucide-react";
 import Layout from "../components/Layout/Layout";
 import PreviewViewer from "../components/Preview/PreviewViewer";
 import CommentSection from "../components/Preview/CommentSection";
@@ -10,6 +10,9 @@ import { teamsApi } from "../services/teamsApi";
 import { canEditDocument } from "../utils/DocumentPermissionUtils";
 import authService from "../services/authService";
 import { downloadDocument } from "../services/documentActionsService";
+import PasswordVerifyModal from "../components/documents/secure/PasswordVerifyModal";
+import useDocumentActions from "../hooks/useDocumentActions";
+import { hasValidUnlockSession, getUnlockSession } from "../utils/documentProtection";
 
 export default function DocumentPreviewPage() {
   const { documentId } = useParams();
@@ -21,6 +24,22 @@ export default function DocumentPreviewPage() {
   const [document, setDocument] = useState(null);
   const [loading, setLoading] = useState(true);
   const [userTeamRole, setUserTeamRole] = useState("");
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const {
+    verifyState,
+    loadingAction,
+    handleAction,
+    closeVerifyModal,
+    submitVerifyPassword,
+  } = useDocumentActions({
+    onSuccess: (type, doc) => {
+      if (type === "preview") {
+        toast.success("Document unlocked successfully!");
+        setRefreshTrigger((prev) => prev + 1);
+      }
+    },
+  });
 
   useEffect(() => {
     let isMounted = true;
@@ -66,6 +85,14 @@ export default function DocumentPreviewPage() {
             if (pollInterval) clearInterval(pollInterval);
             return null;
           }
+        }
+        setDocument(data);
+
+        // Check if password protected and locked, if so trigger verification
+        const isProtected = data.secured || data.passwordProtected;
+        const isUnlocked = hasValidUnlockSession(documentId);
+        if (isProtected && !isUnlocked) {
+          handleAction("preview", data);
         }
 
         if (data?.teamId) {
@@ -122,13 +149,18 @@ export default function DocumentPreviewPage() {
       isMounted = false;
       if (pollInterval) clearInterval(pollInterval);
     };
-  }, [documentId, justEdited, navigate]);
+  }, [documentId, justEdited, navigate, refreshTrigger]);
 
   const handleDownload = async () => {
     if (!document) return;
+    if (isLocked) {
+      handleAction("download", document);
+      return;
+    }
     try {
       toast.info("Download starting...");
-      await downloadDocument(documentId, document.name || "download");
+      const unlockToken = getUnlockSession(documentId)?.token;
+      await downloadDocument(documentId, document.name || "download", { unlockToken });
     } catch (error) {
       console.error("Download failed:", error);
       toast.error("Failed to download document.");
@@ -158,13 +190,13 @@ export default function DocumentPreviewPage() {
       </Layout>
     );
   }
-
   const fileType = document?.type || document?.name?.split('.').pop();
 
   const currentUser = authService.getCurrentUser();
   const currentUserId = currentUser?.id;
   const currentUserGlobalRole = currentUser?.role;
   const canEdit = canEditDocument(document, currentUserId, currentUserGlobalRole, userTeamRole);
+  const isLocked = document?.secured && !hasValidUnlockSession(documentId);
 
   return (
     <Layout 
@@ -212,12 +244,30 @@ export default function DocumentPreviewPage() {
         <div className="flex-1 flex gap-4 min-h-0">
           {/* Preview Section (Left) */}
           <div className="flex-[3] flex flex-col min-w-0">
-            <PreviewViewer 
-              fileUrl={document?.fileUrl} 
-              fileName={document?.name}
-              fileType={fileType}
-              updatedAt={document?.updatedAt || document?.updated_at}
-            />
+            {isLocked ? (
+              <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 border rounded-xl p-8 shadow-sm">
+                <div className="p-4 bg-blue-50 text-blue-600 rounded-2xl mb-4">
+                  <Lock className="h-10 w-10 animate-bounce" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">This file is password protected</h3>
+                <p className="text-gray-500 text-sm text-center max-w-sm mb-6">
+                  You need to unlock this document with its password before you can view its contents or edit it.
+                </p>
+                <button
+                  onClick={() => handleAction("preview", document)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-semibold shadow-md transition-all"
+                >
+                  Unlock Document
+                </button>
+              </div>
+            ) : (
+              <PreviewViewer 
+                fileUrl={document?.fileUrl} 
+                fileName={document?.name}
+                fileType={fileType}
+                updatedAt={document?.updatedAt || document?.updated_at}
+              />
+            )}
           </div>
 
           {/* Sidebar Section (Right) */}
@@ -231,6 +281,14 @@ export default function DocumentPreviewPage() {
           </div>
         </div>
       </div>
+      <PasswordVerifyModal
+        open={verifyState.open}
+        documentName={verifyState.doc?.name}
+        loading={loadingAction}
+        error={verifyState.error}
+        onClose={closeVerifyModal}
+        onUnlock={submitVerifyPassword}
+      />
     </Layout>
   );
 }
