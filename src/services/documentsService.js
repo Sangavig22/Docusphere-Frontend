@@ -56,8 +56,7 @@ function getCurrentUserIdCandidates() {
     add(currentUser?.sub);
   }
 
-  const token = authService.getToken();
-  add(getUserIdFromToken(token));
+  add(authService.getUserId());
 
   return Array.from(ids);
 }

@@ -1,6 +1,5 @@
 import { request } from "../api/apiClient.js";
 import { API_BASE_URL } from "../config/api.js";
-import authService from "./authService.js";
 
 export async function renameDocument(id, name) {
   const trimmedName = String(name || "").trim();
@@ -55,7 +54,6 @@ export async function permanentlyDeleteDocument(id) {
 }
 
 export async function downloadDocument(id, name = "document", { password, unlockToken } = {}) {
-  const token = authService.getToken();
   const params = new URLSearchParams();
   if (password) params.set("password", password);
   const query = params.toString();
@@ -63,8 +61,8 @@ export async function downloadDocument(id, name = "document", { password, unlock
     `${API_BASE_URL}/documents/${id}/download${query ? `?${query}` : ""}`,
     {
       method: "GET",
+      credentials: "include",
       headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(password ? { "X-Document-Password": password } : {}),
         ...(unlockToken ? { "X-Unlock-Token": unlockToken } : {}),
       },
