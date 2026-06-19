@@ -23,6 +23,9 @@ import SharedDocumentPage from "../pages/SharedDocumentPage";
 import AdminTeamManagementPage from "../pages/AdminTeamManagementPage.jsx";
 import AdminTeamDetailsPage from "../pages/AdminTeamDetailsPage.jsx";
 import AdminMergeTeamsPage from "../pages/AdminMergeTeamsPage.jsx";
+import DocumentPreviewPage from "../pages/DocumentPreviewPage";
+import DocumentEditorPage from "../pages/DocumentEditorPage";
+
 
 
 function withLayout(element, pageTitle, pageSubtitle, type = "dashboard") {
@@ -42,7 +45,7 @@ export const routes = [
     theme: "light",
     protected: false,
   },
-   {
+  {
     path: "/signup",
     element: <SignUp />,
     theme: "light",
@@ -54,7 +57,7 @@ export const routes = [
     theme: "light",
     protected: false,
   },
-   {
+  {
     path: "/forgot-password",
     element: <ForgotPassword />,
     theme: "light",
@@ -72,7 +75,7 @@ export const routes = [
     theme: "light",
     protected: false,
   },
-   {
+  {
     path: "/share/:token",
     element: <SharedDocumentPage />,
     protected: false,
@@ -91,7 +94,7 @@ export const routes = [
   },
   {
     path: "/uploads",
-    element: withLayout(<UploadPage />, "Uploads", "Drag and drop files or browse to upload." ),
+    element: withLayout(<UploadPage />, "Uploads", "Drag and drop files or browse to upload."),
     protected: true,
   },
   {
@@ -103,12 +106,23 @@ export const routes = [
     ),
     protected: true,
   },
-   {
+  {
     path: "/documents",
     element: withLayout(<MyDocumentsPage />, "My Documents", "Manage and organize all your documents."),
     protected: true,
   },
- 
+  {
+    path: "/documents/:documentId/preview",
+    element: <DocumentPreviewPage />,
+     protected: true,
+  },
+  {
+    path: "/editor/:documentId",
+    element: <DocumentEditorPage />,
+     protected: true,
+  },
+
+
   {
     path: "/starred",
     element: withLayout(<StarredPage />, "Starred ", "Manage and organize all starred documents."),
@@ -119,7 +133,7 @@ export const routes = [
     element: withLayout(<RecentPage />, "Recent", "Manage and organize all recently opened documents."),
     protected: true,
   },
-   {
+  {
     path: "/trash",
     element: withLayout(<TrashPage />, "Recycle Bin", "Restore or permanently delete documents."),
     protected: true,
@@ -145,6 +159,7 @@ export const routes = [
     ),
     protected: true,
   },
+
 
   // Admin route
   {

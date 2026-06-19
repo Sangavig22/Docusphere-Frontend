@@ -37,7 +37,7 @@ export default function ResultCards({
             onClick={onEdit}
             className="rounded-xl border border-border px-5 py-2.5 text-base font-semibold text-text hover:bg-card"
           >
-            Edit
+            Details
           </button>
           <button
             type="button"

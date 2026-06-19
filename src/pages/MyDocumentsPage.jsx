@@ -45,7 +45,13 @@ export default function MyDocumentsPage() {
     resetDocumentPassword,
     submitVerifyPassword,
   } = useDocumentActions({
-    onSuccess: reload,
+    onSuccess: (type, doc) => {
+      if (type === "preview" && doc) {
+        navigate(`/documents/${doc.id}/preview`);
+      } else {
+        reload();
+      }
+    },
   });
   const [viewMode, setViewMode] = useState("grid");
   const visibleDocs = useMemo(() => docs, [docs]);

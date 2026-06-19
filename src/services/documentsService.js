@@ -6,6 +6,7 @@ import {
 } from "../constants/documents";
 import { API_BASE_URL } from "../config/api";
 import authService from "./authService";
+import { getUserIdFromToken } from "../utils/authToken";
 
 const CURRENT_USER_STORAGE_KEY = "currentUser";
 

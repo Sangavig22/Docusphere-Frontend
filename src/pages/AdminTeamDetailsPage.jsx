@@ -90,6 +90,13 @@ function AdminTeamDetail() {
   const handleAction = async (key, doc) => {
     if (key === "trash") {
       handleDocumentDeleteClick(doc);
+    } else if (key === "preview") {
+      const docId = doc?.id || doc?.apiId || doc?.documentId || doc?.fileId;
+      if (docId) {
+        navigate(`/documents/${docId}/preview`);
+      } else {
+        toast.error("Cannot preview: missing document ID.");
+      }
     } else {
       handleDocAction(key, doc);
     }

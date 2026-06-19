@@ -24,7 +24,15 @@ function TeamDetail() {
   const { documents, isLoading: isDocsLoading, error: docsError, deleteDocument, refetch: refetchDocs, toggleStar } = useTeamDocuments(teamId);
 
   // Document action handlers (rename, duplicate, move, download, trash, etc.)
-  const { modalState, loadingAction, handleAction, closeModal, submitModal } = useDocumentActions({ onSuccess: refetchDocs });
+  const { modalState, loadingAction, handleAction, closeModal, submitModal } = useDocumentActions({ 
+    onSuccess: (type, doc) => {
+      if (type === "preview" && doc) {
+        navigate(`/documents/${doc.id}/preview`);
+      } else {
+        refetchDocs();
+      }
+    } 
+  });
 
   const isLoading = isTeamLoading || isDocsLoading;
   const error = teamError || docsError;
