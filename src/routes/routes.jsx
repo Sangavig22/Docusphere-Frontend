@@ -114,10 +114,12 @@ export const routes = [
   {
     path: "/documents/:documentId/preview",
     element: <DocumentPreviewPage />,
+     protected: true,
   },
   {
     path: "/editor/:documentId",
     element: <DocumentEditorPage />,
+     protected: true,
   },
 
 
