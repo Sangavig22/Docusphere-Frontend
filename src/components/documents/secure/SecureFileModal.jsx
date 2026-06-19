@@ -302,7 +302,6 @@ export default function SecureFileModal({
                   if (error) setError("");
                 }}
                 disabled={busy}
-                autoComplete="new-password"
                 onSubmit={handleChangePassword}
               />
               <PasswordStrengthHint password={password} />
