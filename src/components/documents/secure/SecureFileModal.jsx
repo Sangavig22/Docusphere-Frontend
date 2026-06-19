@@ -456,7 +456,7 @@ export default function SecureFileModal({
                   if (error) setError("");
                 }}
                 disabled={busy}
-                autoFocus 
+                autoFocus
               />
               <PasswordInput
                 id="secure-file-reset-confirm-password"
