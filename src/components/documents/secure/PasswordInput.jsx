@@ -34,7 +34,6 @@ export default function PasswordInput({
           onKeyDown={handleKeyDown}
           disabled={disabled}
           autoFocus={autoFocus}
-          autoComplete={autoComplete}
           placeholder="Password"
           className={[
             "w-full rounded-xl border bg-white px-3 py-2.5 pr-10 text-sm text-slate-900 outline-none transition-colors",
