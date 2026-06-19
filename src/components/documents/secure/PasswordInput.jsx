@@ -9,7 +9,6 @@ export default function PasswordInput({
   error = "",
   disabled = false,
   autoFocus = false,
-  autoComplete = "current-password",
   onSubmit,
 }) {
   const [visible, setVisible] = useState(false);
