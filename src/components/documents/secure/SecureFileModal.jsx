@@ -468,7 +468,6 @@ export default function SecureFileModal({
                 }}
                 error={error}
                 disabled={busy}
-                autoComplete="new-password"
                 onSubmit={handleResetPassword}
               />
               <PasswordStrengthHint password={password} />
