@@ -292,7 +292,6 @@ export default function SecureFileModal({
                   if (error) setError("");
                 }}
                 disabled={busy}
-                autoComplete="new-password"
               />
               <PasswordInput
                 id="secure-file-confirm-password"
