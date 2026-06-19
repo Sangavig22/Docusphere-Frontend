@@ -253,7 +253,6 @@ export default function SecureFileModal({
                 error={error}
                 disabled={busy}
                 autoFocus
-                autoComplete="new-password"
                 onSubmit={handleEnableProtection}
               />
               <PasswordStrengthHint password={password} />
