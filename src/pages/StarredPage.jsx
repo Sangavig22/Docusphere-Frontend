@@ -2,12 +2,13 @@ import { useMemo, useState } from "react";
 import { Plus, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { DocumentCard, DocumentRow, DocumentsToolbar } from "../components/documents";
-import { DEFAULT_DOCUMENT_ACTIONS } from "../components/documents/DocumentActionsMenu";
+import { DEFAULT_DOCUMENT_ACTIONS, SHARED_VIEWER_ACTION_KEYS } from "../components/documents/DocumentActionsMenu";
 import DocumentActionModal from "../components/documents/DocumentActionModal";
 import ShareModal from "../components/documents/share/ShareModal";
 import SecureFileModal from "../components/documents/secure/SecureFileModal";
 import ProtectedMoveBlockedModal from "../components/documents/secure/ProtectedMoveBlockedModal";
 import PasswordVerifyModal from "../components/documents/secure/PasswordVerifyModal";
+import VersionHistoryModal from "../components/documents/version/VersionHistoryModal";
 import useDocumentActions from "../hooks/useDocumentActions";
 import { usePaginatedMyDocuments } from "../hooks/usePaginatedMyDocuments";
 
@@ -95,6 +96,7 @@ export default function StarredPage() {
               onToggleStar={toggleStar}
               onAction={handleAction}
               actions={DEFAULT_DOCUMENT_ACTIONS}
+              actionKeys={d.isOwner === false ? SHARED_VIEWER_ACTION_KEYS : undefined}
               disableActions={d.isOwner === false}
               menuPushContent
               denseMenu
@@ -111,6 +113,7 @@ export default function StarredPage() {
               onToggleStar={toggleStar}
               onAction={handleAction}
               actions={DEFAULT_DOCUMENT_ACTIONS}
+              actionKeys={d.isOwner === false ? SHARED_VIEWER_ACTION_KEYS : undefined}
               disableActions={d.isOwner === false}
               menuPushContent
               denseMenu
@@ -174,7 +177,8 @@ export default function StarredPage() {
           modalState.open &&
           modalState.type !== "share" &&
           modalState.type !== "secure_file" &&
-          modalState.type !== "protected_move_block"
+          modalState.type !== "protected_move_block" &&
+          modalState.type !== "version_history"
         }
         type={modalState.type}
         title={modalState.title}
@@ -218,6 +222,12 @@ export default function StarredPage() {
         error={verifyState.error}
         onClose={closeVerifyModal}
         onUnlock={submitVerifyPassword}
+      />
+      <VersionHistoryModal
+        open={modalState.open && modalState.type === "version_history"}
+        document={modalState.doc}
+        onClose={closeModal}
+        onRestored={() => reload()}
       />
     </div>
   );

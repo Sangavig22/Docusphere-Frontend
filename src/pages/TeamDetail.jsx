@@ -9,6 +9,7 @@ import DocumentsList from "../components/Team/DocumentsList";
 import AddMemberModal from "../components/Team/AddMemberModal";
 import DocumentsToolbar from "../components/documents/DocumentsToolbar";
 import DocumentActionModal from "../components/documents/DocumentActionModal";
+import VersionHistoryModal from "../components/documents/version/VersionHistoryModal";
 import { DEFAULT_DOCUMENT_ACTIONS } from "../components/documents/DocumentActionsMenu";
 import useDocumentActions from "../hooks/useDocumentActions";
 import { ChevronLeft } from "lucide-react";
@@ -168,7 +169,10 @@ function TeamDetail() {
             showStar={false}
           />
           <DocumentActionModal
-            open={modalState.open}
+            open={
+              modalState.open &&
+              modalState.type !== "version_history"
+            }
             type={modalState.type}
             title={modalState.title}
             message={modalState.message}
@@ -179,6 +183,13 @@ function TeamDetail() {
             loading={loadingAction}
             onClose={closeModal}
             onConfirm={submitModal}
+          />
+          <VersionHistoryModal
+            open={modalState.open && modalState.type === "version_history"}
+            document={modalState.doc}
+            userTeamRole={normalizedCurrentUserRole}
+            onClose={closeModal}
+            onRestored={() => refetchDocs()}
           />
         </div>
       )}

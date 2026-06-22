@@ -469,6 +469,15 @@ export default function useDocumentActions({ onSuccess } = {}) {
       return;
     }
 
+    if (actionKey === "version_history") {
+      setModalState({
+        open: true,
+        type: "version_history",
+        doc: enrichDoc(doc),
+      });
+      return;
+    }
+
     if (actionKey === "duplicate") {
       const actionId = TOAST_ACTION_IDS.DUPLICATE;
       setLoadingAction(true);

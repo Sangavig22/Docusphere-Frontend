@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Lock } from "lucide-react";
+import { History, Lock } from "lucide-react";
 import PasswordVerifyModal from "../components/documents/secure/PasswordVerifyModal";
+import VersionHistoryModal from "../components/documents/version/VersionHistoryModal";
 import { verifySharedDocumentPassword } from "../services/documentProtectionService";
 import { downloadSharedDocument, getSharedDocumentByToken } from "../services/documentShareService";
 import {
@@ -49,6 +50,7 @@ export default function SharedDocumentPage() {
   const [verifyOpen, setVerifyOpen] = useState(false);
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [verifyError, setVerifyError] = useState("");
+  const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
 
   const isLoggedIn = useMemo(() => authService.isAuthenticated(), []);
   const canComment = doc?.permission === "COMMENT" || doc?.canComment === true;
@@ -218,7 +220,7 @@ export default function SharedDocumentPage() {
           </div>
         ) : null}
 
-        <div className="mt-5 flex items-center gap-2">
+        <div className="mt-5 flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={handleDownload}
@@ -227,6 +229,17 @@ export default function SharedDocumentPage() {
           >
             {downloading ? "Downloading..." : "Download"}
           </button>
+          {isLoggedIn && resolvedDocumentId ? (
+            <button
+              type="button"
+              onClick={() => setVersionHistoryOpen(true)}
+              disabled={!canViewContent}
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <History size={16} />
+              Version History
+            </button>
+          ) : null}
         </div>
 
         <div id={commentAnchorId} className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
@@ -267,6 +280,16 @@ export default function SharedDocumentPage() {
           )}
         </div>
       </div>
+
+      <VersionHistoryModal
+        open={versionHistoryOpen}
+        document={{
+          ...doc,
+          id: resolvedDocumentId,
+          isOwner: doc?.isOwner ?? false,
+        }}
+        onClose={() => setVersionHistoryOpen(false)}
+      />
     </div>
   );
 }

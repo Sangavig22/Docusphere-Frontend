@@ -25,6 +25,7 @@ import AdminTeamDetailsPage from "../pages/AdminTeamDetailsPage.jsx";
 import AdminMergeTeamsPage from "../pages/AdminMergeTeamsPage.jsx";
 import DocumentPreviewPage from "../pages/DocumentPreviewPage";
 import DocumentEditorPage from "../pages/DocumentEditorPage";
+import VersionPreviewPage from "../pages/VersionPreviewPage";
 
 
 
@@ -115,6 +116,11 @@ export const routes = [
     path: "/documents/:documentId/preview",
     element: <DocumentPreviewPage />,
      protected: true,
+  },
+  {
+    path: "/documents/:documentId/versions/:versionId/preview",
+    element: <VersionPreviewPage />,
+    protected: true,
   },
   {
     path: "/editor/:documentId",

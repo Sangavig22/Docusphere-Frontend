@@ -122,12 +122,12 @@ export default function DocumentsList({
       return undefined;
     }
 
-    return ["preview", "download"];
+    return ["preview", "download", "version_history"];
   };
 
   if (viewMode === "list") {
     return (
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 pb-72">
         {visibleDocs.map((doc) => (
           <DocumentRow
             key={doc.id}
@@ -138,6 +138,9 @@ export default function DocumentsList({
             actionKeys={getActionKeysForDoc(doc)}
             disableActions={false}
             showStar={showStar}
+            menuPushContent
+            denseMenu
+            menuClassName="w-52 p-0"
           />
         ))}
       </div>
@@ -145,7 +148,7 @@ export default function DocumentsList({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 pb-72 sm:grid-cols-2 lg:grid-cols-3">
       {visibleDocs.map((doc) => (
         <DocumentCard
           key={doc.id}
@@ -156,6 +159,9 @@ export default function DocumentsList({
           actionKeys={getActionKeysForDoc(doc)}
           disableActions={false}
           showStar={showStar}
+          menuPushContent
+          denseMenu
+          menuClassName="w-52 p-0"
         />
       ))}
     </div>

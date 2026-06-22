@@ -1,15 +1,45 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { request } from "../../api/apiClient";
+import { fetchVersionEditorConfig } from "../../services/documentVersionService";
 
-export default function OnlyOfficeEditor({ documentId }) {
+function applyReadOnlyConfig(config) {
+  if (!config || typeof config !== "object") return config;
+
+  const editorConfig = { ...(config.editorConfig || {}) };
+  editorConfig.mode = "view";
+  editorConfig.customization = {
+    ...(editorConfig.customization || {}),
+    comments: false,
+    chat: false,
+    feedback: false,
+    forcesave: false,
+    help: false,
+    hideRightMenu: true,
+  };
+
+  return {
+    ...config,
+    editorConfig,
+  };
+}
+
+export default function OnlyOfficeEditor({
+  documentId,
+  versionId,
+  readOnly = false,
+  fetchConfig,
+}) {
   const containerRef = useRef(null);
   const editorRef = useRef(null);
+  const editorId = useMemo(
+    () => `onlyoffice-editor-${documentId}-${versionId || "current"}`,
+    [documentId, versionId],
+  );
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [loadError, setLoadError] = useState(null);
   const [config, setConfig] = useState(null);
   const [loadingConfig, setLoadingConfig] = useState(true);
 
-  // 1. Load ONLYOFFICE API Script
   useEffect(() => {
     const scriptId = "onlyoffice-api-script";
     let script = window.document.getElementById(scriptId);
@@ -25,43 +55,48 @@ export default function OnlyOfficeEditor({ documentId }) {
     if (!script) {
       script = window.document.createElement("script");
       script.id = scriptId;
-      script.src = import.meta.env.VITE_ONLYOFFICE_API_URL || "http://localhost:80/web-apps/apps/api/documents/api.js";
+      const ONLYOFFICE_SERVER_URL = "http://localhost";
+      script.src = import.meta.env.VITE_ONLYOFFICE_API_URL || `${ONLYOFFICE_SERVER_URL}/web-apps/apps/api/documents/api.js`;
       script.async = true;
       script.onload = initializeEditor;
       script.onerror = () => {
         setLoadError("Failed to load ONLYOFFICE Document Server API script.");
       };
       window.document.body.appendChild(script);
+    } else if (window.DocsAPI) {
+      initializeEditor();
     } else {
-      if (window.DocsAPI) {
-        initializeEditor();
-      } else {
-        script.onload = initializeEditor;
-      }
+      script.onload = initializeEditor;
     }
 
     return () => {
       if (editorRef.current) {
         try {
           editorRef.current.destroyEditor();
-        } catch (e) {
-          console.error("Failed to destroy editor", e);
+        } catch (error) {
+          console.error("Failed to destroy editor", error);
         }
         editorRef.current = null;
       }
     };
   }, []);
 
-  // 2. Fetch Config from Backend
   useEffect(() => {
-    const fetchConfig = async () => {
+    const loadConfig = async () => {
       try {
         setLoadingConfig(true);
-        const data = await request(`/editor/documents/${documentId}`);
-        setConfig(data);
+        let data;
+        if (typeof fetchConfig === "function") {
+          data = await fetchConfig();
+        } else if (versionId) {
+          data = await fetchVersionEditorConfig(documentId, versionId);
+        } else {
+          data = await request(`/editor/documents/${documentId}`);
+        }
+        setConfig(readOnly ? applyReadOnlyConfig(data) : data);
         setLoadError(null);
-      } catch (err) {
-        console.error("Failed to load ONLYOFFICE editor config:", err);
+      } catch (error) {
+        console.error("Failed to load ONLYOFFICE editor config:", error);
         setLoadError("Failed to load editor configuration from server. Please make sure backend is running.");
       } finally {
         setLoadingConfig(false);
@@ -69,33 +104,31 @@ export default function OnlyOfficeEditor({ documentId }) {
     };
 
     if (documentId) {
-      fetchConfig();
+      loadConfig();
     }
-  }, [documentId]);
+  }, [documentId, versionId, readOnly, fetchConfig]);
 
-  // 3. Initialize DocEditor when script and config are ready
   useEffect(() => {
     if (!scriptLoaded || !config || !window.DocsAPI) return;
 
-    // Destroy existing instance if there is one
     if (editorRef.current) {
       try {
         editorRef.current.destroyEditor();
-      } catch (e) {
-        console.error("Error destroying previous editor instance", e);
+      } catch (error) {
+        console.error("Error destroying previous editor instance", error);
       }
       editorRef.current = null;
     }
 
     try {
-      editorRef.current = new window.DocsAPI.DocEditor(containerRef.current.id, config);
-    } catch (err) {
-      console.error("Failed to create DocEditor instance", err);
+      editorRef.current = new window.DocsAPI.DocEditor(editorId, config);
+    } catch (error) {
+      console.error("Failed to create DocEditor instance", error);
       setTimeout(() => {
         setLoadError("Failed to initialize ONLYOFFICE Document Editor.");
       }, 0);
     }
-  }, [scriptLoaded, config]);
+  }, [scriptLoaded, config, editorId]);
 
   if (loadError) {
     return (
@@ -111,14 +144,16 @@ export default function OnlyOfficeEditor({ documentId }) {
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[400px] gap-4">
         <div className="animate-spin h-10 w-10 border-4 border-blue-600 border-t-transparent rounded-full" />
-        <p className="text-gray-500 font-medium animate-pulse">Loading ONLYOFFICE Editor...</p>
+        <p className="text-gray-500 font-medium animate-pulse">
+          {readOnly ? "Loading read-only version preview..." : "Loading ONLYOFFICE Editor..."}
+        </p>
       </div>
     );
   }
 
   return (
     <div className="h-full w-full bg-white rounded-xl shadow-sm overflow-hidden flex flex-col min-h-[600px]">
-      <div id="onlyoffice-editor" ref={containerRef} className="flex-1 w-full h-full" />
+      <div id={editorId} ref={containerRef} className="flex-1 w-full h-full" />
     </div>
   );
 }

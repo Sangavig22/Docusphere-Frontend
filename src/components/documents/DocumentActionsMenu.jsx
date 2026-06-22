@@ -9,6 +9,7 @@ import {
   RotateCcw,
   Trash2,
   Shield,
+  History,
 } from "lucide-react";
 import { isDocumentProtected } from "../../utils/documentProtection";
 
@@ -19,6 +20,7 @@ export const DEFAULT_DOCUMENT_ACTIONS = [
   { key: "move", label: "Move to", icon: FolderInput },
   { key: "duplicate", label: "Duplicate", icon: Copy },
   { key: "download", label: "Download", icon: Download },
+  { key: "version_history", label: "Version History", icon: History },
   { key: "share", label: "Share", icon: Share2 },
   { key: "secure_file", label: "Secure file", icon: Shield },
   { key: "trash", label: "Move to trash", icon: Trash2, danger: true },
@@ -28,6 +30,9 @@ export const TRASH_ACTIONS = [
   { key: "restore", label: "Restore", icon: RotateCcw },
   { key: "delete_permanently", label: "Delete permanently", icon: Trash2, danger: true },
 ];
+
+/** Actions available to users who can view shared documents but are not the owner. */
+export const SHARED_VIEWER_ACTION_KEYS = ["preview", "download", "version_history"];
 
 // Admin Team Functions
 export const ADMIN_ACTIONS = [
