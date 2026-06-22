@@ -823,3 +823,4 @@ export default function TeamChat({
     </section>
   );
 }
+
