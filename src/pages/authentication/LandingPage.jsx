@@ -1,10 +1,14 @@
-import { useNavigate } from "react-router-dom";
+import { createElement } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import logo from "../../assets/logo.png";
 import GradientButton from "../../components/Authentication/GradientButton";
 import { FileText, ShieldCheck, Users, Zap, Clock, Sparkles, ArrowRight } from "lucide-react";
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isTeamInvite = new URLSearchParams(location.search).get("teamInvite") === "1";
+  const signInPath = isTeamInvite ? "/signin?redirect=/team" : "/signin";
 
   const features = [
     {
@@ -56,7 +60,7 @@ export default function LandingPage() {
               </span>
             </div>
             <nav className="flex items-center gap-2 sm:gap-3">
-              <GradientButton onClick={() => navigate("/signin")}>
+              <GradientButton onClick={() => navigate(signInPath)}>
                 Sign In
               </GradientButton>
               
@@ -91,14 +95,14 @@ export default function LandingPage() {
             </p>
 
             <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:auto-rows-fr ">
-              {features.map(({ t, d, icon: Icon }) => (
+              {features.map(({ t, d, icon }) => (
                 <div
                   key={t}
                   tabIndex={0}
                   className="h-full min-h-0 bg-card rounded-2xl border border-border shadow-xl px-5 py-6 flex flex-col items-center text-center focus:outline-none focus:border transition-all duration-300 hover:shadow-2xl transform hover:-translate-y-1"
                 >
                   <div className="h-12 w-12 shrink-0 rounded-md bg-surface flex items-center justify-center mb-4 ">
-                    <Icon className="text-text" size={22} />
+                    {createElement(icon, { className: "text-text", size: 22 })}
                   </div>
                   <h3 className="text-xl font-semibold shrink-0 text-text">
                     {t}

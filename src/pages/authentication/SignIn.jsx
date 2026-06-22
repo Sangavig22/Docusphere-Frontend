@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { signInFields } from "../../constants/authField";
 import PrimaryButton from "../../components/Authentication/PrimaryButton";
@@ -16,7 +16,9 @@ import useForm from "../../hooks/useForm";
 
 const SignIn = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [rememberMe, setRememberMe] = useState(false);
+  const redirectTo = new URLSearchParams(location.search).get("redirect");
 
   const googleLogin = () => {
     authService.startGoogleAuth();
@@ -50,7 +52,9 @@ const SignIn = () => {
 
         // Role-based redirect
         setTimeout(() => {
-          if (data.role?.toUpperCase() === ROLES.ADMIN) {
+          if (redirectTo && redirectTo.startsWith("/")) {
+            navigate(redirectTo);
+          } else if (data.role?.toUpperCase() === ROLES.ADMIN) {
             navigate("/dashboard-selector");
           } else {
             console.log("Redirecting to dashboard (USER)");

@@ -4,81 +4,82 @@ import {
   FileText,
   Activity,
   UsersIcon,
+  Clock,
+  Star,
+  UploadCloud,
 } from "lucide-react";
 
-// Icon mapping for string-based icons
 const iconMap = {
   users: User,
   documents: FileText,
   sessions: Activity,
   teams: UsersIcon,
+  clock: Clock,
+  starred: Star,
+  upload: UploadCloud,
 };
 
-// Admin variant styles (colorful)
 const variantStyles = {
-  users: "bg-[#eef2ff] text-[#000f97] border-[#e0e7ff]",
-  documents: "bg-[#ecfdf5] text-[#047857] border-[#d1fae5]",
-  sessions: "bg-[#fef2f2] text-[#7c0a0a] border-[#fee2e2]",
-  teams: "bg-[#fefce8] text-[#a16207] border-[#fef9c3]",
+  users:
+    "bg-[#eef2ff] text-[#000f97] border-[#e0e7ff] dark:bg-indigo-500/10 dark:text-indigo-200 dark:border-indigo-500/25",
+  documents:
+    "bg-[#ecfdf5] text-[#047857] border-[#d1fae5] dark:bg-emerald-500/10 dark:text-emerald-200 dark:border-emerald-500/25",
+  sessions:
+    "bg-[#fef2f2] text-[#7c0a0a] border-[#fee2e2] dark:bg-rose-500/10 dark:text-rose-200 dark:border-rose-500/25",
+  teams:
+    "bg-[#fefce8] text-[#a16207] border-[#fef9c3] dark:bg-amber-500/10 dark:text-amber-200 dark:border-amber-500/25",
 };
 
-// Icon background colors for admin variant
 const iconBgStyles = {
-  users: "bg-[#f8faff]",      // softer indigo white-tint
-  documents: "bg-[#f7fdfa]",  // softer green white-tint
-  sessions: "bg-[#fff7f7]",  // softer red white-tint
-  teams: "bg-[#fffdf5]",     // softer yellow white-tint
+  users: "bg-[#f8faff] dark:bg-indigo-500/15",
+  documents: "bg-[#f7fdfa] dark:bg-emerald-500/15",
+  sessions: "bg-[#fff7f7] dark:bg-rose-500/15",
+  teams: "bg-[#fffdf5] dark:bg-amber-500/15",
 };
 
-function StatCard({ 
-  title, 
-  value, 
+function StatCard({
+  title,
+  value,
   subtitle,
-  icon, 
+  icon,
   variant = "dashboard",
   type = "users",
   growth = null,
 }) {
-  // Determine if icon is a React component or string
   const isIconString = typeof icon === "string";
-  // For admin variant, use type to get icon; for dashboard variant, use icon prop
-  const IconComponent = variant === "admin" 
-    ? iconMap[type] || Activity 
-    : (isIconString ? iconMap[icon] || Activity : null);
+  const iconKey = isIconString ? icon : type;
+  const IconComponent =
+    variant === "admin"
+      ? iconMap[type] || Activity
+      : iconMap[iconKey] || (isIconString ? iconMap[icon] : null) || Activity;
 
-  // Base container styles - compact and consistent for both variants
-  const baseStyles = "border rounded-xl p-4 shadow-sm w-full transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-md cursor-pointer";
+  const baseStyles =
+    "border rounded-xl p-4 shadow-sm w-full transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-md cursor-pointer";
 
-  // Admin variant (colorful cards) - compact size
   if (variant === "admin") {
     return (
-      <div className={`${baseStyles} ${variantStyles[type]} flex justify-between items-start`}>
-        <div className="flex flex-col flex-1">
-          <p className="text-[12px] font-bold opacity-80 uppercase tracking-tight">
-            {title}
-          </p>
-          <h2 className="text-2xl font-extrabold mt-1">
-            {value}
-          </h2>
-          <p className="text-[11px] font-semibold mt-1 opacity-70">
-            {subtitle}
-          </p>
+      <div className={`${baseStyles} ${variantStyles[type]} flex items-start justify-between`}>
+        <div className="flex flex-1 flex-col">
+          <p className="text-[12px] font-bold uppercase tracking-tight opacity-80">{title}</p>
+          <h2 className="mt-1 text-2xl font-extrabold">{value}</h2>
+          <p className="mt-1 text-[11px] font-semibold opacity-70">{subtitle}</p>
         </div>
         {IconComponent && (
-          <div className={`flex-shrink-0 ml-3 p-2 rounded-lg ${iconBgStyles[type]}`}>
-            <IconComponent size={24} strokeWidth={2.5} />
+          <div className={`ml-3 flex-shrink-0 rounded-lg p-2 ${iconBgStyles[type]}`}>
+            <IconComponent size={24} strokeWidth={2.5} className="inherit" />
           </div>
         )}
       </div>
     );
   }
 
-  // Dashboard variant (simple cards) - same compact size
   return (
-    <div className={`${baseStyles} bg-card border-border flex items-center gap-4`}>
+    <div className={`${baseStyles} flex items-center gap-4 border-border bg-card`}>
       {icon && (
-        <div className="h-12 w-12 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 flex-shrink-0">
-          {isIconString ? (
+        <div
+          className={`icon-badge flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg`}
+        >
+          {isIconString || IconComponent ? (
             <IconComponent size={24} />
           ) : (
             icon
@@ -86,11 +87,9 @@ function StatCard({
         </div>
       )}
       <div className="flex-1">
-        <h4 className="text-xs font-semibold tracking-wide text-muted uppercase">
-          {title}
-        </h4>
-        <p className="text-2xl font-bold text-text mt-1">{value}</p>
-        <p className="text-xs text-muted mt-1">{subtitle}</p>
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted">{title}</h4>
+        <p className="mt-1 text-2xl font-bold text-text">{value}</p>
+        <p className="mt-1 text-xs text-muted">{subtitle}</p>
       </div>
     </div>
   );

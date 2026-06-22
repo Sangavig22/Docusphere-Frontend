@@ -15,6 +15,9 @@ export default function UploadPage() {
               // If upload was initiated from a team, return to that team's detail page.
               const teamId = localStorage.getItem("teamId");
               if (teamId) {
+                window.dispatchEvent(
+                  new CustomEvent("docusphere:teams-changed", { detail: { teamId } }),
+                );
                 // cleanup and navigate back to team
                 localStorage.removeItem("teamId");
                 navigate(`/team/${teamId}`);
