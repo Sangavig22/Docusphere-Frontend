@@ -332,7 +332,7 @@ export default function useDocumentActions({ onSuccess } = {}) {
   async function changeDocumentPasswordHandler({ currentPassword, newPassword }) {
     const doc = modalState.doc;
     if (!doc) return { ok: false, message: "Document not found." };
-    if (doc?.isOwner === false && !canManageDocument(doc)) {
+    if (doc?.isOwner === false) {
       return { ok: false, message: "Only owner can change this password." };
     }
     return runProtectionModalAction(async () => {
@@ -351,7 +351,7 @@ export default function useDocumentActions({ onSuccess } = {}) {
   async function removeDocumentProtectionHandler(currentPassword) {
     const doc = modalState.doc;
     if (!doc) return { ok: false, message: "Document not found." };
-    if (doc?.isOwner === false && !canManageDocument(doc)) {
+    if (doc?.isOwner === false) {
       return { ok: false, message: "Only owner can remove protection." };
     }
     return runProtectionModalAction(async () => {
@@ -368,7 +368,7 @@ export default function useDocumentActions({ onSuccess } = {}) {
   async function resetDocumentPasswordHandler({ newPassword }) {
     const doc = modalState.doc;
     if (!doc) return { ok: false, message: "Document not found." };
-    if (doc?.isOwner === false && !canManageDocument(doc)) {
+    if (doc?.isOwner === false) {
       toast.warning("Only owner can reset this document password.");
       return { ok: false, message: "Only owner can reset this document password." };
     }
