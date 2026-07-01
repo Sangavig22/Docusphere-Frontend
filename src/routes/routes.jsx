@@ -10,6 +10,7 @@ import SettingsPage from "../pages/SettingsPage.jsx";
 import Layout from "../components/Layout/Layout";
 import Dashboard from "../Pages/Dashboard";
 import UploadPage from "../pages/UploadPage";
+import AdminReportsPage from "../pages/AdminReportsPage.jsx";
 import AdminDashboardPage from "../pages/AdminDashboardPage.jsx";
 import OCRSummarization from "../pages/OCRSummarization";
 import MyDocumentsPage from "../pages/MyDocumentsPage";
@@ -191,6 +192,15 @@ export const routes = [
       "admin"
     ),
     protected: true,
+  },
+  {
+    path: "/admin/reports",
+    element: withLayout(
+      <AdminReportsPage />,
+      "Export Reports",
+      "Download system data in PDF or CSV format",
+      "admin"
+    ),
   },
   {
     path: "/admin/teams/new",
