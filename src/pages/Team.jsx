@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import { Plus } from "lucide-react";
 import "react-toastify/dist/ReactToastify.css";
@@ -12,8 +12,9 @@ import { useTeams } from "../hooks/useTeams";
 
 function Team() {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const { teams, isLoading, error, deleteTeam } = useTeams();
+  const { teams, isLoading, error, deleteTeam, refetch } = useTeams();
   
   const [openMenuId, setOpenMenuId] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, team: null });
@@ -45,6 +46,13 @@ function Team() {
   };
 
   const normalizedQuery = query.trim().toLowerCase();
+
+  useEffect(() => {
+    if (location.pathname === "/team") {
+      void refetch();
+    }
+  }, [location.pathname, refetch]);
+
   const visibleTeams = useMemo(() => {
     let list = teams.filter((team) => {
       if (!normalizedQuery) return true;
@@ -107,7 +115,7 @@ function Team() {
         </button>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
         <DocumentsToolbar
           query={query}
           onQueryChange={setQuery}

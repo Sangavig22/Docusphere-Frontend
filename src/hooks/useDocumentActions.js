@@ -11,6 +11,7 @@ import {
   trashDocument,
   shareDocumentByEmail,
 } from "../services/documentActionsService";
+import { teamsApi } from "../services/teamsApi";
 import {
   changeDocumentPassword,
   protectDocument,
@@ -75,6 +76,23 @@ function isTeamDocument(doc) {
   // Different API payloads use different team id shapes.
   const teamId = doc?.teamId ?? doc?.teamID ?? doc?.team?.id ?? doc?.team?.teamId;
   return teamId !== null && teamId !== undefined && String(teamId).trim() !== "";
+}
+
+function canManageDocument(doc) {
+  if (doc?.isOwner === true) return true;
+  if (isTeamDocument(doc) && doc?.canManageTeamDoc === true) return true;
+  return doc?.isOwner !== false && !isTeamDocument(doc);
+}
+
+function canShareDocument(doc) {
+  if (canManageDocument(doc)) return true;
+  if (isTeamDocument(doc) && doc?.canShareTeamDoc === true) return true;
+  return doc?.isOwner !== false && !isTeamDocument(doc);
+}
+
+function resolveTeamId(doc) {
+  const teamId = doc?.teamId ?? doc?.teamID ?? doc?.team?.id ?? doc?.team?.teamId;
+  return teamId == null ? "" : String(teamId).trim();
 }
 
 function getActionErrorMessage(error, fallback) {
@@ -418,11 +436,15 @@ export default function useDocumentActions({ onSuccess } = {}) {
       "trash",
       "delete_permanently",
       "restore",
-      "share",
       "secure_file",
     ]);
-    if (doc?.isOwner === false && restrictedForNonOwner.has(actionKey)) {
-      toast.warning("Only owner can manage this document.");
+    if (!canManageDocument(doc) && restrictedForNonOwner.has(actionKey)) {
+      toast.warning("You do not have permission to manage this document.");
+      return;
+    }
+
+    if (actionKey === "share" && !canShareDocument(doc)) {
+      toast.warning("You do not have permission to share this document.");
       return;
     }
 
@@ -587,8 +609,19 @@ export default function useDocumentActions({ onSuccess } = {}) {
       }
 
       if (modalState.confirmText === "Move to Trash") {
-        await trashDocument(resolveApiId(doc));
-        toast.success("Document moved to trash.");
+        const docId = resolveApiId(doc);
+        if (isTeamDocument(doc)) {
+          const teamId = resolveTeamId(doc);
+          if (!teamId) {
+            toast.error("Cannot delete: missing team id.");
+            return;
+          }
+          await teamsApi.deleteTeamDocument(teamId, docId);
+          toast.success("Document deleted.");
+        } else {
+          await trashDocument(docId);
+          toast.success("Document moved to trash.");
+        }
         setModalState(EMPTY_MODAL);
         await onSuccess?.("trash", doc);
         return;

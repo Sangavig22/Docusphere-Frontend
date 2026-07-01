@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
 	:root {
@@ -51,6 +52,40 @@ html, body, #root {
 .dark .text-gray-600 { color: var(--muted) !important; }
 .dark .bg-red-50 { background-color: rgba(255,69,58,0.03) !important; }
 
+/* Slate palette — used heavily in team/chat UI */
+.dark .text-slate-900,
+.dark .text-slate-800 { color: var(--text) !important; }
+.dark .text-slate-700 { color: var(--text) !important; }
+.dark .text-slate-600,
+.dark .text-slate-500 { color: var(--muted) !important; }
+.dark .text-slate-400,
+.dark .text-slate-300 { color: var(--muted) !important; }
+.dark .border-slate-100,
+.dark .border-slate-200 { border-color: var(--border) !important; }
+.dark .bg-slate-50 { background-color: var(--bg) !important; }
+.dark .bg-slate-100 { background-color: rgba(255, 255, 255, 0.06) !important; }
+.dark .hover\:bg-slate-50:hover,
+.dark .hover\:bg-slate-100:hover { background-color: rgba(255, 255, 255, 0.08) !important; }
+.dark .hover\:text-slate-600:hover,
+.dark .hover\:text-slate-700:hover { color: var(--text) !important; }
+.dark .ring-slate-100 { --tw-ring-color: var(--border) !important; }
+
+/* Form controls */
+textarea,
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+select {
+	background-color: var(--card);
+	color: var(--text);
+}
+textarea {
+	caret-color: var(--text);
+}
+input::placeholder,
+textarea::placeholder {
+	color: var(--muted);
+}
+
+
 /* Semantic theme token utilities */
 .bg-card { background-color: var(--card) !important; }
 .text-text { color: var(--text) !important; }
@@ -60,4 +95,10 @@ html, body, #root {
 /* Interactive / variant utilities for semantic tokens */
 .hover\:bg-card:hover { background-color: var(--card) !important; }
 .focus\:border-border:focus { border-color: var(--border) !important; }
+
+.icon-badge {
+	background-color: color-mix(in srgb, var(--primary) 14%, var(--card));
+	color: var(--primary);
+}
+
 

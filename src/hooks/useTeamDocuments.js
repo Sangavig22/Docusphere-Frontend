@@ -55,6 +55,7 @@ export function useTeamDocuments(teamId, isAdmin = false) {
         const ownerId = resolveDocumentOwnerId(doc);
         return {
           ...doc,
+          teamId: doc?.teamId ?? teamId,
           isOwner: ownerId !== "" && String(ownerId) === String(currentUserId),
         };
       });

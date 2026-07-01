@@ -1,6 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { teamsApi } from '../services/teamsApi';
 
+function dispatchTeamChanged(teamId) {
+  if (typeof window === 'undefined' || !teamId) return;
+  window.dispatchEvent(new CustomEvent('docusphere:teams-changed', { detail: { teamId } }));
+}
+
 /**
  * Fetches team details and members for a specific team.
  * Uses GET /api/teams/:id and GET /api/teams/:id/members.
@@ -52,12 +57,13 @@ export function useTeamMemberDetails(teamId, isAdmin = false) {
               : await teamsApi.addMember(teamId, memberData);
           const newMember = resp?.data ?? resp;
           await fetchDetails();
+          dispatchTeamChanged(teamId);
           return newMember;
       } catch (err) {
           console.error("Failed to add member", err);
           throw err;
       }
-  }, [teamId, fetchDetails]);
+  }, [teamId, fetchDetails, isAdmin]);
 
    const deleteMember = useCallback(async (memberId) => {
     try {
@@ -67,12 +73,13 @@ export function useTeamMemberDetails(teamId, isAdmin = false) {
             await teamsApi.removeMember(teamId, memberId);
         }
         await fetchDetails();
+        dispatchTeamChanged(teamId);
     } 
     catch(err) {
         console.error("Failed to remove member", err);
         throw new Error(err.message || "Failed to remove member");
     }
-  }, [teamId]);
+  }, [teamId, fetchDetails, isAdmin]);
 
   //UPDATE ROLE
 
@@ -96,7 +103,7 @@ export function useTeamMemberDetails(teamId, isAdmin = false) {
           console.error("Failed to update role", err);
           throw err;
       }
-  }, [teamId]);
+  }, [teamId, isAdmin]);
 
   //TRANSFER lEADER
 
@@ -112,7 +119,26 @@ export function useTeamMemberDetails(teamId, isAdmin = false) {
           console.error("Failed to transfer leader", err);
           throw err;
       }
-  }, [teamId, fetchDetails]);
+  }, [teamId, fetchDetails, isAdmin]);
+
+  const updateMemberChatBlock = useCallback(async (member, blocked) => {
+    const memberId = member.userId ?? member.id ?? member._id;
+    try {
+      await teamsApi.updateMemberChatBlock(teamId, memberId, blocked);
+      setMembers((prev) =>
+        prev.map((m) => {
+          const id = m.userId ?? m.id ?? m._id;
+          if (String(id) === String(memberId)) {
+            return { ...m, active: !blocked };
+          }
+          return m;
+        })
+      );
+    } catch (err) {
+      console.error("Failed to update chat block", err);
+      throw err;
+    }
+  }, [teamId]);
 
   return { 
       teamData, 
@@ -123,6 +149,7 @@ export function useTeamMemberDetails(teamId, isAdmin = false) {
       addMember,
       deleteMember,
       updateMemberRole,
+      updateMemberChatBlock,
       transferLeader
   };
 }
