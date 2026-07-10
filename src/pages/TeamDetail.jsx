@@ -10,6 +10,8 @@ import TeamChat from "../components/Team/TeamChat";
 import AddMemberModal from "../components/Team/AddMemberModal";
 import DocumentsToolbar from "../components/documents/DocumentsToolbar";
 import DocumentActionModal from "../components/documents/DocumentActionModal";
+import VersionHistoryModal from "../components/documents/version/VersionHistoryModal";
+import { DEFAULT_DOCUMENT_ACTIONS } from "../components/documents/DocumentActionsMenu";
 import ShareModal from "../components/documents/share/ShareModal";
 import { TEAM_DOCUMENT_ACTIONS } from "../components/documents/DocumentActionsMenu";
 import useDocumentActions from "../hooks/useDocumentActions";
@@ -272,6 +274,7 @@ function TeamDetail() {
           <DocumentActionModal
             open={
               modalState.open &&
+              modalState.type !== "version_history"
               modalState.type !== "share"
             }
             type={modalState.type}
@@ -285,6 +288,12 @@ function TeamDetail() {
             onClose={closeModal}
             onConfirm={submitModal}
           />
+          <VersionHistoryModal
+            open={modalState.open && modalState.type === "version_history"}
+            document={modalState.doc}
+            userTeamRole={normalizedCurrentUserRole}
+            onClose={closeModal}
+            onRestored={() => refetchDocs()}
           <ShareModal
             open={modalState.open && modalState.type === "share"}
             document={modalState.doc}

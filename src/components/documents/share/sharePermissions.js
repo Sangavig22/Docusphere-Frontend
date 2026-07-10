@@ -22,3 +22,14 @@ export function getPermissionRole(permission) {
   if (value === "EDIT") return "Editor";
   return "Viewer";
 }
+
+export function getPermissionBadgeClasses(permission) {
+  const value = String(permission || "VIEW").toUpperCase();
+  if (value === "EDIT") {
+    return "bg-violet-100 text-violet-800 ring-violet-200";
+  }
+  if (value === "COMMENT") {
+    return "bg-amber-100 text-amber-800 ring-amber-200";
+  }
+  return "bg-emerald-100 text-emerald-800 ring-emerald-200";
+}

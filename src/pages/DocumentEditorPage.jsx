@@ -1,22 +1,29 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Save } from "lucide-react";
 import Layout from "../components/Layout/Layout";
 import OnlyOfficeEditor from "../components/Preview/OnlyOfficeEditor";
+import SaveChangesModal from "../components/documents/version/SaveChangesModal";
 import { request } from "../api/apiClient";
 import { teamsApi } from "../services/teamsApi";
 import authService from "../services/authService";
 import { canEditDocument } from "../utils/DocumentPermissionUtils";
 import AccessDeniedPage from "./AccessDeniedPage";
 import { toast } from "react-toastify";
+import {
+  saveDocumentChangeSummary,
+} from "../services/documentVersionService";
 
 export default function DocumentEditorPage() {
   const { documentId } = useParams();
   const navigate = useNavigate();
+  const editorRef = useRef(null);
   const [document, setDocument] = useState(null);
   const [userTeamRole, setUserTeamRole] = useState("");
   const [loading, setLoading] = useState(true);
   const [checkingPermissions, setCheckingPermissions] = useState(true);
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const fetchDocumentAndRole = async () => {
@@ -48,6 +55,24 @@ export default function DocumentEditorPage() {
     fetchDocumentAndRole();
   }, [documentId]);
 
+  async function handleSaveChanges(changeSummary) {
+    setSaving(true);
+    try {
+      await saveDocumentChangeSummary(documentId, changeSummary);
+      const forced = await editorRef.current?.forceSave?.();
+      if (forced === false) {
+        toast.warn("Save sent to ONLYOFFICE. If changes are missing, wait a moment and reopen the document.");
+      }
+      toast.success("Changes saved successfully.");
+      setSaveModalOpen(false);
+      navigate(`/documents/${documentId}/preview?edited=true`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to save changes.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   if (loading || checkingPermissions) {
     return (
       <Layout pageTitle="Loading..." pageSubtitle="Preparing ONLYOFFICE Editor">
@@ -77,8 +102,14 @@ export default function DocumentEditorPage() {
       pageTitle={document?.name || "Edit Document"} 
       pageSubtitle="Edit your document via ONLYOFFICE Community Edition"
     >
+      <SaveChangesModal
+        open={saveModalOpen}
+        loading={saving}
+        onClose={() => setSaveModalOpen(false)}
+        onSave={handleSaveChanges}
+      />
+
       <div className="flex flex-col h-full gap-4">
-        {/* Toolbar */}
         <div className="flex items-center justify-between bg-white dark:bg-card p-3 rounded-xl shadow-sm border dark:border-border">
           <div className="flex items-center gap-3">
             <button 
@@ -93,11 +124,19 @@ export default function DocumentEditorPage() {
                <span className="font-semibold text-gray-800 dark:text-text">Editor Mode: ONLYOFFICE</span>
             </div>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setSaveModalOpen(true)}
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+          >
+            <Save size={16} />
+            Save Changes
+          </button>
         </div>
 
-        {/* Editor Area */}
         <div className="flex-1 min-h-[600px] bg-gray-100 dark:bg-card rounded-xl overflow-hidden shadow-inner">
-          <OnlyOfficeEditor document={document} documentId={documentId} />
+          <OnlyOfficeEditor ref={editorRef} documentId={documentId} />
         </div>
       </div>
     </Layout>

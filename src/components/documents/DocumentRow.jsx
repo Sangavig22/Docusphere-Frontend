@@ -10,6 +10,22 @@ import {
 } from "../../utils/documentUtils.js";
 import DocumentProtectedBadge from "./secure/DocumentProtectedBadge";
 
+function typeStyles(type) {
+  switch (type) {
+    case "pdf":
+      return { bg: "bg-rose-50", fg: "text-rose-600", ring: "ring-rose-100" };
+    case "word":
+      return { bg: "bg-blue-50", fg: "text-blue-600", ring: "ring-blue-100" };
+    case "sheet":
+      return { bg: "bg-emerald-50", fg: "text-emerald-600", ring: "ring-emerald-100" };
+    case "powerpoint":
+      return { bg: "bg-orange-50", fg: "text-orange-600", ring: "ring-orange-100" };
+    case "image":
+      return { bg: "bg-violet-50", fg: "text-violet-600", ring: "ring-violet-100" };
+    default:
+      return { bg: "bg-surface", fg: "text-muted", ring: "ring-slate-100" };
+  }
+}
 
 export default function DocumentRow({
   doc,
@@ -31,6 +47,8 @@ export default function DocumentRow({
   const formatLabel = useMemo(() => formatDocumentFormat(doc.type, doc.name), [doc.type, doc.name]);
   const styles = useMemo(() => typeStyles(type), [type]);
   const canOpenPreview = typeof onAction === "function";
+  const menuDisabled =
+    disableActions && (!Array.isArray(actionKeys) || actionKeys.length === 0);
 
   function triggerPreview() {
     if (!canOpenPreview) return;
@@ -116,7 +134,7 @@ export default function DocumentRow({
         <button
           ref={menuButtonRef}
           type="button"
-          disabled={disableActions}
+          disabled={menuDisabled}
           className={[
             "inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors",
             menuOpen ? "bg-card text-text" : "text-muted hover:bg-card hover:text-text",
@@ -126,22 +144,22 @@ export default function DocumentRow({
         >
           <MoreVertical size={18} />
         </button>
-        <Popover
-          open={menuOpen}
-          onClose={() => setMenuOpen(false)}
-          anchorRef={menuButtonRef}
-          portal={menuPortal}
-          side={menuPortal ? "bottom" : "auto"}
-          pushContent={menuPushContent}
-          scrollable={!menuPortal}
-          className={[menuPortal ? "" : "right-0 top-10", menuClassName].join(" ")}
-        >
+            <Popover
+              open={menuOpen}
+              onClose={() => setMenuOpen(false)}
+              anchorRef={menuButtonRef}
+              portal={menuPortal}
+              side="auto"
+              pushContent={menuPushContent}
+              scrollable
+              className={[menuPortal ? "" : "right-0 top-10", menuClassName].join(" ")}
+            >
           <DocumentActionsMenu
             doc={doc}
             dense={denseMenu}
             actionKeys={actionKeys}
             actions={actions}
-            disabled={disableActions}
+            disabled={menuDisabled}
             onAction={(key, d) => {
               setMenuOpen(false);
               onAction?.(key, d);

@@ -47,6 +47,8 @@ export default function DocumentCard({
   const formatLabel = useMemo(() => formatDocumentFormat(doc.type, doc.name), [doc.type, doc.name]);
   const styles = typeStyles(type);
   const canOpenPreview = typeof onAction === "function";
+  const menuDisabled =
+    disableActions && (!Array.isArray(actionKeys) || actionKeys.length === 0);
 
   function triggerPreview() {
     if (!canOpenPreview) return;
@@ -110,7 +112,7 @@ export default function DocumentCard({
             <button
               ref={menuButtonRef}
               type="button"
-              disabled={disableActions}
+              disabled={menuDisabled}
               className={[
                 "inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors",
                 menuOpen ? "bg-card text-text" : "text-muted hover:bg-card hover:text-text",
@@ -125,9 +127,9 @@ export default function DocumentCard({
               onClose={() => setMenuOpen(false)}
               anchorRef={menuButtonRef}
               portal={menuPortal}
-              side={menuPortal ? "bottom" : "auto"}
+              side="auto"
               pushContent={menuPushContent}
-              scrollable={!menuPortal}
+              scrollable
               className={[menuPortal ? "" : "right-0 top-10", menuClassName].join(" ")}
             >
               <DocumentActionsMenu
@@ -135,7 +137,7 @@ export default function DocumentCard({
                 dense={denseMenu}
                 actionKeys={actionKeys}
                 actions={actions}
-                disabled={disableActions}
+                disabled={menuDisabled}
                 onAction={(key, d) => {
                   setMenuOpen(false);
                   onAction?.(key, d);
