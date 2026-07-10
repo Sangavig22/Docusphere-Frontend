@@ -24,6 +24,7 @@ export const ADMIN_MENU = {
   primary: [
     { label: "Dashboard", icon: LayoutDashboard, to: "/admin/dashboard" },
     { label: "Team Management", icon: Users, to: "/admin/teams" },
+    { label: "Global Search", icon: Search, to: "/admin/search" },
     { label: "Export Reports", icon: Download, to: "/admin/reports" },
     { label: "Merge Teams", icon: GitMerge, to: "/admin/merge" },
   ],

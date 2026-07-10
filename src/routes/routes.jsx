@@ -26,6 +26,7 @@ import AdminTeamDetailsPage from "../pages/AdminTeamDetailsPage.jsx";
 import AdminMergeTeamsPage from "../pages/AdminMergeTeamsPage.jsx";
 import DocumentPreviewPage from "../pages/DocumentPreviewPage";
 import DocumentEditorPage from "../pages/DocumentEditorPage";
+import AdminGlobalSearch from "../pages/AdminGlobalSearch.jsx";
 
 
 
@@ -199,6 +200,15 @@ export const routes = [
       <AdminReportsPage />,
       "Export Reports",
       "Download system data in PDF or CSV format",
+      "admin"
+    ),
+  },
+  {
+    path: "/admin/search",
+    element: withLayout(
+      <AdminGlobalSearch />,
+      "Global Search",
+      "Search across all users, teams, and documents",
       "admin"
     ),
   },
