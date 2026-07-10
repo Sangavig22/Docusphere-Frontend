@@ -1,19 +1,56 @@
-import StatCard from "../components/ui/StatCard";
-import QuickActions from "../components/dashboard/QuickActions";
-import { FileText, Clock, Star, UploadCloud } from "lucide-react";
+import { useCallback } from "react";
 import { useDashboardData } from "../hooks/useDashboardData";
 import { DASHBOARD_CONFIG } from "../config/dashboardsConfig";
+import { usePaginatedMyDocuments } from "../hooks/usePaginatedMyDocuments";
+import useDocumentActions from "../hooks/useDocumentActions";
+import StatCard from "../components/ui/StatCard";
+import DocumentPreviewSection from "../components/dashboard/DocumentPreviewSection";
+import DocumentActionModal from "../components/documents/DocumentActionModal";
+import ShareModal from "../components/documents/share/ShareModal";
 
-// Icon mapping for dashboard
-const iconMap = {
-  documents: <FileText className="w-5 h-5" />,
-  clock: <Clock className="w-5 h-5" />,
-  starred: <Star className="w-5 h-5" />,
-  upload: <UploadCloud className="w-5 h-5" />,
-};
+const RECENT_PREVIEW_LIMIT = 10;
+const RECENT_DAYS = 7;
 
 function Dashboard() {
   const { counts, isLoading, error } = useDashboardData();
+  const {
+    documents: recentDocuments,
+    loading: recentLoading,
+    error: recentError,
+    reload: reloadRecent,
+    toggleStar: toggleStarRecentBase,
+  } = usePaginatedMyDocuments({ recentDays: RECENT_DAYS, pageSize: RECENT_PREVIEW_LIMIT });
+  const {
+    documents: starredDocuments,
+    loading: starredLoading,
+    error: starredError,
+    reload: reloadStarred,
+    toggleStar: toggleStarStarredBase,
+  } = usePaginatedMyDocuments({ starred: true, pageSize: RECENT_PREVIEW_LIMIT });
+
+  const refreshPreviewLists = useCallback(() => {
+    reloadRecent();
+    reloadStarred();
+  }, [reloadRecent, reloadStarred]);
+
+  const { modalState, loadingAction, handleAction, closeModal, submitModal, shareWithPeople } =
+    useDocumentActions({ onSuccess: refreshPreviewLists });
+
+  const onToggleStarRecent = useCallback(
+    async (id) => {
+      await toggleStarRecentBase(id);
+      reloadStarred();
+    },
+    [toggleStarRecentBase, reloadStarred],
+  );
+
+  const onToggleStarStarred = useCallback(
+    async (id) => {
+      await toggleStarStarredBase(id);
+      reloadRecent();
+    },
+    [toggleStarStarredBase, reloadRecent],
+  );
 
   if (isLoading) {
     return (
@@ -32,26 +69,56 @@ function Dashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 w-full space-y-6 overflow-x-hidden">
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {DASHBOARD_CONFIG.user.statCards.map((card) => (
           <StatCard
             key={card.title}
             title={card.title}
-            value={counts[card.countKey].toString()}
+            value={String(counts[card.countKey] ?? 0)}
             subtitle={card.subtitle}
-            icon={iconMap[card.icon]}
+            icon={card.icon}
             variant="dashboard"
           />
         ))}
       </div>
 
-      {/* Quick Actions */}
-      <div className="bg-white border border-slate-100 p-6 rounded-2xl shadow-sm">
-        <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-        <QuickActions />
-      </div>
+      {/* Recent & Starred Preview */}
+      <DocumentPreviewSection
+        recentItems={recentDocuments.slice(0, RECENT_PREVIEW_LIMIT)}
+        starredItems={starredDocuments.slice(0, RECENT_PREVIEW_LIMIT)}
+        recentLoading={recentLoading}
+        starredLoading={starredLoading}
+        recentError={recentError}
+        starredError={starredError}
+        recentViewAllTo="/recent"
+        starredViewAllTo="/starred"
+        onAction={handleAction}
+        onToggleStarRecent={onToggleStarRecent}
+        onToggleStarStarred={onToggleStarStarred}
+      />
+
+      <DocumentActionModal
+        open={modalState.open && modalState.type !== "share"}
+        type={modalState.type}
+        title={modalState.title}
+        message={modalState.message}
+        value={modalState.value}
+        options={modalState.options}
+        confirmText={modalState.confirmText}
+        confirmVariant={modalState.confirmVariant}
+        loading={loadingAction}
+        onClose={closeModal}
+        onConfirm={submitModal}
+      />
+      <ShareModal
+        open={modalState.open && modalState.type === "share"}
+        document={modalState.doc}
+        loading={loadingAction}
+        onClose={closeModal}
+        onShareWithPeople={shareWithPeople}
+      />
     </div>
   );
 }

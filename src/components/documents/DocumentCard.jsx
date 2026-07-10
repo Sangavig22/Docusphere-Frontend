@@ -39,6 +39,7 @@ export default function DocumentCard({
   denseMenu = false,
   showStar = true,
   actionKeys,
+  isSelected=false
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuButtonRef = useRef(null);
@@ -57,9 +58,13 @@ export default function DocumentCard({
   return (
     <div
       className={[
-        "group relative flex h-full min-h-[170px] flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-[border-color,box-shadow] hover:border-slate-300 hover:shadow-md",
+        "group relative flex h-full min-h-[170px] flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-[border-color,box-shadow] hover:border-slate-300 hover:shadow-md dark:border-border dark:bg-card dark:hover:border-slate-500",
         canOpenPreview ? "cursor-pointer" : "",
+        isSelected
+          ? "ring-2 ring-blue-500 border-blue-400 bg-blue-50/60 dark:ring-blue-400 dark:border-blue-500 dark:bg-blue-500/10"
+          : "",
       ].join(" ")}
+      data-document-id={doc.id}
       role={canOpenPreview ? "button" : undefined}
       tabIndex={canOpenPreview ? 0 : undefined}
       onClick={(event) => {

@@ -39,6 +39,7 @@ export default function DocumentRow({
   denseMenu = false,
   showStar = true,
   actionKeys,
+  isSelected = false,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuButtonRef = useRef(null);
@@ -57,9 +58,13 @@ export default function DocumentRow({
   return (
     <div
       className={[
-        "relative flex items-center gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm",
+        "relative flex items-center gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-border dark:bg-card",
         canOpenPreview ? "cursor-pointer" : "",
+        isSelected
+          ? "ring-2 ring-blue-500 border-blue-400 bg-blue-50/60 dark:ring-blue-400 dark:border-blue-500 dark:bg-blue-500/10"
+          : "",
       ].join(" ")}
+      data-document-id={doc.id}
       role={canOpenPreview ? "button" : undefined}
       tabIndex={canOpenPreview ? 0 : undefined}
       onClick={(event) => {

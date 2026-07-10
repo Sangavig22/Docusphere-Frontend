@@ -142,7 +142,10 @@ function RequireAuth({ children }) {
     }, []);
 
     if (loading) return <div className="p-6 text-center">Loading...</div>;
-    if (!isAuthenticated) return <Navigate to="/signin" replace />;
+    if (!isAuthenticated) {
+        const redirect = `${window.location.pathname}${window.location.search}`;
+        return <Navigate to={`/signin?redirect=${encodeURIComponent(redirect)}`} replace />;
+    }
     return children;
 }
 

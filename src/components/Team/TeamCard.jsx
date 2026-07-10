@@ -1,5 +1,5 @@
 import { useRef, useEffect } from "react";
-import { Users, MoreHorizontal, X } from "lucide-react";
+import { Users, MoreHorizontal } from "lucide-react";
 
 function TeamCard({
   team,
@@ -24,16 +24,15 @@ function TeamCard({
       document.addEventListener("mousedown", handleClickOutside);
       return () => document.removeEventListener("mousedown", handleClickOutside);
     }
-  }, [isOpen]);
+  }, [isOpen, setOpenMenuId]);
 
   return (
     <div
       onClick={onOpen}
-      className="relative bg-white rounded-xl border border-slate-100 shadow-sm px-5 py-4 flex flex-col gap-3 cursor-pointer hover:shadow-md transition"
+      className="relative flex cursor-pointer flex-col gap-3 rounded-xl border border-border bg-card px-5 py-4 shadow-sm transition hover:shadow-md"
     >
-      {/* Top Row */}
       <div className="flex items-start justify-between">
-        <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+        <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400">
           <Users size={18} />
         </div>
 
@@ -43,50 +42,45 @@ function TeamCard({
               e.stopPropagation();
               setOpenMenuId(isOpen ? null : team.id);
             }}
-            className="p-1 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+            className="rounded p-1 text-muted transition hover:bg-slate-100 hover:text-text dark:hover:bg-white/10"
           >
             <MoreHorizontal size={18} />
           </button>
 
           {isOpen && (
-            <div className="absolute right-0 top-full mt-1 z-10 min-w-[120px] rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
-
-              {/* View */}
+            <div className="absolute right-0 top-full z-10 mt-1 min-w-[120px] rounded-lg border border-border bg-card py-1 shadow-lg">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   onOpen();
                 }}
-                className="w-full px-4 py-2 text-left text-sm hover:bg-slate-50"
+                className="w-full px-4 py-2 text-left text-sm text-text hover:bg-slate-50 dark:hover:bg-white/10"
               >
                 View
               </button>
 
-              {/* Delete */}
               {canDeleteTeam && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     onDelete();
                   }}
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-slate-50 hover:text-red-600"
+                  className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
                 >
                   Delete
                 </button>
               )}
             </div>
           )}
-
         </div>
       </div>
 
-      {/* Bottom */}
       <div>
-        <h3 className="text-sm font-semibold text-slate-900">
+        <h3 className="text-sm font-semibold text-text">
           {team.name}
         </h3>
-        <p className="text-xs text-slate-500 mt-1">
-          {team.memberCount || 0} members · {team.documentCount || 0} docs
+        <p className="mt-1 text-xs text-muted">
+          {team.memberCount ?? 0} members - {team.documentCount ?? 0} docs
         </p>
       </div>
     </div>

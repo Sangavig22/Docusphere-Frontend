@@ -26,6 +26,11 @@ export const DEFAULT_DOCUMENT_ACTIONS = [
   { key: "trash", label: "Move to trash", icon: Trash2, danger: true },
 ];
 
+/** Team documents omit file protection actions. */
+export const TEAM_DOCUMENT_ACTIONS = DEFAULT_DOCUMENT_ACTIONS.filter(
+  (action) => action.key !== "secure_file"
+);
+
 export const TRASH_ACTIONS = [
   { key: "restore", label: "Restore", icon: RotateCcw },
   { key: "delete_permanently", label: "Delete permanently", icon: Trash2, danger: true },

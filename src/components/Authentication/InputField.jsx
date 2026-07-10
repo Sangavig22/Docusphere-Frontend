@@ -41,11 +41,10 @@ const InputField = ({
           "
         style={{
           // Chrome adds blue background on autofill - this overrides it to transparent
-          WebkitBoxShadow: '0 0 0 1000px transparent inset !important',
+          WebkitBoxShadow: '0 0 0 1000px var(--card) inset',
           // Keep text color aligned with the active theme when autofilled
-          WebkitTextFillColor: 'var(--text) !important',
-          transition: 'background-color 5000s ease-in-out 0s',
-          backgroundColor: 'transparent !important'
+          WebkitTextFillColor: 'var(--text) ',
+          backgroundColor: 'var(--card)'
         }}
       />
       {type === "password" && (

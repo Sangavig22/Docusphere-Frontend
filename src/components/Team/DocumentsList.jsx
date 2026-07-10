@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { DocumentCard, DocumentRow, normalizeDocumentType } from "../documents";
 import { DEFAULT_DOCUMENT_ACTIONS } from "../documents/DocumentActionsMenu";
 
@@ -19,22 +19,24 @@ const resolveUploader = (doc) => {
   }
 
   if (doc?.uploadedBy && typeof doc.uploadedBy === "object") {
-    const fromObject =
-      doc.uploadedBy.fullName || doc.uploadedBy.name || doc.uploadedBy.email || doc.uploadedBy.userName;
+    const fromObject = doc.uploadedBy.fullName ||doc.uploadedBy.name || doc.uploadedBy.email || doc.uploadedBy.userName;
     if (typeof fromObject === "string" && fromObject.trim()) return fromObject.trim();
   }
 
   return "-";
 };
 
+const resolveDocumentId = (doc) => String(doc?.id ?? doc?.documentId ?? doc?._id ?? "");
+
 const normalizeDoc = (doc, index) => {
   const fileName = doc?.name || doc?.fileName || `Document ${index + 1}`;
   const sizeBytes = Number(doc?.sizeBytes ?? doc?.size ?? 0);
   const updatedAt = doc?.updatedAt || doc?.updated_at || doc?.createdAt || new Date().toISOString();
+  const docId = doc?.id ?? doc?.documentId ?? doc?._id ?? `doc-${index}`;
 
   return {
     ...doc,
-    id: doc?.id ?? `doc-${index}`,
+    id: docId,
     name: fileName,
     sizeBytes,
     updatedAt,
@@ -46,6 +48,7 @@ const normalizeDoc = (doc, index) => {
 
 export default function DocumentsList({
   documents = [],
+  selectedDocumentId = "",
   viewMode = "grid",
   searchQuery = "",
   filterType = "all",
@@ -58,8 +61,8 @@ export default function DocumentsList({
   showStar = true,
   canManageAllTeamDocs = false,
 }) {
+  const [activeSelectedId, setActiveSelectedId] = useState(selectedDocumentId);
   const resolvedActions = useMemo(() => {
-    // If actions prop is provided directly, use it; otherwise resolve from actionKeys
     if (actions && Array.isArray(actions) && actions.length > 0) {
       return actions;
     }
@@ -70,6 +73,7 @@ export default function DocumentsList({
     const normalized = documents.map((doc, index) => ({
       ...normalizeDoc(doc, index),
       canManageTeamDoc: canManageAllTeamDocs || doc?.isOwner === true,
+      canShareTeamDoc: canManageAllTeamDocs || doc?.isOwner === true,
     }));
     const q = searchQuery.trim().toLowerCase();
 
@@ -79,52 +83,86 @@ export default function DocumentsList({
       const matchesQuery = !q ? true : `${d.name}`.toLowerCase().includes(q);
       return matchesType && matchesQuery;
     });
-
     out = out.slice().sort((a, b) => {
       if (sortKey === "name_desc") return b.name.localeCompare(a.name);
       if (sortKey === "size_desc") return (b.sizeBytes ?? 0) - (a.sizeBytes ?? 0);
       if (sortKey === "updated_desc") {
-        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+        return (new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
       }
       return a.name.localeCompare(b.name);
     });
 
     return out;
-  }, [documents, searchQuery, filterType, sortKey]);
+  }, [
+    documents,
+    searchQuery,
+    filterType,
+    sortKey,
+    canManageAllTeamDocs
+  ]);
+
+  useEffect(() => {
+    if (!selectedDocumentId) return;
+
+    setActiveSelectedId(selectedDocumentId);
+
+    const scrollToDocument = () => {
+      const element = document.querySelector(
+        `[data-document-id="${selectedDocumentId}"]`
+      );
+      if (element) {
+        element.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }
+    };
+
+    requestAnimationFrame(() => {
+      scrollToDocument();
+      window.setTimeout(scrollToDocument, 150);
+    });
+
+    const timer = window.setTimeout(() => {
+      setActiveSelectedId("");
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [selectedDocumentId, visibleDocs]);
+
+  const isDocSelected = (doc) =>
+    String(resolveDocumentId(doc)) === String(activeSelectedId);
 
   if (!visibleDocs.length) {
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-slate-500 text-sm">No documents uploaded yet</p>
+        <p className="text-slate-500 text-sm">
+          No documents uploaded yet
+        </p>
       </div>
     );
   }
 
   const handleAction = (key, doc) => {
-    // If parent provided a handler, use it (this covers rename/duplicate/move/download/etc.)
     if (typeof onAction === "function") {
       onAction(key, doc);
       return;
     }
-
     if (key === "trash" && onDelete) {
       onDelete(doc);
       return;
     }
-
-    // Fallback: no-op for actions not handled here
   };
-// For documents that user cannot manage, restrict certain actions to only preview and download.
-  const getActionKeysForDoc = (doc) => {
-    if (actionKeys) return actionKeys;
 
-    if (doc.canManageTeamDoc) {
+  const getActionKeysForDoc = (doc) => {
+    if (actionKeys)
+      return actionKeys;
+    if (doc.canManageTeamDoc)
       return undefined;
     }
 
     return ["preview", "download", "version_history"];
   };
-
   if (viewMode === "list") {
     return (
       <div className="flex flex-col gap-3 pb-72">
@@ -132,7 +170,10 @@ export default function DocumentsList({
           <DocumentRow
             key={doc.id}
             doc={doc}
-            onAction={(key) => handleAction(key, doc)}
+            isSelected={isDocSelected(doc)}
+            onAction={(key)=>
+              handleAction(key, doc)
+            }
             onToggleStar={onToggleStar}
             actions={resolvedActions}
             actionKeys={getActionKeysForDoc(doc)}
@@ -146,14 +187,16 @@ export default function DocumentsList({
       </div>
     );
   }
-
   return (
     <div className="grid grid-cols-1 gap-4 pb-72 sm:grid-cols-2 lg:grid-cols-3">
       {visibleDocs.map((doc) => (
         <DocumentCard
           key={doc.id}
           doc={doc}
-          onAction={(key) => handleAction(key, doc)}
+          isSelected={isDocSelected(doc)}
+          onAction={(key)=>
+            handleAction(key, doc)
+          }
           onToggleStar={onToggleStar}
           actions={resolvedActions}
           actionKeys={getActionKeysForDoc(doc)}

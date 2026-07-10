@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, Upload, Users, Star, Clock, Search, ScanText, Settings, HelpCircle, RecycleIcon, GitMerge } from "lucide-react";
+import { LayoutDashboard, FileText, Upload, Users, Star, Clock, Search, ScanText, Settings, HelpCircle, RecycleIcon, GitMerge,Download } from "lucide-react";
 
 // Dashboard menu items
 export const DASHBOARD_MENU = {
@@ -24,6 +24,7 @@ export const ADMIN_MENU = {
   primary: [
     { label: "Dashboard", icon: LayoutDashboard, to: "/admin/dashboard" },
     { label: "Team Management", icon: Users, to: "/admin/teams" },
+    { label: "Export Reports", icon: Download, to: "/admin/reports" },
     { label: "Merge Teams", icon: GitMerge, to: "/admin/merge" },
   ],
   secondary: [
