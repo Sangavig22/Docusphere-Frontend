@@ -10,8 +10,8 @@ function IconButton({ active = false, label, onClick, children }) {
       className={[
         "inline-flex h-10 w-10 items-center justify-center rounded-xl border transition-colors",
         active
-          ? "border-blue-200 bg-blue-50 text-blue-700"
-          : "border-border bg-card text-muted hover:bg-card",
+          ? "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-500/40 dark:bg-blue-500/15 dark:text-blue-300"
+          : "border-border bg-card text-muted hover:bg-surface",
       ].join(" ")}
       aria-label={label}
       onClick={onClick}
@@ -29,8 +29,8 @@ function MenuButton({ label, icon: Icon, open, onToggle, children }) {
         className={[
           "inline-flex h-10 w-10 items-center justify-center rounded-xl border transition-colors",
           open
-            ? "border-blue-200 bg-blue-50 text-blue-700"
-            : "border-border bg-card text-muted hover:bg-card",
+            ? "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-500/40 dark:bg-blue-500/15 dark:text-blue-300"
+            : "border-border bg-card text-muted hover:bg-surface",
         ].join(" ")}
         aria-label={label}
         onClick={onToggle}
@@ -50,7 +50,7 @@ function MenuItem({ active, label, onClick }) {
       type="button"
       className={[
         "flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors",
-        active ? "bg-blue-50 text-blue-700" : "text-text hover:bg-card",
+        active ? "bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300" : "text-text hover:bg-surface",
       ].join(" ")}
       onClick={onClick}
       role="menuitem"
@@ -96,7 +96,7 @@ export default function DocumentsToolbar({
           value={query}
           onChange={(e) => onQueryChange?.(e.target.value)}
           placeholder="Search..."
-          className="h-11 w-full rounded-2xl border border-border bg-card pl-9 pr-3 text-sm outline-none placeholder:text-muted focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+          className="h-11 w-full rounded-2xl border border-border bg-card pl-9 pr-3 text-sm outline-none placeholder:text-muted focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:border-blue-500 dark:focus:ring-blue-500/25"
         />
       </div>
 

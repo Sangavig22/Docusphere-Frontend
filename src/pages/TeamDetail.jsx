@@ -274,7 +274,7 @@ function TeamDetail() {
           <DocumentActionModal
             open={
               modalState.open &&
-              modalState.type !== "version_history"
+              modalState.type !== "version_history" &&
               modalState.type !== "share"
             }
             type={modalState.type}
@@ -294,6 +294,7 @@ function TeamDetail() {
             userTeamRole={normalizedCurrentUserRole}
             onClose={closeModal}
             onRestored={() => refetchDocs()}
+          />
           <ShareModal
             open={modalState.open && modalState.type === "share"}
             document={modalState.doc}

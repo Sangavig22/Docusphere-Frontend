@@ -35,22 +35,22 @@ export default function PasswordVerifyModal({
 
   return (
     <div className="fixed inset-0 z-[85] animate-in fade-in duration-200">
-      <div className="absolute inset-0 bg-slate-200/35 backdrop-blur-[1px]" onMouseDown={onClose} />
+      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] dark:bg-black/60" onMouseDown={onClose} />
       <div className="absolute inset-0 flex items-center justify-center p-4">
         <div
-          className="relative w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl transition-all duration-200"
+          className="relative w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-2xl transition-all duration-200"
           onMouseDown={(event) => event.stopPropagation()}
         >
           <div className="mb-4 flex items-start justify-between gap-3">
             <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400">
                 <Lock size={18} />
               </div>
-              <h3 className="text-[16px] font-semibold text-slate-900">Password protected</h3>
+              <h3 className="text-[16px] font-semibold text-text">Password protected</h3>
             </div>
             <button
               type="button"
-              className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100"
+              className="flex h-9 w-9 items-center justify-center rounded-xl text-muted hover:bg-surface"
               onClick={onClose}
               aria-label="Close"
               disabled={loading}
@@ -73,7 +73,7 @@ export default function PasswordVerifyModal({
           </div>
 
           <div className="space-y-4">
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-muted">
               This file is protected with a password.
               <br />
               Enter password to continue.

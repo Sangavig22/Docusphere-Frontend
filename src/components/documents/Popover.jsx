@@ -207,7 +207,7 @@ export default function Popover({
     <div
       ref={ref}
       className={[
-        "z-[9999] w-56 overscroll-contain rounded-xl border border-slate-200 bg-white p-1 shadow-xl",
+        "z-[9999] w-56 overscroll-contain rounded-xl border border-border bg-card p-1 shadow-xl",
         usePortal || scrollable ? "overflow-y-auto" : "overflow-visible",
         !usePortal && "absolute",
         className,

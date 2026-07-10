@@ -313,6 +313,11 @@ export default function useDocumentActions({ onSuccess } = {}) {
       ? [{ value: "personal", label: "Personal space" }, ...normalizedTeams]
       : normalizedTeams;
 
+    if (options.length === 0) {
+      toast.info("No move destinations available. Create or join a team first.");
+      return;
+    }
+
     setModalState({
       open: true,
       type: "select",

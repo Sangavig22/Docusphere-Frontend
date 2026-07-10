@@ -12,11 +12,11 @@ export function canRestoreVersion({ doc, userTeamRole } = {}) {
   const isTeamDocument = teamId != null && String(teamId).trim() !== "";
 
   if (!isTeamDocument) {
-    return doc?.isOwner === true;
+    return doc?.isOwner !== false;
   }
 
-  const role = String(userTeamRole || "").toUpperCase();
-  if (role === "LEADER" || role === "MANAGER") {
+  const role = String(userTeamRole || doc?.teamRole || doc?.userTeamRole || "").toUpperCase();
+  if (doc?.canManageTeamDoc === true || role === "LEADER" || role === "MANAGER") {
     return true;
   }
 

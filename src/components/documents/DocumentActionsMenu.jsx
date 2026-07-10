@@ -55,8 +55,8 @@ function Item({ icon: Icon, label, danger = false, onClick, dense = false, disab
         disabled
           ? "cursor-not-allowed text-muted"
           : danger
-            ? "text-rose-600 hover:bg-rose-50"
-            : "text-text hover:bg-card",
+            ? "text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-500/15"
+            : "text-text hover:bg-surface",
       ].join(" ")}
       onClick={onClick}
       disabled={disabled}

@@ -21,7 +21,7 @@ export default function VersionTimelineCard({
     <article
       className={[
         "min-w-0 flex-1 rounded-2xl border bg-card p-4 shadow-sm transition-shadow hover:shadow-md",
-        version.isCurrent ? "border-blue-200 ring-1 ring-blue-100" : "border-border",
+        version.isCurrent ? "border-blue-200 ring-1 ring-blue-100 dark:border-blue-500/40 dark:ring-blue-500/25" : "border-border",
       ].join(" ")}
     >
       <div className="flex flex-col gap-3">
@@ -33,7 +33,7 @@ export default function VersionTimelineCard({
                 <span className="ml-1.5 text-sm font-medium text-muted">({formatVersionLabel(version.versionNumber)})</span>
               </h4>
               {isFirst && version.isCurrent ? (
-                <span className="text-xs font-medium text-blue-600">← Current</span>
+                <span className="text-xs font-medium text-blue-600 dark:text-blue-400">← Current</span>
               ) : null}
             </div>
             <VersionStatusBadges version={version} compact />
@@ -72,7 +72,7 @@ export default function VersionTimelineCard({
               type="button"
               disabled={Boolean(actionLoading)}
               onClick={() => onDownload(version)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-white px-3.5 py-2 text-xs font-semibold text-text hover:bg-surface disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3.5 py-2 text-xs font-semibold text-text hover:bg-surface disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Download size={14} />
               {downloadBusy ? "Downloading..." : "Download Version"}
@@ -84,7 +84,7 @@ export default function VersionTimelineCard({
               type="button"
               disabled={Boolean(actionLoading)}
               onClick={() => onRestore(version)}
-              className="self-end rounded-lg border border-amber-300 bg-amber-50 px-3.5 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+              className="self-end rounded-lg border border-amber-300 bg-amber-50 px-3.5 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-300 dark:hover:bg-amber-500/25"
             >
               Restore Version
             </button>

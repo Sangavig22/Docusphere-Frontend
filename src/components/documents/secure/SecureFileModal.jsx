@@ -11,13 +11,13 @@ import {
 
 function RecoverySection({ onReset, disabled }) {
   return (
-    <div className="mt-3 border-t border-slate-100 pt-3">
-      <p className="text-xs text-slate-500">Forgot your current password?</p>
+    <div className="mt-3 border-t border-border pt-3">
+      <p className="text-xs text-muted">Forgot your current password?</p>
       <button
         type="button"
         onClick={onReset}
         disabled={disabled}
-        className="mt-1 text-xs font-medium text-slate-600 underline decoration-slate-300 underline-offset-2 hover:text-slate-800 disabled:opacity-50"
+        className="mt-1 text-xs font-medium text-muted underline decoration-border underline-offset-2 hover:text-text disabled:opacity-50"
       >
         Reset protection password
       </button>
@@ -31,7 +31,7 @@ function ForgotCurrentPasswordLink({ onClick, disabled }) {
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="text-xs text-slate-500 underline decoration-slate-300 underline-offset-2 hover:text-slate-700 disabled:opacity-50"
+      className="text-xs text-muted underline decoration-border underline-offset-2 hover:text-text disabled:opacity-50"
     >
       Forgot current password?
     </button>
@@ -200,10 +200,10 @@ export default function SecureFileModal({
 
   return (
     <div className="fixed inset-0 z-[80] animate-in fade-in duration-200">
-      <div className="absolute inset-0 bg-slate-200/35 backdrop-blur-[1px]" onMouseDown={onClose} />
+      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] dark:bg-black/60" onMouseDown={onClose} />
       <div className="absolute inset-0 flex items-center justify-center p-4">
         <div
-          className="relative w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl transition-all duration-200"
+          className="relative w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-2xl transition-all duration-200"
           onMouseDown={(event) => event.stopPropagation()}
         >
           <div className="mb-4 flex items-start justify-between gap-3">
@@ -211,11 +211,11 @@ export default function SecureFileModal({
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                 <Shield size={18} />
               </div>
-              <h3 className="text-[16px] font-semibold text-slate-900">{title}</h3>
+              <h3 className="text-[16px] font-semibold text-text">{title}</h3>
             </div>
             <button
               type="button"
-              className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100"
+              className="flex h-9 w-9 items-center justify-center rounded-xl text-muted hover:bg-surface"
               onClick={onClose}
               aria-label="Close"
               disabled={busy}
@@ -239,7 +239,7 @@ export default function SecureFileModal({
 
           {!protectedDoc ? (
             <div className="space-y-4">
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-muted">
                 Protect this file with a password required for preview and download.
               </p>
               <PasswordInput
@@ -266,7 +266,7 @@ export default function SecureFileModal({
               </button>
             </div>
           ) : !canManageProtection ? (
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-muted">
               Only the document owner can change or remove password protection.
             </p>
           ) : mode === "change" ? (
@@ -326,7 +326,7 @@ export default function SecureFileModal({
                     setShowRecovery(false);
                   }}
                   disabled={busy}
-                  className="flex-1 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                  className="flex-1 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold text-text hover:bg-surface disabled:opacity-60"
                 >
                   Cancel
                 </button>
@@ -342,7 +342,7 @@ export default function SecureFileModal({
             </div>
           ) : mode === "remove" ? (
             <div className="space-y-4">
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-muted">
                 Enter the current password to remove protection. Preview and download will no longer require a
                 password.
               </p>
@@ -359,7 +359,7 @@ export default function SecureFileModal({
                 autoFocus
                 onSubmit={handleRemoveProtection}
               />
-              <label className="flex items-start gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+              <label className="flex items-start gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text">
                 <input
                   type="checkbox"
                   className="mt-1"
@@ -391,7 +391,7 @@ export default function SecureFileModal({
                     setShowRecovery(false);
                   }}
                   disabled={busy}
-                  className="flex-1 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                  className="flex-1 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold text-text hover:bg-surface disabled:opacity-60"
                 >
                   Cancel
                 </button>
@@ -407,7 +407,7 @@ export default function SecureFileModal({
             </div>
           ) : mode === "reset_confirm" ? (
             <div className="space-y-4">
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-muted">
                 Resetting password will invalidate existing unlock sessions.
               </p>
               <div className="flex gap-2">
@@ -423,7 +423,7 @@ export default function SecureFileModal({
                     setError("");
                   }}
                   disabled={busy}
-                  className="flex-1 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                  className="flex-1 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold text-text hover:bg-surface disabled:opacity-60"
                 >
                   Cancel
                 </button>
@@ -476,7 +476,7 @@ export default function SecureFileModal({
                   type="button"
                   onClick={() => setMode("reset_confirm")}
                   disabled={busy}
-                  className="flex-1 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                  className="flex-1 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold text-text hover:bg-surface disabled:opacity-60"
                 >
                   Back
                 </button>
@@ -492,7 +492,7 @@ export default function SecureFileModal({
             </div>
           ) : (
             <div className="space-y-4">
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-muted">
                 This document is password protected. People with access still need the password to preview or
                 download content.
               </p>
@@ -510,7 +510,7 @@ export default function SecureFileModal({
                     setShowRecovery(false);
                   }}
                   disabled={busy}
-                  className="flex-1 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                  className="flex-1 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold text-text hover:bg-surface disabled:opacity-60"
                 >
                   Change password
                 </button>

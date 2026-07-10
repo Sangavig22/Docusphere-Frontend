@@ -62,8 +62,26 @@ export function usePaginatedMyDocuments(options = {}) {
         if (personalOnly) {
           docs = docs.filter(isPersonalSpaceDocument);
         }
+
+        const usesClientFilter =
+          personalOnly ||
+          (filterType && filterType !== "all" && !BACKEND_SINGLE_TYPE_FILTERS.has(filterType));
+        let nextPagination = result.pagination;
+        if (usesClientFilter && result.documents.length > 0) {
+          const keepRatio = docs.length / result.documents.length;
+          const adjustedTotal = Math.max(
+            docs.length,
+            Math.round(result.pagination.totalItems * keepRatio),
+          );
+          nextPagination = {
+            ...result.pagination,
+            totalItems: adjustedTotal,
+            totalPages: Math.max(1, Math.ceil(adjustedTotal / result.pagination.pageSize)),
+          };
+        }
+
         setDocuments(docs);
-        setPagination(result.pagination);
+        setPagination(nextPagination);
       } catch (err) {
         if (err?.name === "AbortError") return;
         setError(err instanceof Error ? err.message : "Unable to load documents.");
@@ -74,7 +92,7 @@ export function usePaginatedMyDocuments(options = {}) {
 
     run();
     return () => controller.abort();
-  }, [page, pageSize, query, filterType, sortKey, starred, recentDays, scope]);
+  }, [page, pageSize, query, filterType, sortKey, starred, recentDays, scope, personalOnly]);
 
   useEffect(() => {
     const cancel = reload();
@@ -88,7 +106,12 @@ export function usePaginatedMyDocuments(options = {}) {
       const nextStarred = !prevStarred;
 
       // Optimistic update for immediate UI response.
-      setDocuments((prev) => prev.map((doc) => (doc.id === id ? { ...doc, starred: nextStarred } : doc)));
+      setDocuments((prev) => {
+        if (starred && !nextStarred) {
+          return prev.filter((doc) => doc.id !== id);
+        }
+        return prev.map((doc) => (doc.id === id ? { ...doc, starred: nextStarred } : doc));
+      });
 
       try {
         if (nextStarred) await starDocument(id);
@@ -102,7 +125,7 @@ export function usePaginatedMyDocuments(options = {}) {
         setError(err instanceof Error ? err.message : "Unable to update star.");
       }
     },
-    [reload],
+    [reload, starred],
   );
 
   const removeDocument = useCallback((id) => {

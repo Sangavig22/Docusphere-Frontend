@@ -17,7 +17,7 @@ export default function SaveChangesModal({
 
   return (
     <div className="fixed inset-0 z-[90]">
-      <div className="absolute inset-0 bg-slate-900/40" onMouseDown={onClose} />
+      <div className="absolute inset-0 bg-slate-900/40 dark:bg-black/60" onMouseDown={onClose} />
       <div className="absolute inset-0 flex items-center justify-center p-4">
         <div
           className="w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-2xl"
@@ -35,7 +35,7 @@ export default function SaveChangesModal({
             value={summary}
             onChange={(event) => setSummary(event.target.value)}
             placeholder="Fixed formatting, added chapter 3, updated project requirements..."
-            className="mt-2 w-full resize-none rounded-xl border border-border bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+            className="mt-2 w-full resize-none rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-500/25"
             disabled={loading}
           />
 

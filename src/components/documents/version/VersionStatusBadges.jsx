@@ -1,8 +1,8 @@
 const BADGE_STYLES = {
-  latest: "bg-emerald-50 text-emerald-700 ring-emerald-100",
-  current: "bg-blue-50 text-blue-700 ring-blue-100",
-  restored: "bg-amber-50 text-amber-700 ring-amber-100",
-  protected: "bg-violet-50 text-violet-700 ring-violet-100",
+  latest: "bg-emerald-50 text-emerald-700 ring-emerald-100 dark:bg-emerald-500/15 dark:text-emerald-400 dark:ring-emerald-500/25",
+  current: "bg-blue-50 text-blue-700 ring-blue-100 dark:bg-blue-500/15 dark:text-blue-400 dark:ring-blue-500/25",
+  restored: "bg-amber-50 text-amber-700 ring-amber-100 dark:bg-amber-500/15 dark:text-amber-400 dark:ring-amber-500/25",
+  protected: "bg-violet-50 text-violet-700 ring-violet-100 dark:bg-violet-500/15 dark:text-violet-400 dark:ring-violet-500/25",
 };
 
 function Badge({ label, tone }) {

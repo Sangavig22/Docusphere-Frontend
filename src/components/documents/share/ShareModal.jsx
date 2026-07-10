@@ -160,7 +160,7 @@ export default function ShareModal({
   return (
     open ? (
       <div className="fixed inset-0 z-[80]">
-        <div className="absolute inset-0 bg-slate-200/35 backdrop-blur-[1px]" onMouseDown={onClose} />
+        <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] dark:bg-black/60" onMouseDown={onClose} />
         <div className="absolute inset-0 flex items-center justify-center p-4">
           <div
             className="relative w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-2xl"
@@ -168,8 +168,8 @@ export default function ShareModal({
           >
             <div className="mb-4 flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <h3 className="text-[16px] font-semibold text-slate-900">Share</h3>
-                <p className="mt-0.5 truncate text-sm text-slate-500" title={documentName}>
+                <h3 className="text-[16px] font-semibold text-text">Share</h3>
+                <p className="mt-0.5 truncate text-sm text-muted" title={documentName}>
                   {documentName}
                 </p>
               </div>
@@ -198,7 +198,7 @@ export default function ShareModal({
 
             <div className="space-y-4">
               {isDocumentProtected(document) ? (
-                <p className="text-xs text-slate-600">
+                <p className="text-xs text-muted">
                   Shared users will need the document password to access preview or download.
                 </p>
               ) : null}
@@ -231,10 +231,10 @@ export default function ShareModal({
                       className="inline-flex min-w-[150px] items-center justify-between rounded-lg border border-border bg-card py-2 pl-3 pr-2 text-sm text-text"
                     >
                       <span>{getPermissionLabel(invitePermission)}</span>
-                      <ChevronDown size={14} className="text-slate-500" />
+                      <ChevronDown size={14} className="text-muted" />
                     </button>
                     {invitePermissionOpen ? (
-                      <div className="absolute right-0 top-11 z-30 w-44 rounded-xl border border-slate-200 bg-white p-1 shadow-lg">
+                      <div className="absolute right-0 top-11 z-30 w-44 rounded-xl border border-border bg-card p-1 shadow-lg">
                         {INVITE_PERMISSION_OPTIONS.map((option) => (
                           <button
                             key={option.value}
@@ -243,7 +243,7 @@ export default function ShareModal({
                               setInvitePermission(option.value);
                               setInvitePermissionOpen(false);
                             }}
-                            className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-text hover:bg-card"
+                            className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-text hover:bg-surface"
                           >
                             <span>{option.label}</span>
                             {invitePermission === option.value ? <Check size={14} className="text-blue-600" /> : null}
@@ -254,7 +254,7 @@ export default function ShareModal({
                   </div>
                 </div>
                 {invitePermission === "EDIT" ? (
-                  <p className="mt-2 text-xs text-slate-500">
+                  <p className="mt-2 text-xs text-muted">
                     Edit access allows invited users to modify document content.
                   </p>
                 ) : null}
@@ -303,12 +303,12 @@ export default function ShareModal({
                       }}
                       className={[
                         "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-                        generalAccessType === "PUBLIC" ? "bg-blue-600" : "bg-slate-300",
+                        generalAccessType === "PUBLIC" ? "bg-blue-600" : "bg-slate-300 dark:bg-slate-600",
                       ].join(" ")}
                     >
                       <span
                         className={[
-                          "pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ease-out",
+                          "pointer-events-none inline-block h-5 w-5 rounded-full bg-card shadow transition-transform duration-200 ease-out",
                           generalAccessType === "PUBLIC" ? "translate-x-5" : "translate-x-0.5",
                         ].join(" ")}
                       />
@@ -331,10 +331,10 @@ export default function ShareModal({
                               className="inline-flex min-w-[150px] items-center justify-between rounded-lg border border-border bg-card py-2 pl-3 pr-2 text-sm text-text"
                           >
                             <span>{getPermissionLabel(generalPermission)}</span>
-                            <ChevronDown size={14} className="text-slate-500" />
+                            <ChevronDown size={14} className="text-muted" />
                           </button>
                           {generalPermissionOpen ? (
-                            <div className="absolute right-0 top-11 z-30 w-44 rounded-xl border border-slate-200 bg-white p-1 shadow-lg">
+                            <div className="absolute right-0 top-11 z-30 w-44 rounded-xl border border-border bg-card p-1 shadow-lg">
                               {PUBLIC_PERMISSION_OPTIONS.map((option) => (
                                 <button
                                   key={option.value}
@@ -344,7 +344,7 @@ export default function ShareModal({
                                     handleGeneralAccessUpdate("PUBLIC", option.value);
                                     setGeneralPermissionOpen(false);
                                   }}
-                                    className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-text hover:bg-card"
+                                    className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-text hover:bg-surface"
                                 >
                                   <span>{option.label}</span>
                                   {generalPermission === option.value ? <Check size={14} className="text-blue-600" /> : null}
@@ -373,7 +373,7 @@ export default function ShareModal({
                             type="button"
                             onClick={handleCopyLink}
                             disabled={loading || sending || updatingGeneralAccess}
-                            className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-text hover:bg-surface disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             Copy public link
                           </button>
@@ -390,7 +390,7 @@ export default function ShareModal({
                     sendStatus.type === "success"
                       ? "text-emerald-600"
                       : sendStatus.type === "info"
-                        ? "text-slate-600"
+                        ? "text-muted"
                         : "text-rose-600",
                   ].join(" ")}
                 >
