@@ -28,9 +28,13 @@ export default function OnlyOfficeEditor({
   versionId,
   readOnly = false,
   fetchConfig,
+  enabled = true,
+  resolveConfigError,
+  externalConfig = null,
 }) {
   const containerRef = useRef(null);
   const editorRef = useRef(null);
+  const documentKeyRef = useRef(null);
   const editorId = useMemo(
     () => `onlyoffice-editor-${documentId}-${versionId || "current"}`,
     [documentId, versionId],
@@ -82,6 +86,18 @@ export default function OnlyOfficeEditor({
   }, []);
 
   useEffect(() => {
+    if (!enabled) {
+      setLoadingConfig(false);
+      return;
+    }
+
+    if (externalConfig) {
+      setConfig(readOnly ? applyReadOnlyConfig(externalConfig) : externalConfig);
+      setLoadError(null);
+      setLoadingConfig(false);
+      return;
+    }
+
     const loadConfig = async () => {
       try {
         setLoadingConfig(true);
@@ -97,19 +113,28 @@ export default function OnlyOfficeEditor({
         setLoadError(null);
       } catch (error) {
         console.error("Failed to load ONLYOFFICE editor config:", error);
-        setLoadError("Failed to load editor configuration from server. Please make sure backend is running.");
+        const message =
+          typeof resolveConfigError === "function"
+            ? resolveConfigError(error)
+            : "Failed to load editor configuration from server. Please make sure backend is running.";
+        setLoadError(message);
       } finally {
         setLoadingConfig(false);
       }
     };
 
-    if (documentId) {
+    if (documentId && enabled) {
       loadConfig();
     }
-  }, [documentId, versionId, readOnly, fetchConfig]);
+  }, [documentId, versionId, readOnly, fetchConfig, enabled, resolveConfigError, externalConfig]);
 
   useEffect(() => {
     if (!scriptLoaded || !config || !window.DocsAPI) return;
+
+    const nextKey = config?.document?.key ?? null;
+    if (editorRef.current && documentKeyRef.current === nextKey) {
+      return;
+    }
 
     if (editorRef.current) {
       try {
@@ -122,6 +147,7 @@ export default function OnlyOfficeEditor({
 
     try {
       editorRef.current = new window.DocsAPI.DocEditor(editorId, config);
+      documentKeyRef.current = nextKey;
     } catch (error) {
       console.error("Failed to create DocEditor instance", error);
       setTimeout(() => {
@@ -129,6 +155,10 @@ export default function OnlyOfficeEditor({
       }, 0);
     }
   }, [scriptLoaded, config, editorId]);
+
+  if (!enabled) {
+    return null;
+  }
 
   if (loadError) {
     return (

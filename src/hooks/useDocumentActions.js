@@ -166,10 +166,18 @@ export default function useDocumentActions({ onSuccess } = {}) {
       return;
     }
 
-    await renameDocument(docId, name);
-    toast.success("Document renamed successfully.");
-    setModalState(EMPTY_MODAL);
-    await onSuccess?.("rename", doc);
+    try {
+      await renameDocument(docId, name);
+      toast.success("Document renamed successfully.");
+      setModalState(EMPTY_MODAL);
+      await onSuccess?.("rename", doc);
+    } catch (error) {
+      if (error?.status === 409) {
+        toast.error("A document with this name already exists.");
+        return;
+      }
+      throw error;
+    }
   }
 
   async function handleMove(doc, selectedDestination) {

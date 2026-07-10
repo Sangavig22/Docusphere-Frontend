@@ -1,12 +1,18 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { MessageSquare, Send, User } from "lucide-react";
+import { MessageSquare, Send } from "lucide-react";
 import { commentService } from "../../services/commentService";
+import {
+  addSharedComment,
+  getSharedComments,
+} from "../../services/documentShareService";
 import authService from "../../services/authService";
+import { getShareCommentErrorMessage } from "../../utils/shareAccessErrors";
 
-export default function CommentSection({ documentId }) {
+export default function CommentSection({ documentId, hideHeader = false, shareToken = "" }) {
   const [comments, setComments] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [actionError, setActionError] = useState("");
   const scrollRef = useRef(null);
 
   const currentUserId = authService.getUserId();
@@ -14,20 +20,24 @@ export default function CommentSection({ documentId }) {
   const loadComments = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await commentService.getComments(documentId);
+      setActionError("");
+      const data = shareToken
+        ? await getSharedComments(shareToken, documentId)
+        : await commentService.getComments(documentId);
       setComments(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Failed to load comments:", error);
+      setActionError(getShareCommentErrorMessage(error));
     } finally {
       setLoading(false);
     }
-  }, [documentId]);
+  }, [documentId, shareToken]);
 
   useEffect(() => {
-    if (documentId) {
+    if (documentId || shareToken) {
       loadComments();
     }
-  }, [documentId, loadComments]);
+  }, [documentId, shareToken, loadComments]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -39,18 +49,20 @@ export default function CommentSection({ documentId }) {
     e.preventDefault();
     if (!newMessage.trim()) return;
 
+    const message = newMessage.trim();
     try {
       setNewMessage("");
-      
-      const saved = await commentService.addComment(
-        documentId,
-        currentUserId,
-        newMessage
-      );
-      
+      setActionError("");
+
+      const saved = shareToken
+        ? await addSharedComment(shareToken, documentId, message)
+        : await commentService.addComment(documentId, currentUserId, message);
+
       setComments((prev) => [...prev, saved]);
     } catch (error) {
       console.error("Failed to post comment:", error);
+      setNewMessage(message);
+      setActionError(getShareCommentErrorMessage(error));
     }
   };
 
@@ -61,14 +73,20 @@ export default function CommentSection({ documentId }) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-xl shadow-sm">
-      <div className="p-4 border-b flex items-center gap-2">
-        <MessageSquare className="h-5 w-5 text-blue-600" />
-        <h3 className="font-semibold text-gray-800">Comments</h3>
-        <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
-          {comments.length}
-        </span>
-      </div>
+    <div className="flex h-full flex-col rounded-xl bg-white shadow-sm">
+      {!hideHeader ? (
+        <div className="flex items-center gap-2 border-b p-4">
+          <MessageSquare className="h-5 w-5 text-blue-600" />
+          <h3 className="font-semibold text-gray-800">Comments</h3>
+          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
+            {comments.length}
+          </span>
+        </div>
+      ) : null}
+
+      {actionError ? (
+        <div className="border-b bg-rose-50 px-4 py-2 text-sm text-rose-700">{actionError}</div>
+      ) : null}
 
       <div 
         ref={scrollRef}
