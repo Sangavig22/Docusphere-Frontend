@@ -3,7 +3,7 @@ export default function RestoreVersionDialog({ version, loading, onCancel, onCon
 
   return (
     <div className="fixed inset-0 z-[95]">
-      <div className="absolute inset-0 bg-slate-900/40" onMouseDown={onCancel} />
+      <div className="absolute inset-0 bg-slate-900/40 dark:bg-black/60" onMouseDown={onCancel} />
       <div className="absolute inset-0 flex items-center justify-center p-4">
         <div
           className="w-full max-w-sm rounded-2xl border border-border bg-card p-5 shadow-xl"

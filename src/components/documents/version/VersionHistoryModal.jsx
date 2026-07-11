@@ -213,7 +213,7 @@ export default function VersionHistoryModal({
   return (
     <>
       <div className="fixed inset-0 z-[80]">
-        <div className="absolute inset-0 bg-slate-200/35 backdrop-blur-[1px]" onMouseDown={onClose} />
+        <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] dark:bg-black/60" onMouseDown={onClose} />
         <div className="absolute inset-0 flex items-end justify-center p-0 sm:items-center sm:p-4">
           <div
             className="relative flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-t-2xl border border-border bg-card shadow-2xl sm:rounded-2xl"
@@ -253,16 +253,16 @@ export default function VersionHistoryModal({
               ) : null}
 
               {!loading && error ? (
-                <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+                <div className="rounded-xl border border-border bg-surface p-4 text-sm text-rose-700 dark:text-rose-400">
                   <div className="flex items-start gap-2">
                     <AlertCircle size={18} className="mt-0.5 shrink-0" />
                     <div className="min-w-0">
-                      <p className="font-semibold">Unable to load versions</p>
-                      <p className="mt-1">{error}</p>
+                      <p className="font-semibold text-text">Unable to load versions</p>
+                      <p className="mt-1 text-muted">{error}</p>
                       <button
                         type="button"
                         onClick={() => loadVersions(page)}
-                        className="mt-3 rounded-lg border border-rose-300 px-3 py-1.5 text-sm font-medium text-rose-700 hover:bg-rose-100"
+                        className="mt-3 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-text hover:bg-surface"
                       >
                         Retry
                       </button>
@@ -293,8 +293,10 @@ export default function VersionHistoryModal({
                         <div className="hidden shrink-0 flex-col items-center md:flex md:w-8">
                           <div
                             className={[
-                              "relative z-10 mt-6 h-3.5 w-3.5 rounded-full border-2 bg-white",
-                              version.isCurrent ? "border-blue-600 bg-blue-50" : "border-slate-300",
+                              "relative z-10 mt-6 h-3.5 w-3.5 rounded-full border-2 bg-card",
+                              version.isCurrent
+                                ? "border-blue-600 bg-blue-50 dark:border-blue-400 dark:bg-blue-500/20"
+                                : "border-border",
                             ].join(" ")}
                           />
                           <span className="mt-2 text-[10px] font-semibold uppercase tracking-wide text-muted">

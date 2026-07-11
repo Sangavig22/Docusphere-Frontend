@@ -87,6 +87,13 @@ export default function StarredPage() {
         />
       </div>
 
+      {loading ? (
+        <div className="rounded-2xl border border-border bg-card p-4 text-sm text-muted shadow-sm">
+          Loading documents...
+        </div>
+      ) : null}
+
+      <div className={loading ? "pointer-events-none opacity-60" : ""}>
       {viewMode === "grid" ? (
         <div className="grid grid-cols-1 gap-4 pb-72 sm:grid-cols-2 lg:grid-cols-3">
           {visibleDocs.map((d) => (
@@ -123,6 +130,8 @@ export default function StarredPage() {
         </div>
       )}
 
+      </div>
+
       <div className="flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3 text-sm text-muted shadow-sm">
         <span>
           Page {pagination.page} of {pagination.totalPages} (showing {visibleDocs.length} on this page, {pagination.totalItems} total)
@@ -146,12 +155,6 @@ export default function StarredPage() {
           </button>
         </div>
       </div>
-
-      {loading ? (
-        <div className="rounded-2xl border border-border bg-card p-4 text-sm text-muted shadow-sm">
-          Loading documents...
-        </div>
-      ) : null}
 
       {error ? (
         <div className="rounded-2xl border border-border bg-card p-4 text-sm text-muted shadow-sm">
@@ -226,6 +229,7 @@ export default function StarredPage() {
       <VersionHistoryModal
         open={modalState.open && modalState.type === "version_history"}
         document={modalState.doc}
+        userTeamRole={modalState.doc?.teamRole || ""}
         onClose={closeModal}
         onRestored={() => reload()}
       />

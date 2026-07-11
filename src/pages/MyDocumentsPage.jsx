@@ -85,6 +85,13 @@ export default function MyDocumentsPage() {
         />
       </div>
 
+      {loading ? (
+        <div className="rounded-2xl border border-border bg-card p-4 text-sm text-muted shadow-sm">
+          Loading documents...
+        </div>
+      ) : null}
+
+      <div className={loading ? "pointer-events-none opacity-60" : ""}>
       {viewMode === "grid" ? (
         <div className="grid grid-cols-1 gap-4 pb-72 sm:grid-cols-2 lg:grid-cols-3">
           {visibleDocs.map((d) => (
@@ -121,6 +128,8 @@ export default function MyDocumentsPage() {
         </div>
       )}
 
+      </div>
+
       <div className="flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3 text-sm text-muted shadow-sm">
         <span>
           Page {pagination.page} of {pagination.totalPages} (showing {visibleDocs.length} on this page, {pagination.totalItems} total)
@@ -130,7 +139,7 @@ export default function MyDocumentsPage() {
             type="button"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={loading || page <= 1}
-            className="rounded-lg border border-border px-3 py-1.5 text-muted disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg border border-border px-3 py-1.5 text-text disabled:cursor-not-allowed disabled:opacity-50"
           >
             Previous
           </button>
@@ -138,26 +147,20 @@ export default function MyDocumentsPage() {
             type="button"
             onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
             disabled={loading || page >= pagination.totalPages}
-            className="rounded-lg border border-border px-3 py-1.5 text-muted disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg border border-border px-3 py-1.5 text-text disabled:cursor-not-allowed disabled:opacity-50"
           >
             Next
           </button>
         </div>
       </div>
 
-      {loading ? (
-        <div className="rounded-2xl border border-border bg-card p-4 text-sm text-muted shadow-sm">
-          Loading documents...
-        </div>
-      ) : null}
-
       {error ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700 shadow-sm">
+        <div className="rounded-2xl border border-border bg-card p-4 text-sm text-muted shadow-sm">
           <div>{error}</div>
           <button
             type="button"
             onClick={reload}
-            className="mt-2 rounded-lg border border-rose-300 px-3 py-1.5 text-rose-700"
+            className="mt-2 rounded-lg border border-border bg-surface px-3 py-1.5 text-text"
           >
             Retry
           </button>
@@ -225,6 +228,7 @@ export default function MyDocumentsPage() {
       <VersionHistoryModal
         open={modalState.open && modalState.type === "version_history"}
         document={modalState.doc}
+        userTeamRole={modalState.doc?.teamRole || ""}
         onClose={closeModal}
         onRestored={() => reload()}
       />

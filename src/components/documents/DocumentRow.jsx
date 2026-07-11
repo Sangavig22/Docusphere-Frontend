@@ -13,17 +13,17 @@ import DocumentProtectedBadge from "./secure/DocumentProtectedBadge";
 function typeStyles(type) {
   switch (type) {
     case "pdf":
-      return { bg: "bg-rose-50", fg: "text-rose-600", ring: "ring-rose-100" };
+      return { bg: "bg-rose-50 dark:bg-rose-500/15", fg: "text-rose-600 dark:text-rose-400", ring: "ring-rose-100 dark:ring-rose-500/25" };
     case "word":
-      return { bg: "bg-blue-50", fg: "text-blue-600", ring: "ring-blue-100" };
+      return { bg: "bg-blue-50 dark:bg-blue-500/15", fg: "text-blue-600 dark:text-blue-400", ring: "ring-blue-100 dark:ring-blue-500/25" };
     case "sheet":
-      return { bg: "bg-emerald-50", fg: "text-emerald-600", ring: "ring-emerald-100" };
+      return { bg: "bg-emerald-50 dark:bg-emerald-500/15", fg: "text-emerald-600 dark:text-emerald-400", ring: "ring-emerald-100 dark:ring-emerald-500/25" };
     case "powerpoint":
-      return { bg: "bg-orange-50", fg: "text-orange-600", ring: "ring-orange-100" };
+      return { bg: "bg-orange-50 dark:bg-orange-500/15", fg: "text-orange-600 dark:text-orange-400", ring: "ring-orange-100 dark:ring-orange-500/25" };
     case "image":
-      return { bg: "bg-violet-50", fg: "text-violet-600", ring: "ring-violet-100" };
+      return { bg: "bg-violet-50 dark:bg-violet-500/15", fg: "text-violet-600 dark:text-violet-400", ring: "ring-violet-100 dark:ring-violet-500/25" };
     default:
-      return { bg: "bg-surface", fg: "text-muted", ring: "ring-slate-100" };
+      return { bg: "bg-surface", fg: "text-muted", ring: "ring-border" };
   }
 }
 
@@ -58,7 +58,7 @@ export default function DocumentRow({
   return (
     <div
       className={[
-        "relative flex items-center gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-border dark:bg-card",
+        "relative flex items-center gap-4 rounded-2xl border border-border bg-card px-4 py-3 shadow-sm",
         canOpenPreview ? "cursor-pointer" : "",
         isSelected
           ? "ring-2 ring-blue-500 border-blue-400 bg-blue-50/60 dark:ring-blue-400 dark:border-blue-500 dark:bg-blue-500/10"
@@ -95,7 +95,7 @@ export default function DocumentRow({
           <DocumentProtectedBadge doc={doc} />
         </div>
         <div className="min-w-0">
-          <div className="truncate text-sm font-semibold text-slate-900" title={doc.name}>
+          <div className="truncate text-sm font-semibold text-text" title={doc.name}>
             {doc.name}
           </div>
           <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
@@ -114,7 +114,7 @@ export default function DocumentRow({
         </div>
       </div>
 
-      <div className="hidden w-28 text-right text-sm font-medium text-slate-600 sm:block">
+      <div className="hidden w-28 text-right text-sm font-medium text-muted sm:block">
         {formatBytes(doc.sizeBytes)}
       </div>
 
