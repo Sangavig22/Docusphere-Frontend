@@ -7,6 +7,9 @@ export default defineConfig(({ mode }) => {
   const proxyTarget = env.VITE_API_PROXY_TARGET?.trim() || env.VITE_API_BASE_URL?.trim() || 'http://localhost:8080'
 
   return {
+    define: {
+      global: 'globalThis',
+    },
     plugins: [react(), tailwindcss()],
     server: {
       proxy: {

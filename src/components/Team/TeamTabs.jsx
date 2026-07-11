@@ -5,6 +5,7 @@ export default function TeamTabs({
   setActiveTab,
   chatUnreadCount = 0,
   chatMentionCount = 0,
+  isAdmin = false,
 }) {
   const tabStyle = (tab) =>
     `flex items-center gap-2 py-4 text-sm font-medium border-b-2 transition ${
@@ -26,20 +27,22 @@ export default function TeamTabs({
           Members
         </button>
 
-        <button type="button" onClick={() => setActiveTab("Chat")} className={tabStyle("Chat")}>
-          <MessageSquare size={16} />
-          Chat
-          {chatMentionCount > 0 && (
-            <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">
-              @
-            </span>
-          )}
-          {chatUnreadCount > 0 && (
-            <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-blue-600 px-1.5 py-0.5 text-[10px] font-semibold text-white">
-              {chatUnreadCount}
-            </span>
-          )}
-        </button>
+        {!isAdmin && (
+          <button type="button" onClick={() => setActiveTab("Chat")} className={tabStyle("Chat")}>
+            <MessageSquare size={16} />
+            Chat
+            {chatMentionCount > 0 && (
+              <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                @
+              </span>
+            )}
+            {chatUnreadCount > 0 && (
+              <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-blue-600 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                {chatUnreadCount}
+              </span>
+            )}
+          </button>
+        )}
       </div>
     </div>
   );
