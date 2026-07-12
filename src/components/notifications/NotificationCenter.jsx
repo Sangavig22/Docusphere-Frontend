@@ -19,6 +19,7 @@ const NotificationCenter = ({
   onMarkAllRead,
   context = 'user',
 }) => {
+  const isEnabled = localStorage.getItem("docusphere_notifications_enabled") !== "false";
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState('all'); // 'all' or 'unread'
   const dropdownRef = useRef(null);
@@ -142,7 +143,26 @@ const NotificationCenter = ({
 
           {/* Notifications List */}
           <div className="notification-dropdown-content" ref={contentRef}>
-            {filteredNotifications.length === 0 ? (
+            {!isEnabled ? (
+              <div className="notification-empty-state">
+                <p style={{ color: "var(--muted)", textAlign: "center", padding: "24px 16px", fontSize: 14 }}>
+                  Notifications are disabled. Enable them in{" "}
+                  <Link
+                    to="/setting"
+                    onClick={() => setIsOpen(false)}
+                    style={{
+                      color: "var(--primary, #6366F1)",
+                      textDecoration: "underline",
+                      fontWeight: 500,
+                      cursor: "pointer"
+                    }}
+                  >
+                    Settings
+                  </Link>{" "}
+                  to receive updates.
+                </p>
+              </div>
+            ) : filteredNotifications.length === 0 ? (
               <div className="notification-empty-state">
                 <p>{filter === 'unread' ? 'No unread notifications' : 'No notifications yet'}</p>
               </div>

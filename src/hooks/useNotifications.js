@@ -9,6 +9,7 @@ import {
   getNotificationQueue,
 } from '../services/notificationsService';
 import authService from '../services/authService';
+import { toast } from 'react-toastify';
 
 /**
  * Determine notification context based on current URL pathname
@@ -43,6 +44,19 @@ export const useNotifications = (explicitContext) => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(
+    localStorage.getItem("docusphere_notifications_enabled") !== "false"
+  );
+
+  useEffect(() => {
+    const handleToggle = () => {
+      setNotificationsEnabled(localStorage.getItem("docusphere_notifications_enabled") !== "false");
+    };
+    window.addEventListener("docusphere-notifications-toggle", handleToggle);
+    return () => {
+      window.removeEventListener("docusphere-notifications-toggle", handleToggle);
+    };
+  }, []);
 
   // Resolve context: explicit prop wins, then URL-based detection
   const context = explicitContext || getContextFromPathname();
@@ -83,17 +97,30 @@ export const useNotifications = (explicitContext) => {
               const wsNotification = JSON.parse(message.body);
               console.log(`New ${context} notification received via WS:`, wsNotification);
 
-              const notification = {
-                ...wsNotification,
-                read: !wsNotification.unread,
-                timestamp: wsNotification.createdAt,
-              };
-
-              setNotifications((prev) => {
-                if (prev.some((n) => n.id === notification.id)) return prev;
-                return [notification, ...prev];
+              // Always show Toastify alert on incoming WebSocket notifications
+              toast.info(`${wsNotification.title || 'New Notification'}: ${wsNotification.message || ''}`, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
               });
-              setUnreadCount((prev) => prev + 1);
+
+              const isEnabled = localStorage.getItem("docusphere_notifications_enabled") !== "false";
+              if (isEnabled) {
+                const notification = {
+                  ...wsNotification,
+                  read: !wsNotification.unread,
+                  timestamp: wsNotification.createdAt,
+                };
+
+                setNotifications((prev) => {
+                  if (prev.some((n) => n.id === notification.id)) return prev;
+                  return [notification, ...prev];
+                });
+                setUnreadCount((prev) => prev + 1);
+              }
             } catch (err) {
               console.error('Error parsing WS message:', err);
             }
@@ -231,18 +258,29 @@ export const useNotifications = (explicitContext) => {
     }
 
     initSocket();
-    loadNotifications(1);
 
-    // Poll every 30 s so notifications appear even when WebSocket push is missed
-    const pollInterval = setInterval(() => {
+    let pollInterval;
+    if (notificationsEnabled) {
       loadNotifications(1);
-    }, 30000);
 
-    const handleNotificationsUpdated = () => loadNotifications(1);
+      // Poll every 30 s so notifications appear even when WebSocket push is missed
+      pollInterval = setInterval(() => {
+        loadNotifications(1);
+      }, 30000);
+    }
+
+    const handleNotificationsUpdated = () => {
+      const isEnabled = localStorage.getItem("docusphere_notifications_enabled") !== "false";
+      if (isEnabled) {
+        loadNotifications(1);
+      }
+    };
     window.addEventListener('notificationsUpdated', handleNotificationsUpdated);
 
     return () => {
-      clearInterval(pollInterval);
+      if (pollInterval) {
+        clearInterval(pollInterval);
+      }
       window.removeEventListener('notificationsUpdated', handleNotificationsUpdated);
       if (subscriptionRef.current) {
         subscriptionRef.current.unsubscribe();
@@ -253,7 +291,7 @@ export const useNotifications = (explicitContext) => {
         socketRef.current = null;
       }
     };
-  }, [initSocket, loadNotifications]);
+  }, [initSocket, loadNotifications, notificationsEnabled]);
 
   return {
     notifications,

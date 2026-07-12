@@ -9,6 +9,8 @@ export const useNotificationSound = () => {
    * Play a clean, premium dual-chime notification sound
    */
   const playSound = () => {
+    const isEnabled = localStorage.getItem("docusphere_notifications_enabled") !== "false";
+    if (!isEnabled) return;
     try {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       if (!AudioContext) return;
