@@ -176,6 +176,14 @@ export const teamsApi = {
 
   /** GET /api/admin/users */
   getAdminUsers: () => request('/admin/users'),
+
+  /** POST /api/teams/invitations/:invitationId/accept */
+  acceptInvitation: (invitationId) =>
+    request(`/teams/invitations/${invitationId}/accept`, { method: 'POST' }),
+
+  /** POST /api/teams/invitations/:invitationId/decline */
+  declineInvitation: (invitationId) =>
+    request(`/teams/invitations/${invitationId}/decline`, { method: 'POST' }),
 };
 
 

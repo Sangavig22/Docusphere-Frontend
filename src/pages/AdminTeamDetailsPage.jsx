@@ -123,7 +123,7 @@ function AdminTeamDetail() {
         canAddMembers={activeTab === "Members"}
       />
 
-      <TeamTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+      <TeamTabs activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={true} />
 
       {activeTab === "Documents" && (
         <div className="space-y-4">

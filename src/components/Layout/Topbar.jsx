@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Bell, LogOut, Shield, Sun, Moon } from "lucide-react";
+import { LogOut, Shield, Sun, Moon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import authService from "../../services/authService";
 import { LAYOUT_COLORS } from "../../config/layoutConfig";
@@ -7,6 +7,7 @@ import { TOPBAR_CONFIG } from "../../config/topbarConfig";
 import { AUTH_CONFIG } from "../../config/authConfig";
 import { useUser } from "../../context/UserContext";
 import { useTheme } from "../../context/ThemeContext";
+import NotificationsBell from "../notifications/NotificationsBell";
 
 function Topbar({
   user: propUser,
@@ -140,13 +141,8 @@ function Topbar({
         >
           {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
         </button>
-        {/* Notification Icon */}
-        <button className="relative p-2 rounded-full hover:bg-gray-100">
-          <Bell size={20} />
-          {notificationCount > 0 && (
-            <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
-          )}
-        </button>
+        {/* Notification Bell */}
+        <NotificationsBell context={isAdmin ? 'admin' : 'user'} />
 
         {/* User Avatar with Dropdown */}
         <div className="relative" ref={menuRef}>

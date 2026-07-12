@@ -28,7 +28,7 @@ import DocumentPreviewPage from "../pages/DocumentPreviewPage";
 import DocumentEditorPage from "../pages/DocumentEditorPage";
 import VersionPreviewPage from "../pages/VersionPreviewPage";
 import AdminGlobalSearch from "../pages/AdminGlobalSearch.jsx";
-
+import NotificationsPage from "../pages/NotificationsPage.jsx";
 
 
 function withLayout(element, pageTitle, pageSubtitle, type = "dashboard") {
@@ -82,6 +82,12 @@ export const routes = [
     path: "/share/:token",
     element: <SharedDocumentPage />,
     protected: false,
+  },
+
+  {
+    path: '/notifications',
+    element: <NotificationsPage />,
+    protected: true,
   },
 
   {

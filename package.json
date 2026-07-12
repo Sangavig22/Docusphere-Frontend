@@ -22,6 +22,7 @@
     "react-toastify": "^11.0.5",
     "recharts": "^3.8.1",
     "sockjs-client": "^1.6.1",
+    "stompjs": "^2.3.3",
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
