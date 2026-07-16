@@ -52,6 +52,9 @@ function TeamDetail() {
   const [selectedDocumentId, setSelectedDocumentId] = useState("");
   const [memberStatuses, setMemberStatuses] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  const [memberQuery, setMemberQuery] = useState("");
+  const [memberRoleFilter, setMemberRoleFilter] = useState("all");
+  const [memberStatusFilter, setMemberStatusFilter] = useState("all");
   
   const [toolbar, setToolbar] = useState({
     query: "",
@@ -81,6 +84,32 @@ function TeamDetail() {
       };
     });
   }, [members, memberStatuses]);
+
+  const visibleMembers = useMemo(() => {
+    const normalizedQuery = memberQuery.trim().toLowerCase();
+
+    return membersWithStatuses.filter((member) => {
+      const memberName = String(member.fullName ?? member.userFullName ?? member.name ?? "").toLowerCase();
+      const memberEmail = String(member.email ?? member.userEmail ?? "").toLowerCase();
+      const memberRole = String(member.role || "").toUpperCase();
+      const memberStatus = String(member.status || (member.active === false ? "INACTIVE" : "ACTIVE")).toUpperCase();
+
+      if (normalizedQuery) {
+        const matchesQuery = memberName.includes(normalizedQuery) || memberEmail.includes(normalizedQuery);
+        if (!matchesQuery) return false;
+      }
+
+      if (memberRoleFilter !== "all" && memberRole !== memberRoleFilter) {
+        return false;
+      }
+
+      if (memberStatusFilter !== "all" && memberStatus !== memberStatusFilter.toUpperCase()) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [membersWithStatuses, memberQuery, memberRoleFilter, memberStatusFilter]);
 
   const updateToolbar = (key, value) => {
     setToolbar((prev) => ({ ...prev, [key]: value }));
@@ -212,7 +241,7 @@ function TeamDetail() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
       <button 
         onClick={() => navigate("/team")} 
         className="group relative inline-flex items-center gap-2 overflow-hidden rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-text shadow-sm transition-all duration-300 hover:border-blue-200 hover:text-blue-700 hover:shadow-md active:scale-95 dark:hover:border-blue-500/40 dark:hover:text-blue-300"
@@ -296,15 +325,61 @@ function TeamDetail() {
       )}
 
       {activeTab === "Members" && (
-        <MembersTable
-            members={membersWithStatuses}
-          onDelete={handleMemberDelete}
-          useActionMenu={true}
-          onToggleChatBlock={handleToggleChatBlock}
-          currentUserRole={currentUserRole}
-          isAdmin={false}
-          currentUserId={currentUserId}
-        />
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+              <div className="w-full lg:max-w-md">
+                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">Search members</label>
+                <input
+                  type="text"
+                  value={memberQuery}
+                  onChange={(e) => setMemberQuery(e.target.value)}
+                  placeholder="Search by name or email"
+                  className="h-11 w-full rounded-2xl border border-border bg-card px-4 text-sm outline-none placeholder:text-muted focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
+
+              <div className="grid w-full gap-3 sm:grid-cols-2 lg:max-w-2xl">
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">Role</label>
+                  <select
+                    value={memberRoleFilter}
+                    onChange={(e) => setMemberRoleFilter(e.target.value)}
+                    className="h-11 w-full rounded-2xl border border-border bg-card px-4 text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+                  >
+                    <option value="all">All roles</option>
+                    <option value="LEADER">Leader</option>
+                    <option value="MANAGER">Manager</option>
+                    <option value="MEMBER">Member</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">Status</label>
+                  <select
+                    value={memberStatusFilter}
+                    onChange={(e) => setMemberStatusFilter(e.target.value)}
+                    className="h-11 w-full rounded-2xl border border-border bg-card px-4 text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+                  >
+                    <option value="all">All statuses</option>
+                    <option value="ACTIVE">Active</option>
+                    <option value="INACTIVE">Inactive</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <MembersTable
+            members={visibleMembers}
+            onDelete={handleMemberDelete}
+            useActionMenu={true}
+            onToggleChatBlock={handleToggleChatBlock}
+            currentUserRole={currentUserRole}
+            isAdmin={false}
+            currentUserId={currentUserId}
+          />
+        </div>
       )}
 
       <div className={activeTab === "Chat" ? "block" : "hidden"}>

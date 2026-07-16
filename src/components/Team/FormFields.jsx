@@ -1,4 +1,4 @@
-import React from "react";
+import { useId, useMemo } from "react";
 
 //Name Input
 export function NameInput({ value, onChange, placeholder = "Enter name" }) {
@@ -14,15 +14,40 @@ export function NameInput({ value, onChange, placeholder = "Enter name" }) {
 }
 
 //Email Input
-export function EmailInput({ value, onChange, placeholder = "Enter email" }) {
+export function EmailInput({ value, onChange, placeholder = "Enter email", suggestions = [] }) {
+  const listId = useId();
+  const normalizedSuggestions = useMemo(() => {
+    const items = Array.isArray(suggestions) ? suggestions : [];
+    return Array.from(
+      new Set(
+        items
+          .map((item) => {
+            if (typeof item === "string") return item.trim();
+            return String(item?.email || item?.userEmail || item?.mail || "").trim();
+          })
+          .filter(Boolean),
+      ),
+    );
+  }, [suggestions]);
+
   return (
-    <input
-      type="email"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-    />
+    <>
+      <input
+        type="email"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        list={normalizedSuggestions.length ? listId : undefined}
+        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+      />
+      {normalizedSuggestions.length ? (
+        <datalist id={listId}>
+          {normalizedSuggestions.map((email) => (
+            <option key={email} value={email} />
+          ))}
+        </datalist>
+      ) : null}
+    </>
   );
 }
 

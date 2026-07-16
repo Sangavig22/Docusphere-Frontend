@@ -52,36 +52,39 @@ function Dashboard() {
     [toggleStarStarredBase, reloadRecent],
   );
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-red-50 p-6 rounded-2xl border border-red-200">
-        <p className="text-red-600">Error loading dashboard: {error}</p>
-      </div>
-    );
-  }
-
   return (
     <div className="min-w-0 w-full space-y-6 overflow-x-hidden">
+      {error ? (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          Error loading dashboard: {error}
+        </div>
+      ) : null}
+
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {DASHBOARD_CONFIG.user.statCards.map((card) => (
-          <StatCard
-            key={card.title}
-            title={card.title}
-            value={String(counts[card.countKey] ?? 0)}
-            subtitle={card.subtitle}
-            icon={card.icon}
-            variant="dashboard"
-          />
-        ))}
+        {isLoading
+          ? DASHBOARD_CONFIG.user.statCards.map((card) => (
+              <div
+                key={card.title}
+                className="rounded-2xl border border-border bg-card p-5 shadow-sm"
+              >
+                <div className="animate-pulse space-y-3">
+                  <div className="h-3 w-20 rounded-full bg-slate-200" />
+                  <div className="h-8 w-16 rounded-full bg-slate-200" />
+                  <div className="h-3 w-28 rounded-full bg-slate-200" />
+                </div>
+              </div>
+            ))
+          : DASHBOARD_CONFIG.user.statCards.map((card) => (
+              <StatCard
+                key={card.title}
+                title={card.title}
+                value={String(counts[card.countKey] ?? 0)}
+                subtitle={card.subtitle}
+                icon={card.icon}
+                variant="dashboard"
+              />
+            ))}
       </div>
 
       {/* Recent & Starred Preview */}

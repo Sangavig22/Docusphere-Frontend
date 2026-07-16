@@ -1,46 +1,14 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { toast } from "react-toastify";
-
-// Internal Form Components
-const EmailInput = ({ value, onChange, placeholder = "Enter email" }) => (
-  <input
-    type="email"
-    value={value}
-    onChange={(e) => onChange(e.target.value)}
-    placeholder={placeholder}
-    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-  />
-);
-
-const RoleSelector = ({ role, setRole }) => {
-  const roleOptions = [
-    { name: "Member", value: "MEMBER", description: "Can upload and edit own documents" },
-    { name: "Manager", value: "MANAGER", description: "Can upload, edit, and view all documents" },
-  ];
-
-  const selected = roleOptions.find((r) => r.value === role);
-
-  return (
-    <div>
-      <select
-        value={role}
-        onChange={(e) => setRole(e.target.value)}
-        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-      >
-        {roleOptions.map((r) => (
-          <option key={r.value} value={r.value}>{r.name}</option>
-        ))}
-      </select>
-      <p className="text-xs text-slate-500 mt-1">{selected?.description}</p>
-    </div>
-  );
-};
+import { EmailInput, RoleSelector } from "./FormFields";
+import { useTeamEmailSuggestions } from "../../hooks/useTeamEmailSuggestions";
 
 function AddMemberModal({ isOpen, onClose, onAddMember, existingMembers = [] }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("MEMBER");
+  const emailSuggestions = useTeamEmailSuggestions();
 
   const handleSubmit = () => {
     const trimmedName = name.trim();
@@ -101,7 +69,7 @@ function AddMemberModal({ isOpen, onClose, onAddMember, existingMembers = [] }) 
         <div className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-slate-700">Email Address</label>
-            <EmailInput value={email} onChange={setEmail} placeholder="e.g. john@example.com" />
+            <EmailInput value={email} onChange={setEmail} placeholder="e.g. john@example.com" suggestions={emailSuggestions} />
           </div>
 
           <div className="space-y-1.5">
