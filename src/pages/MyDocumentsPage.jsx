@@ -2,12 +2,13 @@ import { useMemo, useState } from "react";
 import { Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { DocumentCard, DocumentRow, DocumentsToolbar } from "../components/documents";
-import { DEFAULT_DOCUMENT_ACTIONS } from "../components/documents/DocumentActionsMenu";
+import { DEFAULT_DOCUMENT_ACTIONS, SHARED_VIEWER_ACTION_KEYS } from "../components/documents/DocumentActionsMenu";
 import DocumentActionModal from "../components/documents/DocumentActionModal";
 import ShareModal from "../components/documents/share/ShareModal";
 import SecureFileModal from "../components/documents/secure/SecureFileModal";
 import ProtectedMoveBlockedModal from "../components/documents/secure/ProtectedMoveBlockedModal";
 import PasswordVerifyModal from "../components/documents/secure/PasswordVerifyModal";
+import VersionHistoryModal from "../components/documents/version/VersionHistoryModal";
 import useDocumentActions from "../hooks/useDocumentActions";
 import { usePaginatedMyDocuments } from "../hooks/usePaginatedMyDocuments";
 
@@ -45,7 +46,13 @@ export default function MyDocumentsPage() {
     resetDocumentPassword,
     submitVerifyPassword,
   } = useDocumentActions({
-    onSuccess: reload,
+    onSuccess: (type, doc) => {
+      if (type === "preview" && doc) {
+        navigate(`/documents/${doc.id}/preview`);
+      } else {
+        reload();
+      }
+    },
   });
   const [viewMode, setViewMode] = useState("grid");
   const visibleDocs = useMemo(() => docs, [docs]);
@@ -78,8 +85,15 @@ export default function MyDocumentsPage() {
         />
       </div>
 
+      {loading ? (
+        <div className="rounded-2xl border border-border bg-card p-4 text-sm text-muted shadow-sm">
+          Loading documents...
+        </div>
+      ) : null}
+
+      <div className={loading ? "pointer-events-none opacity-60" : ""}>
       {viewMode === "grid" ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 pb-72 sm:grid-cols-2 lg:grid-cols-3">
           {visibleDocs.map((d) => (
             <DocumentCard
               key={d.id}
@@ -87,12 +101,16 @@ export default function MyDocumentsPage() {
               onToggleStar={toggleStar}
               onAction={handleAction}
               actions={DEFAULT_DOCUMENT_ACTIONS}
+              actionKeys={d.isOwner === false ? SHARED_VIEWER_ACTION_KEYS : undefined}
               disableActions={d.isOwner === false}
+              menuPushContent
+              denseMenu
+              menuClassName="w-52 p-0"
             />
           ))}
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 pb-72">
           {visibleDocs.map((d) => (
             <DocumentRow
               key={d.id}
@@ -100,11 +118,17 @@ export default function MyDocumentsPage() {
               onToggleStar={toggleStar}
               onAction={handleAction}
               actions={DEFAULT_DOCUMENT_ACTIONS}
+              actionKeys={d.isOwner === false ? SHARED_VIEWER_ACTION_KEYS : undefined}
               disableActions={d.isOwner === false}
+              menuPushContent
+              denseMenu
+              menuClassName="w-52 p-0"
             />
           ))}
         </div>
       )}
+
+      </div>
 
       <div className="flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3 text-sm text-muted shadow-sm">
         <span>
@@ -115,7 +139,7 @@ export default function MyDocumentsPage() {
             type="button"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={loading || page <= 1}
-            className="rounded-lg border border-border px-3 py-1.5 text-muted disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg border border-border px-3 py-1.5 text-text disabled:cursor-not-allowed disabled:opacity-50"
           >
             Previous
           </button>
@@ -123,26 +147,20 @@ export default function MyDocumentsPage() {
             type="button"
             onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
             disabled={loading || page >= pagination.totalPages}
-            className="rounded-lg border border-border px-3 py-1.5 text-muted disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg border border-border px-3 py-1.5 text-text disabled:cursor-not-allowed disabled:opacity-50"
           >
             Next
           </button>
         </div>
       </div>
 
-      {loading ? (
-        <div className="rounded-2xl border border-border bg-card p-4 text-sm text-muted shadow-sm">
-          Loading documents...
-        </div>
-      ) : null}
-
       {error ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700 shadow-sm">
+        <div className="rounded-2xl border border-border bg-card p-4 text-sm text-muted shadow-sm">
           <div>{error}</div>
           <button
             type="button"
             onClick={reload}
-            className="mt-2 rounded-lg border border-rose-300 px-3 py-1.5 text-rose-700"
+            className="mt-2 rounded-lg border border-border bg-surface px-3 py-1.5 text-text"
           >
             Retry
           </button>
@@ -160,7 +178,8 @@ export default function MyDocumentsPage() {
           modalState.open &&
           modalState.type !== "share" &&
           modalState.type !== "secure_file" &&
-          modalState.type !== "protected_move_block"
+          modalState.type !== "protected_move_block" &&
+          modalState.type !== "version_history"
         }
         type={modalState.type}
         title={modalState.title}
@@ -205,6 +224,13 @@ export default function MyDocumentsPage() {
         error={verifyState.error}
         onClose={closeVerifyModal}
         onUnlock={submitVerifyPassword}
+      />
+      <VersionHistoryModal
+        open={modalState.open && modalState.type === "version_history"}
+        document={modalState.doc}
+        userTeamRole={modalState.doc?.teamRole || ""}
+        onClose={closeModal}
+        onRestored={() => reload()}
       />
     </div>
   );

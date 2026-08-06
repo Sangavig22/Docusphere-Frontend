@@ -75,18 +75,26 @@ export default function Popover({
     if (side === "top") {
       openAbove = true;
     } else if (side === "bottom") {
-      openAbove = false;
+      openAbove = !canOpenBelow && canOpenAbove;
     } else {
-      // auto: open above only when below doesn't fit and above is better
-      openAbove = canOpenAbove && (spaceBelow < effectiveMenuHeight && spaceAbove > spaceBelow);
+      // auto: open above when below doesn't fit and above has more room
+      openAbove = !canOpenBelow && canOpenAbove;
+      if (!openAbove && canOpenBelow) {
+        openAbove = false;
+      } else if (!canOpenBelow && !canOpenAbove) {
+        openAbove = spaceAbove > spaceBelow;
+      }
     }
 
-    // Keep the menu visually anchored to the trigger.
-    // If there isn't enough space on the chosen side, the menu will become scrollable
-    // via its own `maxHeight` (instead of "jumping" far away from the trigger).
     const top = openAbove
       ? Math.max(minTop, rect.top - effectiveMenuHeight - gap)
       : Math.max(minTop, rect.bottom + gap);
+
+    const availableHeightBelow = Math.max(0, boundaryRect.bottom - top - padding);
+    const availableHeightAbove = Math.max(0, rect.top - gap - minTop);
+    const maxMenuHeight = openAbove
+      ? Math.min(effectiveMenuHeight, availableHeightAbove)
+      : Math.min(effectiveMenuHeight, availableHeightBelow);
 
     const leftAlignEnd = rect.right - effectiveMenuWidth;
     const leftAlignStart = rect.left;
@@ -98,40 +106,46 @@ export default function Popover({
       position: "fixed",
       top,
       left,
-      maxHeight: scrollable ? Math.max(0, boundaryRect.bottom - top - padding) : undefined,
+      maxHeight: usePortal ? Math.max(120, maxMenuHeight) : scrollable ? maxMenuHeight : undefined,
       maxWidth: Math.max(0, boundaryRect.right - left - padding),
     });
-  }, [anchorRef, getScrollParent, scrollable, usePortal]);
+  }, [anchorRef, scrollable, side, usePortal]);
 
   useLayoutEffect(() => {
     if (!open || !anchorRef?.current) return;
+
     if (usePortal) updatePosition();
 
-    // For "bottom" menus near the bottom of the scroll area, create temporary
-    // space and scroll the page (so the menu can fully render without an inner scrollbar).
-    if (pushContent && side === "bottom") {
-      const scrollParent = getScrollParent(anchorRef.current);
-      if (scrollParent && scrollParent !== document.documentElement) {
-        const rect = anchorRef.current.getBoundingClientRect();
-        const menuRect = ref.current?.getBoundingClientRect();
-        const menuHeight = menuRect?.height ?? 320;
-        const padding = 12;
-        const gap = 8;
+    // Near the bottom of the viewport, scroll to reveal the full menu when requested.
+    if (pushContent && side !== "top") {
+      const rect = anchorRef.current.getBoundingClientRect();
+      const menuRect = ref.current?.getBoundingClientRect();
+      const menuHeight = menuRect?.height ?? 320;
+      const padding = 12;
+      const gap = 8;
 
-        const availableBelow = window.innerHeight - padding - (rect.bottom + gap);
-        const needed = Math.max(0, menuHeight - availableBelow);
+      const availableBelow = window.innerHeight - padding - (rect.bottom + gap);
+      const needed = Math.max(0, menuHeight - availableBelow);
 
-        if (needed > 0) {
+      if (needed > 0) {
+        const scrollParent = getScrollParent(anchorRef.current);
+        if (
+          scrollParent &&
+          scrollParent !== document.documentElement &&
+          scrollParent !== document.body
+        ) {
           const prevPaddingBottom = scrollParent.style.paddingBottom;
           const prevNum = Number.parseFloat(prevPaddingBottom || "0") || 0;
           scrollParent.style.paddingBottom = `${prevNum + needed}px`;
           pushedRef.current = { el: scrollParent, prevPaddingBottom, applied: true };
-
-          // Scroll so the trigger moves up, giving room for the menu.
           scrollParent.scrollTop += needed;
+        } else {
+          window.scrollBy({ top: needed, behavior: "auto" });
         }
       }
     }
+
+    if (usePortal) updatePosition();
 
     return () => {
       if (pushedRef.current.applied && pushedRef.current.el) {
@@ -193,8 +207,8 @@ export default function Popover({
     <div
       ref={ref}
       className={[
-        "z-[9999] w-56 overscroll-contain rounded-xl border border-slate-200 bg-white p-1 shadow-xl",
-        scrollable ? "overflow-y-auto" : "overflow-visible",
+        "z-[9999] w-56 overscroll-contain rounded-xl border border-border bg-card p-1 shadow-xl",
+        usePortal || scrollable ? "overflow-y-auto" : "overflow-visible",
         !usePortal && "absolute",
         className,
       ].join(" ")}

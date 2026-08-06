@@ -13,17 +13,17 @@ import DocumentProtectedBadge from "./secure/DocumentProtectedBadge";
 function typeStyles(type) {
   switch (type) {
     case "pdf":
-      return { bg: "bg-rose-50", fg: "text-rose-600", ring: "ring-rose-100" };
+      return { bg: "bg-rose-50 dark:bg-rose-500/15", fg: "text-rose-600 dark:text-rose-400", ring: "ring-rose-100 dark:ring-rose-500/25" };
     case "word":
-      return { bg: "bg-blue-50", fg: "text-blue-600", ring: "ring-blue-100" };
+      return { bg: "bg-blue-50 dark:bg-blue-500/15", fg: "text-blue-600 dark:text-blue-400", ring: "ring-blue-100 dark:ring-blue-500/25" };
     case "sheet":
-      return { bg: "bg-emerald-50", fg: "text-emerald-600", ring: "ring-emerald-100" };
+      return { bg: "bg-emerald-50 dark:bg-emerald-500/15", fg: "text-emerald-600 dark:text-emerald-400", ring: "ring-emerald-100 dark:ring-emerald-500/25" };
     case "powerpoint":
-      return { bg: "bg-orange-50", fg: "text-orange-600", ring: "ring-orange-100" };
+      return { bg: "bg-orange-50 dark:bg-orange-500/15", fg: "text-orange-600 dark:text-orange-400", ring: "ring-orange-100 dark:ring-orange-500/25" };
     case "image":
-      return { bg: "bg-violet-50", fg: "text-violet-600", ring: "ring-violet-100" };
+      return { bg: "bg-violet-50 dark:bg-violet-500/15", fg: "text-violet-600 dark:text-violet-400", ring: "ring-violet-100 dark:ring-violet-500/25" };
     default:
-      return { bg: "bg-surface", fg: "text-muted", ring: "ring-slate-100" };
+      return { bg: "bg-surface", fg: "text-muted", ring: "ring-border" };
   }
 }
 
@@ -39,6 +39,7 @@ export default function DocumentCard({
   denseMenu = false,
   showStar = true,
   actionKeys,
+  isSelected=false
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuButtonRef = useRef(null);
@@ -46,6 +47,8 @@ export default function DocumentCard({
   const formatLabel = useMemo(() => formatDocumentFormat(doc.type, doc.name), [doc.type, doc.name]);
   const styles = typeStyles(type);
   const canOpenPreview = typeof onAction === "function";
+  const menuDisabled =
+    disableActions && (!Array.isArray(actionKeys) || actionKeys.length === 0);
 
   function triggerPreview() {
     if (!canOpenPreview) return;
@@ -55,9 +58,13 @@ export default function DocumentCard({
   return (
     <div
       className={[
-        "group relative flex h-full min-h-[170px] flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-[border-color,box-shadow] hover:border-slate-300 hover:shadow-md",
+        "group relative flex h-full min-h-[170px] flex-col rounded-2xl border border-border bg-card p-4 shadow-sm transition-[border-color,box-shadow] hover:border-slate-300 hover:shadow-md dark:hover:border-slate-500",
         canOpenPreview ? "cursor-pointer" : "",
+        isSelected
+          ? "ring-2 ring-blue-500 border-blue-400 bg-blue-50/60 dark:ring-blue-400 dark:border-blue-500 dark:bg-blue-500/10"
+          : "",
       ].join(" ")}
+      data-document-id={doc.id}
       role={canOpenPreview ? "button" : undefined}
       tabIndex={canOpenPreview ? 0 : undefined}
       onClick={(event) => {
@@ -105,7 +112,7 @@ export default function DocumentCard({
             <button
               ref={menuButtonRef}
               type="button"
-              disabled={disableActions}
+              disabled={menuDisabled}
               className={[
                 "inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors",
                 menuOpen ? "bg-card text-text" : "text-muted hover:bg-card hover:text-text",
@@ -120,9 +127,9 @@ export default function DocumentCard({
               onClose={() => setMenuOpen(false)}
               anchorRef={menuButtonRef}
               portal={menuPortal}
-              side={menuPortal ? "bottom" : "auto"}
+              side="auto"
               pushContent={menuPushContent}
-              scrollable={!menuPortal}
+              scrollable
               className={[menuPortal ? "" : "right-0 top-10", menuClassName].join(" ")}
             >
               <DocumentActionsMenu
@@ -130,7 +137,7 @@ export default function DocumentCard({
                 dense={denseMenu}
                 actionKeys={actionKeys}
                 actions={actions}
-                disabled={disableActions}
+                disabled={menuDisabled}
                 onAction={(key, d) => {
                   setMenuOpen(false);
                   onAction?.(key, d);
@@ -157,7 +164,7 @@ export default function DocumentCard({
           ) : null}
         </div>
         <div className="mt-auto pt-3">
-          <span className="inline-flex shrink-0 items-center rounded-md bg-slate-100 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+          <span className="inline-flex shrink-0 items-center rounded-md bg-surface px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
             {formatLabel}
           </span>
         </div>

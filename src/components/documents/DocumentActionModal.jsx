@@ -35,11 +35,11 @@ export default function DocumentActionModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
-        <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 dark:bg-black/60">
+      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-xl">
+        <h3 className="text-lg font-semibold text-text">{title}</h3>
         {message ? (
-          <p className="mt-2 whitespace-pre-line text-sm text-slate-600">{message}</p>
+          <p className="mt-2 whitespace-pre-line text-sm text-muted">{message}</p>
         ) : null}
 
         {type === "input" ? (
@@ -47,7 +47,7 @@ export default function DocumentActionModal({
             autoFocus
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            className="mt-4 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
+            className="mt-4 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
             placeholder="Enter document name"
           />
         ) : null}
@@ -56,7 +56,7 @@ export default function DocumentActionModal({
           <select
             value={selectedValue}
             onChange={(e) => setSelectedValue(e.target.value)}
-            className="mt-4 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
+            className="mt-4 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
           >
             {options.map((option) => (
               <option key={option.value} value={option.value}>
@@ -71,7 +71,7 @@ export default function DocumentActionModal({
             type="button"
             disabled={loading}
             onClick={onClose}
-            className="rounded-lg border border-border px-3 py-2 text-sm text-text hover:bg-card"
+            className="rounded-lg border border-border px-3 py-2 text-sm text-text hover:bg-surface"
           >
             {cancelText}
           </button>

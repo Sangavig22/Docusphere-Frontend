@@ -1,19 +1,15 @@
-import { API_BASE_URL } from '../config';
-import authService from '../services/authService';
+import { API_BASE_URL } from '../config/api';
 
 export const ocrService = {
   uploadDocument: async (file) => {
     const formData = new FormData();
     formData.append('file', file);
 
-    const token = authService.getToken();
     const response = await fetch(`${API_BASE_URL}/ocr/upload`, {
       method: 'POST',
-      headers: {
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
+      credentials: 'include',
+      // No Content-Type header — fetch sets it automatically with multipart boundary
       body: formData,
-      // No Content-Type header needed for FormData, fetch will set it automatically with the boundary
     });
 
     if (!response.ok) {
@@ -25,11 +21,8 @@ export const ocrService = {
   },
 
   checkStatus: async (jobId) => {
-    const token = authService.getToken();
     const response = await fetch(`${API_BASE_URL}/ocr/status/${jobId}`, {
-      headers: {
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
+      credentials: 'include',
     });
 
     if (!response.ok) {

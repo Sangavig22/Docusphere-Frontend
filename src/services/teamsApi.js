@@ -1,6 +1,4 @@
 import { request } from '../api/apiClient.js';
-import authService from './authService.js';
-import { API_BASE_URL } from '../config/api.js';
 
 export const teamsApi = {
   // ─── User-facing team endpoints ─────────────────────────────────────────────
@@ -16,6 +14,47 @@ export const teamsApi = {
 
   /** GET /api/teams/:id/documents */
   getTeamDocuments: (id) => request(`/teams/${id}/documents`),
+
+    /** GET /api/teams/:id/members/status */
+  getTeamMemberStatuses: (id) => request(`/teams/${id}/members/status`),
+
+  /** POST /api/teams/:id/presence — record team page activity for online status */
+  recordTeamPresence: (id) =>
+    request(`/teams/${id}/presence`, { method: 'POST' }),
+
+  /** GET /api/teams/:id/chat/messages?limit=:limit */
+  getTeamChatMessages: (id, limit = 50) => request(`/teams/${id}/chat/messages?limit=${limit}`),
+
+  /** POST /api/teams/:id/chat/messages */
+  sendTeamChatMessage: (id, payload) =>
+    request(`/teams/${id}/chat/messages`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  /** PUT /api/teams/:teamId/chat/messages/:messageId - Edit a message */
+  editTeamChatMessage: (teamId, messageId, payload) =>
+    request(`/teams/${teamId}/chat/messages/${messageId}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    }),
+
+  /** DELETE /api/teams/:teamId/chat/messages/:messageId - Delete a message */
+  deleteTeamChatMessage: (teamId, messageId, scope = 'for-me') =>
+    request(`/teams/${teamId}/chat/messages/${messageId}?scope=${scope}`, {
+      method: 'DELETE',
+    }),
+
+  /** GET /api/teams/:teamId/chat/messages/:messageId/info - Get message info */
+  getTeamChatMessageInfo: (teamId, messageId) =>
+    request(`/teams/${teamId}/chat/messages/${messageId}/info`),
+
+  /** POST /api/teams/:teamId/chat/receipts — batch delivery/read receipts */
+  postTeamChatReceipts: (teamId, payload) =>
+    request(`/teams/${teamId}/chat/receipts`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
 
   /** POST /api/teams */
   createTeam: (data) =>
@@ -48,6 +87,19 @@ export const teamsApi = {
     request(`/teams/${teamId}/members/${memberId}/role`, {
       method: 'PUT',
       body: JSON.stringify({ role }),
+    }),
+
+  /** POST /api/teams/:teamId/transfer-leader */
+  transferTeamLeader: (teamId, newLeaderId) =>
+    request(`/teams/${teamId}/transfer-leader`, {
+      method: 'POST',
+      body: JSON.stringify({ newLeaderId }),
+    }),
+
+  /** PUT /api/teams/:teamId/members/:memberId/chat-block?blocked=:boolean */
+  updateMemberChatBlock: (teamId, memberId, blocked) =>
+    request(`/teams/${teamId}/members/${memberId}/chat-block?blocked=${blocked}`, {
+      method: 'PUT',
     }),
 
     // ─── Admin team endpoints ────────────────────────────────────────────────────
@@ -124,6 +176,14 @@ export const teamsApi = {
 
   /** GET /api/admin/users */
   getAdminUsers: () => request('/admin/users'),
+
+  /** POST /api/teams/invitations/:invitationId/accept */
+  acceptInvitation: (invitationId) =>
+    request(`/teams/invitations/${invitationId}/accept`, { method: 'POST' }),
+
+  /** POST /api/teams/invitations/:invitationId/decline */
+  declineInvitation: (invitationId) =>
+    request(`/teams/invitations/${invitationId}/decline`, { method: 'POST' }),
 };
 
 

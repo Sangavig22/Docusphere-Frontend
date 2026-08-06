@@ -2,12 +2,13 @@ import { useMemo, useState } from "react";
 import { Clock, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { DocumentCard, DocumentRow, DocumentsToolbar } from "../components/documents";
-import { DEFAULT_DOCUMENT_ACTIONS } from "../components/documents/DocumentActionsMenu";
+import { DEFAULT_DOCUMENT_ACTIONS, SHARED_VIEWER_ACTION_KEYS } from "../components/documents/DocumentActionsMenu";
 import DocumentActionModal from "../components/documents/DocumentActionModal";
 import ShareModal from "../components/documents/share/ShareModal";
 import SecureFileModal from "../components/documents/secure/SecureFileModal";
 import ProtectedMoveBlockedModal from "../components/documents/secure/ProtectedMoveBlockedModal";
 import PasswordVerifyModal from "../components/documents/secure/PasswordVerifyModal";
+import VersionHistoryModal from "../components/documents/version/VersionHistoryModal";
 import useDocumentActions from "../hooks/useDocumentActions";
 import { usePaginatedMyDocuments } from "../hooks/usePaginatedMyDocuments";
 
@@ -44,7 +45,13 @@ export default function RecentPage() {
     resetDocumentPassword,
     submitVerifyPassword,
   } = useDocumentActions({
-    onSuccess: reload,
+    onSuccess: (type, doc) => {
+      if (type === "preview" && doc) {
+        navigate(`/documents/${doc.id}/preview`);
+      } else {
+        reload();
+      }
+    },
   });
   const [viewMode, setViewMode] = useState("grid");
 
@@ -54,8 +61,8 @@ export default function RecentPage() {
     <div className="flex w-full max-w-6xl flex-1 flex-col gap-5">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-2">
-          <h2 className="text-2xl font-semibold text-slate-900">Recently Opened</h2>
-          <Clock size={18} className="text-slate-500" />
+          <h2 className="text-2xl font-semibold text-text">Recently Opened</h2>
+          <Clock size={18} className="text-muted" />
         </div>
         <button
           type="button"
@@ -67,7 +74,7 @@ export default function RecentPage() {
         </button>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
         <DocumentsToolbar
           query={query}
           onQueryChange={setQuery}
@@ -80,6 +87,13 @@ export default function RecentPage() {
         />
       </div>
 
+      {loading ? (
+        <div className="rounded-2xl border border-border bg-card p-4 text-sm text-muted shadow-sm">
+          Loading documents...
+        </div>
+      ) : null}
+
+      <div className={loading ? "pointer-events-none opacity-60" : ""}>
       {viewMode === "grid" ? (
         <div className="grid grid-cols-1 gap-4 pb-72 sm:grid-cols-2 lg:grid-cols-3">
           {visibleDocs.map((d) => (
@@ -89,6 +103,7 @@ export default function RecentPage() {
               onToggleStar={toggleStar}
               onAction={handleAction}
               actions={DEFAULT_DOCUMENT_ACTIONS}
+              actionKeys={d.isOwner === false ? SHARED_VIEWER_ACTION_KEYS : undefined}
               disableActions={d.isOwner === false}
               menuPushContent
               denseMenu
@@ -105,6 +120,7 @@ export default function RecentPage() {
               onToggleStar={toggleStar}
               onAction={handleAction}
               actions={DEFAULT_DOCUMENT_ACTIONS}
+              actionKeys={d.isOwner === false ? SHARED_VIEWER_ACTION_KEYS : undefined}
               disableActions={d.isOwner === false}
               menuPushContent
               denseMenu
@@ -114,26 +130,22 @@ export default function RecentPage() {
         </div>
       )}
 
-      <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
+      </div>
+
+      <div className="flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3 text-sm text-muted shadow-sm">
         <span>
           Showing {visibleDocs.length} recent documents (max {RECENT_PAGE_LIMIT})
         </span>
-        <span className="text-xs text-slate-500">Newest first</span>
+        <span className="text-xs text-muted">Newest first</span>
       </div>
 
-      {loading ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-sm">
-          Loading documents...
-        </div>
-      ) : null}
-
       {error ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700 shadow-sm">
+        <div className="rounded-2xl border border-border bg-card p-4 text-sm text-muted shadow-sm">
           <div>{error}</div>
           <button
             type="button"
             onClick={reload}
-            className="mt-2 rounded-lg border border-rose-300 px-3 py-1.5 text-rose-700"
+            className="mt-2 rounded-lg border border-border bg-surface px-3 py-1.5 text-text"
           >
             Retry
           </button>
@@ -141,7 +153,7 @@ export default function RecentPage() {
       ) : null}
 
       {!loading && visibleDocs.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-600 shadow-sm">
+        <div className="rounded-2xl border border-border bg-card p-8 text-center text-sm text-muted shadow-sm">
           No recent documents in the last {RECENT_DAYS} days.
         </div>
       ) : null}
@@ -151,7 +163,8 @@ export default function RecentPage() {
           modalState.open &&
           modalState.type !== "share" &&
           modalState.type !== "secure_file" &&
-          modalState.type !== "protected_move_block"
+          modalState.type !== "protected_move_block" &&
+          modalState.type !== "version_history"
         }
         type={modalState.type}
         title={modalState.title}
@@ -195,6 +208,13 @@ export default function RecentPage() {
         error={verifyState.error}
         onClose={closeVerifyModal}
         onUnlock={submitVerifyPassword}
+      />
+      <VersionHistoryModal
+        open={modalState.open && modalState.type === "version_history"}
+        document={modalState.doc}
+        userTeamRole={modalState.doc?.teamRole || ""}
+        onClose={closeModal}
+        onRestored={() => reload()}
       />
     </div>
   );

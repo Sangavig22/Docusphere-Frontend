@@ -10,6 +10,7 @@ import SettingsPage from "../pages/SettingsPage.jsx";
 import Layout from "../components/Layout/Layout";
 import Dashboard from "../Pages/Dashboard";
 import UploadPage from "../pages/UploadPage";
+import AdminReportsPage from "../pages/AdminReportsPage.jsx";
 import AdminDashboardPage from "../pages/AdminDashboardPage.jsx";
 import OCRSummarization from "../pages/OCRSummarization";
 import MyDocumentsPage from "../pages/MyDocumentsPage";
@@ -23,7 +24,11 @@ import SharedDocumentPage from "../pages/SharedDocumentPage";
 import AdminTeamManagementPage from "../pages/AdminTeamManagementPage.jsx";
 import AdminTeamDetailsPage from "../pages/AdminTeamDetailsPage.jsx";
 import AdminMergeTeamsPage from "../pages/AdminMergeTeamsPage.jsx";
-
+import DocumentPreviewPage from "../pages/DocumentPreviewPage";
+import DocumentEditorPage from "../pages/DocumentEditorPage";
+import VersionPreviewPage from "../pages/VersionPreviewPage";
+import AdminGlobalSearch from "../pages/AdminGlobalSearch.jsx";
+import NotificationsPage from "../pages/NotificationsPage.jsx";
 
 
 function withLayout(element, pageTitle, pageSubtitle, type = "dashboard") {
@@ -43,7 +48,7 @@ export const routes = [
     theme: "light",
     protected: false,
   },
-   {
+  {
     path: "/signup",
     element: <SignUp />,
     theme: "light",
@@ -55,7 +60,7 @@ export const routes = [
     theme: "light",
     protected: false,
   },
-   {
+  {
     path: "/forgot-password",
     element: <ForgotPassword />,
     theme: "light",
@@ -73,10 +78,16 @@ export const routes = [
     theme: "light",
     protected: false,
   },
-   {
+  {
     path: "/share/:token",
     element: <SharedDocumentPage />,
     protected: false,
+  },
+
+  {
+    path: '/notifications',
+    element: <NotificationsPage />,
+    protected: true,
   },
 
   {
@@ -92,7 +103,7 @@ export const routes = [
   },
   {
     path: "/uploads",
-    element: withLayout(<UploadPage />, "Uploads", "Drag and drop files or browse to upload." ),
+    element: withLayout(<UploadPage />, "Uploads", "Drag and drop files or browse to upload."),
     protected: true,
   },
   {
@@ -104,12 +115,28 @@ export const routes = [
     ),
     protected: true,
   },
-   {
+  {
     path: "/documents",
     element: withLayout(<MyDocumentsPage />, "My Documents", "Manage and organize all your documents."),
     protected: true,
   },
- 
+  {
+    path: "/documents/:documentId/preview",
+    element: <DocumentPreviewPage />,
+     protected: true,
+  },
+  {
+    path: "/documents/:documentId/versions/:versionId/preview",
+    element: <VersionPreviewPage />,
+    protected: true,
+  },
+  {
+    path: "/editor/:documentId",
+    element: <DocumentEditorPage />,
+     protected: true,
+  },
+
+
   {
     path: "/starred",
     element: withLayout(<StarredPage />, "Starred ", "Manage and organize all starred documents."),
@@ -120,7 +147,7 @@ export const routes = [
     element: withLayout(<RecentPage />, "Recent", "Manage and organize all recently opened documents."),
     protected: true,
   },
-   {
+  {
     path: "/trash",
     element: withLayout(<TrashPage />, "Recycle Bin", "Restore or permanently delete documents."),
     protected: true,
@@ -178,6 +205,24 @@ export const routes = [
       "admin"
     ),
     protected: true,
+  },
+  {
+    path: "/admin/reports",
+    element: withLayout(
+      <AdminReportsPage />,
+      "Export Reports",
+      "Download system data in PDF or CSV format",
+      "admin"
+    ),
+  },
+  {
+    path: "/admin/search",
+    element: withLayout(
+      <AdminGlobalSearch />,
+      "Global Search",
+      "Search across all users, teams, and documents",
+      "admin"
+    ),
   },
   {
     path: "/admin/teams/new",

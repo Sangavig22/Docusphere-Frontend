@@ -3,16 +3,6 @@ import { X } from "lucide-react";
 import { toast } from "react-toastify";
 
 // Internal Form Components
-const NameInput = ({ value, onChange, placeholder = "Enter name" }) => (
-  <input
-    type="text"
-    value={value}
-    onChange={(e) => onChange(e.target.value)}
-    placeholder={placeholder}
-    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-  />
-);
-
 const EmailInput = ({ value, onChange, placeholder = "Enter email" }) => (
   <input
     type="email"
@@ -57,11 +47,6 @@ function AddMemberModal({ isOpen, onClose, onAddMember, existingMembers = [] }) 
     const trimmedEmail = email.trim();
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!trimmedName) {
-      toast.error("Name is required");
-      return;
-    }
 
     if (!trimmedEmail || !emailRegex.test(trimmedEmail)) {
       toast.error("Enter a valid email");
@@ -114,11 +99,6 @@ function AddMemberModal({ isOpen, onClose, onAddMember, existingMembers = [] }) 
         </div>
 
         <div className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-slate-700">Full Name</label>
-            <NameInput value={name} onChange={setName} placeholder="e.g. John Doe" />
-          </div>
-
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-slate-700">Email Address</label>
             <EmailInput value={email} onChange={setEmail} placeholder="e.g. john@example.com" />

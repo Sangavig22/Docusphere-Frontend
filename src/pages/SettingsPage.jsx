@@ -23,6 +23,22 @@ const SettingsPage = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const fileInputRef = useRef();
 
+  const [notificationsEnabled, setNotificationsEnabled] = useState(
+    localStorage.getItem("docusphere_notifications_enabled") !== "false"
+  );
+
+  const handleToggleNotifications = () => {
+    const newValue = !notificationsEnabled;
+    setNotificationsEnabled(newValue);
+    localStorage.setItem("docusphere_notifications_enabled", String(newValue));
+    window.dispatchEvent(new Event("docusphere-notifications-toggle"));
+    if (newValue) {
+      toast.success("Real-time notifications enabled!");
+    } else {
+      toast.info("Notifications paused.");
+    }
+  };
+
   useEffect(() => {
     return () => {
       if (photoPreview && photoPreview.startsWith("blob:")) {
@@ -248,6 +264,55 @@ const SettingsPage = () => {
         </div>
         <FormActions onCancel={handleCancel} submitLabel="Save Changes" />
         </form>
+      </SettingsBox>
+
+      {/* Notification Settings Box */}
+      <SettingsBox title="Notification Settings" subtitle="Control how and when you receive real-time alerts.">
+        <div style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "16px 0",
+          borderBottom: "1px solid var(--border)",
+          marginBottom: 16
+        }}>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: 18, color: "var(--text)" }}>Enable Push Notifications</div>
+            <div style={{ color: "var(--muted)", fontSize: 14, marginTop: 4 }}>
+              Receive real-time chime sounds, popup toasts, and menu badge alerts for document shares and team invites.
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleToggleNotifications}
+            style={{
+              position: "relative",
+              width: 52,
+              height: 28,
+              borderRadius: 9999,
+              background: notificationsEnabled ? "linear-gradient(135deg, #6366F1, #4F46E5)" : "#D1D5DB",
+              border: "none",
+              cursor: "pointer",
+              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+              display: "flex",
+              alignItems: "center",
+              padding: "0 4px",
+              boxShadow: notificationsEnabled ? "0 0 12px rgba(99, 102, 241, 0.4)" : "none",
+            }}
+          >
+            <div
+              style={{
+                width: 20,
+                height: 20,
+                borderRadius: "50%",
+                background: "#FFFFFF",
+                transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                transform: notificationsEnabled ? "translateX(24px)" : "translateX(0)",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+              }}
+            />
+          </button>
+        </div>
       </SettingsBox>
 
       {/* Change Password Box */}

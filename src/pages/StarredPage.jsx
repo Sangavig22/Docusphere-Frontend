@@ -2,12 +2,13 @@ import { useMemo, useState } from "react";
 import { Plus, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { DocumentCard, DocumentRow, DocumentsToolbar } from "../components/documents";
-import { DEFAULT_DOCUMENT_ACTIONS } from "../components/documents/DocumentActionsMenu";
+import { DEFAULT_DOCUMENT_ACTIONS, SHARED_VIEWER_ACTION_KEYS } from "../components/documents/DocumentActionsMenu";
 import DocumentActionModal from "../components/documents/DocumentActionModal";
 import ShareModal from "../components/documents/share/ShareModal";
 import SecureFileModal from "../components/documents/secure/SecureFileModal";
 import ProtectedMoveBlockedModal from "../components/documents/secure/ProtectedMoveBlockedModal";
 import PasswordVerifyModal from "../components/documents/secure/PasswordVerifyModal";
+import VersionHistoryModal from "../components/documents/version/VersionHistoryModal";
 import useDocumentActions from "../hooks/useDocumentActions";
 import { usePaginatedMyDocuments } from "../hooks/usePaginatedMyDocuments";
 
@@ -44,7 +45,13 @@ export default function StarredPage() {
     resetDocumentPassword,
     submitVerifyPassword,
   } = useDocumentActions({
-    onSuccess: reload,
+    onSuccess: (type, doc) => {
+      if (type === "preview" && doc) {
+        navigate(`/documents/${doc.id}/preview`);
+      } else {
+        reload();
+      }
+    },
   });
   const [viewMode, setViewMode] = useState("grid");
 
@@ -80,6 +87,13 @@ export default function StarredPage() {
         />
       </div>
 
+      {loading ? (
+        <div className="rounded-2xl border border-border bg-card p-4 text-sm text-muted shadow-sm">
+          Loading documents...
+        </div>
+      ) : null}
+
+      <div className={loading ? "pointer-events-none opacity-60" : ""}>
       {viewMode === "grid" ? (
         <div className="grid grid-cols-1 gap-4 pb-72 sm:grid-cols-2 lg:grid-cols-3">
           {visibleDocs.map((d) => (
@@ -89,6 +103,7 @@ export default function StarredPage() {
               onToggleStar={toggleStar}
               onAction={handleAction}
               actions={DEFAULT_DOCUMENT_ACTIONS}
+              actionKeys={d.isOwner === false ? SHARED_VIEWER_ACTION_KEYS : undefined}
               disableActions={d.isOwner === false}
               menuPushContent
               denseMenu
@@ -105,6 +120,7 @@ export default function StarredPage() {
               onToggleStar={toggleStar}
               onAction={handleAction}
               actions={DEFAULT_DOCUMENT_ACTIONS}
+              actionKeys={d.isOwner === false ? SHARED_VIEWER_ACTION_KEYS : undefined}
               disableActions={d.isOwner === false}
               menuPushContent
               denseMenu
@@ -113,6 +129,8 @@ export default function StarredPage() {
           ))}
         </div>
       )}
+
+      </div>
 
       <div className="flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3 text-sm text-muted shadow-sm">
         <span>
@@ -138,12 +156,6 @@ export default function StarredPage() {
         </div>
       </div>
 
-      {loading ? (
-        <div className="rounded-2xl border border-border bg-card p-4 text-sm text-muted shadow-sm">
-          Loading documents...
-        </div>
-      ) : null}
-
       {error ? (
         <div className="rounded-2xl border border-border bg-card p-4 text-sm text-muted shadow-sm">
           <div>{error}</div>
@@ -168,7 +180,8 @@ export default function StarredPage() {
           modalState.open &&
           modalState.type !== "share" &&
           modalState.type !== "secure_file" &&
-          modalState.type !== "protected_move_block"
+          modalState.type !== "protected_move_block" &&
+          modalState.type !== "version_history"
         }
         type={modalState.type}
         title={modalState.title}
@@ -212,6 +225,13 @@ export default function StarredPage() {
         error={verifyState.error}
         onClose={closeVerifyModal}
         onUnlock={submitVerifyPassword}
+      />
+      <VersionHistoryModal
+        open={modalState.open && modalState.type === "version_history"}
+        document={modalState.doc}
+        userTeamRole={modalState.doc?.teamRole || ""}
+        onClose={closeModal}
+        onRestored={() => reload()}
       />
     </div>
   );

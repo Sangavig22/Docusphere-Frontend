@@ -11,7 +11,7 @@ export default function DocumentProtectedBadge({ doc, className = "" }) {
     <span
       className={[
         "absolute -bottom-0.5 -right-0.5 inline-flex h-[17px] w-[17px] items-center justify-center rounded-full",
-        "bg-white/95 text-slate-500 shadow-sm ring-1 ring-slate-200/90 ring-offset-1 ring-offset-white",
+        "bg-card text-muted shadow-sm ring-1 ring-border ring-offset-1 ring-offset-card dark:ring-offset-card",
         className,
       ].join(" ")}
       title="Password protected"

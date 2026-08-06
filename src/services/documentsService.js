@@ -6,6 +6,7 @@ import {
 } from "../constants/documents";
 import { API_BASE_URL } from "../config/api";
 import authService from "./authService";
+import { getUserIdFromToken } from "../utils/authToken";
 
 const CURRENT_USER_STORAGE_KEY = "currentUser";
 
@@ -56,8 +57,7 @@ function getCurrentUserIdCandidates() {
     add(currentUser?.sub);
   }
 
-  const token = authService.getToken();
-  add(getUserIdFromToken(token));
+  add(authService.getUserId());
 
   return Array.from(ids);
 }
@@ -109,6 +109,13 @@ function normalizeDoc(raw) {
   );
 
   const teamId = raw.teamId ?? raw.team_id ?? raw.team?.id ?? null;
+  const teamRole =
+    raw.teamRole ??
+    raw.userTeamRole ??
+    raw.memberRole ??
+    raw.currentUserTeamRole ??
+    raw.teamMemberRole ??
+    null;
 
   return {
     id: raw.id ?? raw._id ?? raw.documentId,
@@ -124,6 +131,8 @@ function normalizeDoc(raw) {
     secured: isProtected,
     isOwner: resolveIsOwner(raw),
     teamId: teamId == null || teamId === "" ? null : String(teamId),
+    teamRole: teamRole == null || teamRole === "" ? null : String(teamRole),
+    canManageTeamDoc: Boolean(raw.canManageTeamDoc ?? raw.canManage ?? false),
   };
 }
 
