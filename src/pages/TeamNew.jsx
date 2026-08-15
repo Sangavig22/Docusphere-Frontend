@@ -5,6 +5,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import { EmailInput, RoleSelector } from "../components/Team/FormFields";
+import { useTeamEmailSuggestions } from "../hooks/useTeamEmailSuggestions";
 import { teamsApi } from "../services/teamsApi";
 
 // roles for regular users (no Leader option)
@@ -28,6 +29,7 @@ function TeamNew({ backPath = "/team" }) {
   const isAdmin = location.pathname.startsWith("/admin");
   const resolvedBackPath = isAdmin ? "/admin/teams" : backPath;
   const baseRoles = isAdmin ? adminRoleOptions : userRoleOptions;
+  const emailSuggestions = useTeamEmailSuggestions();
 
   const [teamName, setTeamName] = useState("");
   const [currentEmail, setCurrentEmail] = useState("");
@@ -116,8 +118,12 @@ function TeamNew({ backPath = "/team" }) {
 
       setTimeout(() => navigate(resolvedBackPath), 1000);
     } catch (err) {
-      if (err?.status === 409 || err?.code === "TEAM_ALREADY_EXISTS") {
-        toast.error("A team with this name already exists. Please choose another name.");
+      if (
+        err?.status === 409 ||
+        err?.data?.errorCode === "TEAM_ALREADY_EXISTS" ||
+        String(err?.message || "").toLowerCase().includes("already exists")
+      ) {
+        toast.error("A team with this name already exists. Please try a different name.");
         return;
       }
 
@@ -160,7 +166,7 @@ function TeamNew({ backPath = "/team" }) {
                 Add Team Users
               </label>
 
-              <EmailInput value={currentEmail} onChange={setCurrentEmail} />
+              <EmailInput value={currentEmail} onChange={setCurrentEmail} suggestions={emailSuggestions} />
             </div>
 
             {/* Role */}

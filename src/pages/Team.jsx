@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, useRef } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import { Plus } from "lucide-react";
 import "react-toastify/dist/ReactToastify.css";
@@ -12,16 +12,17 @@ import { useTeams } from "../hooks/useTeams";
 
 function Team() {
   const navigate = useNavigate();
-  const location = useLocation();
 
-  const { teams, isLoading, error, deleteTeam, refetch } = useTeams();
-  
+  const { teams, isLoading, error, deleteTeam } = useTeams();
+
   const [openMenuId, setOpenMenuId] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, team: null });
+  const [page, setPage] = useState(1);
 
   const [view, setView] = useState("grid");
   const [query, setQuery] = useState("");
   const [sortKey, setSortKey] = useState("name_asc");
+  const pageSize = 9;
 
   const getTeamId = (team) => team?.id || team?._id || team?.teamId;
   const canDeleteTeam = (team) => String(team?.currentUserRole || "").toUpperCase() === "LEADER";
@@ -48,10 +49,8 @@ function Team() {
   const normalizedQuery = query.trim().toLowerCase();
 
   useEffect(() => {
-    if (location.pathname === "/team") {
-      void refetch();
-    }
-  }, [location.pathname, refetch]);
+    setPage(1);
+  }, [normalizedQuery, sortKey]);
 
   const visibleTeams = useMemo(() => {
     let list = teams.filter((team) => {
@@ -68,7 +67,15 @@ function Team() {
     return list;
   }, [teams, normalizedQuery, sortKey]);
 
+  const totalPages = Math.max(1, Math.ceil(visibleTeams.length / pageSize));
+  const paginatedTeams = useMemo(() => {
+    const startIndex = (page - 1) * pageSize;
+    return visibleTeams.slice(startIndex, startIndex + pageSize);
+  }, [visibleTeams, page]);
 
+  useEffect(() => {
+    setPage((prev) => Math.min(prev, totalPages));
+  }, [totalPages]);
 
   const confirmDelete = () => {
     if (deleteConfirm.team) {
@@ -84,25 +91,15 @@ function Team() {
     setDeleteConfirm({ isOpen: false, team: null });
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-slate-600 dark:text-slate-400">Loading teams...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-        <p className="font-medium text-muted">Error: {error}</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4">
       <ToastContainer />
+
+      {error ? (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 shadow-sm">
+          Error: {error}
+        </div>
+      ) : null}
 
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-text">My Teams</h1>
@@ -126,35 +123,75 @@ function Team() {
           viewMode={view}
           onViewModeChange={setView}
           hideFilter={true}
-
-
         />
       </div>
 
       <div className={view === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "grid grid-cols-1 gap-4"}>
-        {visibleTeams.map((team) => (
-          <TeamCard
-            key={team.id}
-            team={team}
-            onOpen={() => handleTeamClick(team)}
-            onDelete={() => {
-              if (!canDeleteTeam(team)) {
-                toast.error("Only team leader can delete this team");
-                return;
-              }
-              setDeleteConfirm({ isOpen: true, team });
-            }}
-            openMenuId={openMenuId}
-            setOpenMenuId={setOpenMenuId}
-          />
-        ))}
+        {isLoading && !teams.length
+          ? Array.from({ length: pageSize }).map((_, index) => (
+              <div
+                key={`team-skeleton-${index}`}
+                className="h-[132px] rounded-xl border border-border bg-card px-5 py-4 shadow-sm"
+              >
+                <div className="animate-pulse space-y-4">
+                  <div className="flex items-start justify-between">
+                    <div className="h-8 w-8 rounded-full bg-slate-200" />
+                    <div className="h-6 w-6 rounded bg-slate-200" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-3 w-3/5 rounded-full bg-slate-200" />
+                    <div className="h-3 w-1/2 rounded-full bg-slate-200" />
+                  </div>
+                </div>
+              </div>
+            ))
+          : paginatedTeams.map((team) => (
+              <TeamCard
+                key={team.id}
+                team={team}
+                onOpen={() => handleTeamClick(team)}
+                onDelete={() => {
+                  if (!canDeleteTeam(team)) {
+                    toast.error("Only team leader can delete this team");
+                    return;
+                  }
+                  setDeleteConfirm({ isOpen: true, team });
+                }}
+                openMenuId={openMenuId}
+                setOpenMenuId={setOpenMenuId}
+              />
+            ))}
       </div>
 
-      {!visibleTeams.length && (
+      {!isLoading && !visibleTeams.length && (
         <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-500">
           No teams found.
         </div>
       )}
+
+      <div className="flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3 text-sm text-muted shadow-sm">
+        <span>
+          Page {page} of {totalPages} (showing {paginatedTeams.length} on this page, {visibleTeams.length} total)
+        </span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            className="rounded-lg border border-border px-3 py-1.5 text-muted disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages}
+            className="rounded-lg border border-border px-3 py-1.5 text-muted disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      </div>
 
       <ConfirmDelete
         isOpen={deleteConfirm.isOpen}

@@ -15,9 +15,11 @@ const AdminTeamManagementPage = () => {
   const { teams, isLoading, error, deleteTeam } = useAdminTeams();
   const [openMenuId, setOpenMenuId] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, team: null });
+  const [page, setPage] = useState(1);
   const [view, setView] = useState("grid");
   const [query, setQuery] = useState("");
   const [sortKey, setSortKey] = useState("name_asc");
+  const pageSize = 9;
   const menuRef = useRef(null);
 
   const getTeamId = (t) => t?.id || t?._id || t?.teamId;
@@ -52,6 +54,20 @@ const AdminTeamManagementPage = () => {
       .sort((a, b) => sortKey === "name_asc" ? a.name.localeCompare(b.name) : sortKey === "name_desc" ? b.name.localeCompare(a.name) : 0);
   }, [teams, query, sortKey]);
 
+  useEffect(() => {
+    setPage(1);
+  }, [query, sortKey]);
+
+  const totalPages = Math.max(1, Math.ceil(visibleTeams.length / pageSize));
+  const paginatedTeams = useMemo(() => {
+    const startIndex = (page - 1) * pageSize;
+    return visibleTeams.slice(startIndex, startIndex + pageSize);
+  }, [visibleTeams, page]);
+
+  useEffect(() => {
+    setPage((prev) => Math.min(prev, totalPages));
+  }, [totalPages]);
+
   if (isLoading) return <div className="flex justify-center py-12 text-slate-600">Loading teams...</div>;
   if (error) return <div className="bg-red-50 rounded-2xl border border-red-200 p-6 text-red-600">Error: {error}</div>;
 
@@ -67,9 +83,33 @@ const AdminTeamManagementPage = () => {
         <DocumentsToolbar query={query} onQueryChange={setQuery} filterType="all" onFilterTypeChange={() => { }} sortKey={sortKey} onSortKeyChange={setSortKey} viewMode={view} onViewModeChange={setView} hideFilter={true} />
       </div>
       <div className={view === "grid" ? "grid grid-cols-3 gap-4" : "grid grid-cols-1 gap-4"}>
-        {visibleTeams.map((t) => <TeamCard key={t.id} team={t} onOpen={() => handleTeamClick(t)} onDelete={() => setDeleteConfirm({ isOpen: true, team: t, isLoading: false })} openMenuId={openMenuId} setOpenMenuId={setOpenMenuId} isAdmin={true} />)}
+        {paginatedTeams.map((t) => <TeamCard key={t.id} team={t} onOpen={() => handleTeamClick(t)} onDelete={() => setDeleteConfirm({ isOpen: true, team: t, isLoading: false })} openMenuId={openMenuId} setOpenMenuId={setOpenMenuId} isAdmin={true} />)}
       </div>
       {!visibleTeams.length && <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-500">No teams found.</div>}
+
+      <div className="flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3 text-sm text-muted shadow-sm">
+        <span>
+          Page {page} of {totalPages} (showing {paginatedTeams.length} on this page, {visibleTeams.length} total)
+        </span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            className="rounded-lg border border-border px-3 py-1.5 text-muted disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages}
+            className="rounded-lg border border-border px-3 py-1.5 text-muted disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      </div>
       <ConfirmDelete isOpen={deleteConfirm.isOpen} title="Delete Team" message={<>Are you sure you want to delete "<span className="font-bold">{deleteConfirm.team?.name}</span>" team?</>} onConfirm={() => { const id = getTeamId(deleteConfirm.team); id ? handleTeamDelete(id) : setDeleteConfirm({ isOpen: false, team: null, isLoading: false }) }} onCancel={() => setDeleteConfirm({ isOpen: false, team: null, isLoading: false })} confirmText="Yes" cancelText="No" isDangerous={true} isLoading={deleteConfirm.isLoading} />
     </div>
   );
