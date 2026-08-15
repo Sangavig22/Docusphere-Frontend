@@ -1,16 +1,16 @@
-import { LayoutDashboard, FileText, Upload, Users, Star, Clock, Search, ScanText, Settings, HelpCircle, RecycleIcon, GitMerge,Download } from "lucide-react";
+import { LayoutDashboard, FileText, Upload, Users, Star, Clock, Search, ScanText, Settings, HelpCircle, RecycleIcon, GitMerge,Download, FileEdit } from "lucide-react";
 
 // Dashboard menu items
 export const DASHBOARD_MENU = {
   primary: [
     { label: "Dashboard", icon: LayoutDashboard, to: "/dashboard" },
     { label: "My Documents", icon: FileText, to: "/documents" },
+    { label: "Online Editor", icon: FileEdit, to: "/online-editor" },
     { label: "Uploads", icon: Upload, to: "/uploads" },
     { label: "Team", icon: Users, to: "/team" },
     { label: "Starred", icon: Star, to: "/starred" },
     { label: "Recent", icon: Clock, to: "/recent" },
     { label: "OCR", icon: ScanText, to: "/ocr" },
-
   ],
   secondary: [
     { label: "Recycle bin", icon: RecycleIcon, to: "/trash" },

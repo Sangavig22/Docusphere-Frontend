@@ -29,6 +29,8 @@ import DocumentEditorPage from "../pages/DocumentEditorPage";
 import VersionPreviewPage from "../pages/VersionPreviewPage";
 import AdminGlobalSearch from "../pages/AdminGlobalSearch.jsx";
 import NotificationsPage from "../pages/NotificationsPage.jsx";
+import OnlineEditorPage from "../pages/OnlineEditorPage";
+import OnlineEditorWorkspace from "../pages/OnlineEditorWorkspace";
 
 
 function withLayout(element, pageTitle, pageSubtitle, type = "dashboard") {
@@ -134,6 +136,16 @@ export const routes = [
     path: "/editor/:documentId",
     element: <DocumentEditorPage />,
      protected: true,
+  },
+  {
+    path: "/online-editor",
+    element: withLayout(<OnlineEditorPage />, "Online Editor", "Create and edit office documents online."),
+    protected: true,
+  },
+  {
+    path: "/online-editor/edit/:documentId",
+    element: <OnlineEditorWorkspace />,
+    protected: true,
   },
 
 
