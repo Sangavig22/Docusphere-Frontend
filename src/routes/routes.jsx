@@ -29,6 +29,9 @@ import DocumentEditorPage from "../pages/DocumentEditorPage";
 import VersionPreviewPage from "../pages/VersionPreviewPage";
 import AdminGlobalSearch from "../pages/AdminGlobalSearch.jsx";
 import NotificationsPage from "../pages/NotificationsPage.jsx";
+import OnlineEditorPage from "../pages/OnlineEditorPage";
+import OnlineEditorWorkspace from "../pages/OnlineEditorWorkspace";
+import HelpCenterPage from "../pages/HelpCenterPage";
 
 
 function withLayout(element, pageTitle, pageSubtitle, type = "dashboard") {
@@ -135,6 +138,16 @@ export const routes = [
     element: <DocumentEditorPage />,
      protected: true,
   },
+  {
+    path: "/online-editor",
+    element: withLayout(<OnlineEditorPage />, "Online Editor", "Create and edit office documents online."),
+    protected: true,
+  },
+  {
+    path: "/online-editor/edit/:documentId",
+    element: <OnlineEditorWorkspace />,
+    protected: true,
+  },
 
 
   {
@@ -171,6 +184,11 @@ export const routes = [
     path: "/setting",
     element: withLayout(<SettingsPage />, "Settings", "Manage your account and preferences."
     ),
+    protected: true,
+  },
+  {
+    path: "/help",
+    element: withLayout(<HelpCenterPage />, "Help & Support Center", "Find answers, learn how to use DocuSphere, or contact our support team."),
     protected: true,
   },
 
