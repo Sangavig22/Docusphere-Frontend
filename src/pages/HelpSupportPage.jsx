@@ -27,6 +27,7 @@ import {
 import { helpSupportService } from "../services/helpSupportService";
 import { FAQ_DATA, TUTORIAL_VIDEOS, STEP_GUIDES } from "../data/helpCenterData";
 import VideoPlayerModal from "../components/Help/VideoPlayerModal";
+import { getYoutubeThumbnail, extractYoutubeId } from "../utils/youtube";
 
 export default function HelpSupportPage() {
   const navigate = useNavigate();
@@ -453,43 +454,55 @@ export default function HelpSupportPage() {
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {filteredVideos.length > 0 ? (
-            filteredVideos.map((video) => (
-              <div
-                key={video.id}
-                onClick={() => setSelectedVideo(video)}
-                className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-md transition-all duration-300 cursor-pointer"
-              >
-                {/* Visual Thumbnail Card */}
-                <div className="relative aspect-video w-full bg-gradient-to-br from-primary/20 via-muted to-card flex items-center justify-center overflow-hidden border-b border-border">
-                  <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors" />
-                  <div className="z-10 flex h-12 w-12 items-center justify-center rounded-full bg-primary/95 text-primary-foreground shadow-lg group-hover:scale-110 transition-transform">
-                    <Play className="h-5 w-5 fill-current ml-0.5" />
+            filteredVideos.map((video) => {
+              const videoId = extractYoutubeId(video.videoId || video.youtubeUrl);
+              const thumbUrl = videoId ? getYoutubeThumbnail(videoId) : null;
+              return (
+                <div
+                  key={video.id}
+                  onClick={() => setSelectedVideo(video)}
+                  className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-md transition-all duration-300 cursor-pointer"
+                >
+                  {/* Visual Thumbnail Card */}
+                  <div className="relative aspect-video w-full bg-gradient-to-br from-primary/20 via-muted to-card flex items-center justify-center overflow-hidden border-b border-border">
+                    {thumbUrl ? (
+                      <img
+                        src={thumbUrl}
+                        alt={video.title}
+                        loading="lazy"
+                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : null}
+                    <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors" />
+                    <div className="z-10 flex h-12 w-12 items-center justify-center rounded-full bg-primary/95 text-primary-foreground shadow-lg group-hover:scale-110 transition-transform">
+                      <Play className="h-5 w-5 fill-current ml-0.5" />
+                    </div>
+                  </div>
+                  {/* Details Panel */}
+                  <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] uppercase font-bold text-primary tracking-wide">
+                        {video.category}
+                      </span>
+                      <h3 className="font-bold text-sm text-foreground line-clamp-1">
+                        {highlightText(video.title, searchQuery)}
+                      </h3>
+                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                        {video.description}
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between text-[10px] font-semibold text-muted-foreground pt-2 border-t border-border/50">
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3.5 w-3.5" /> {video.duration}
+                      </span>
+                      <span className="text-primary group-hover:translate-x-1 transition-transform flex items-center gap-0.5">
+                        Watch Tutorial <ArrowRight className="h-3 w-3" />
+                      </span>
+                    </div>
                   </div>
                 </div>
-                {/* Details Panel */}
-                <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] uppercase font-bold text-primary tracking-wide">
-                      {video.category}
-                    </span>
-                    <h3 className="font-bold text-sm text-foreground line-clamp-1">
-                      {highlightText(video.title, searchQuery)}
-                    </h3>
-                    <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                      {video.description}
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-between text-[10px] font-semibold text-muted-foreground pt-2 border-t border-border/50">
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3.5 w-3.5" /> {video.duration}
-                    </span>
-                    <span className="text-primary group-hover:translate-x-1 transition-transform flex items-center gap-0.5">
-                      Watch Tutorial <ArrowRight className="h-3 w-3" />
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))
+              );
+            })
           ) : (
             <div className="col-span-full py-8 text-center text-muted-foreground text-xs">
               No video tutorials match "{searchQuery}".

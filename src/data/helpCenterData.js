@@ -63,180 +63,136 @@ export const FAQ_DATA = [
 ];
 
 export const TUTORIAL_VIDEOS = [
-  // Documents
+  // Documents Category
   {
     id: "upload-document",
-    title: "How to Upload a Document",
-    description: "Learn how to upload your first document to DocuSphere.",
+    title: "How to Upload Documents",
+    description: "Upload PDF, Word, or image files easily into your DocuSphere workspace.",
     category: "Documents",
-    duration: "45 sec",
-    youtubeUrl: "",
-    videoId: "",
-    available: false
+    duration: "1:02",
+    youtubeUrl: "https://youtu.be/D2fd7vrNdCE?si=nB5nSdGlgywMlA4U",
+    videoId: "D2fd7vrNdCE",
+    available: true
   },
   {
-    id: "search-filter-documents",
-    title: "How to Search and Filter Documents",
-    description: "Learn how to find specific documents using search filters.",
+    id: "manage-documents",
+    title: "How to Manage Documents",
+    description: "Organize your files, create directories, and navigate the document dashboard.",
     category: "Documents",
-    duration: "1 min 15 sec",
-    youtubeUrl: "",
-    videoId: "",
-    available: false
+    duration: "2:12",
+    youtubeUrl: "https://youtu.be/M2N2eeWm1wE?si=5dLHsJBgEWcc6pPl",
+    videoId: "M2N2eeWm1wE",
+    available: true
   },
   {
-    id: "rename-organize-documents",
-    title: "How to Rename and Organize Documents",
-    description: "Keep your files organized in directories.",
+    id: "document-actions",
+    title: "How to Use Document Actions",
+    description: "Perform bulk operations, download, rename, star, or delete files.",
     category: "Documents",
-    duration: "50 sec",
-    youtubeUrl: "",
-    videoId: "",
-    available: false
+    duration: "2:30",
+    youtubeUrl: "https://youtu.be/ssQD3ShDI0c?si=2cf9vXQMFfenVw45",
+    videoId: "ssQD3ShDI0c",
+    available: true
   },
+
+  // OCR & AI Category
   {
-    id: "recycle-bin",
-    title: "How to Use the Recycle Bin",
-    description: "Restore soft-deleted files or purge them permanently.",
-    category: "Documents",
-    duration: "1 min",
-    youtubeUrl: "",
-    videoId: "",
-    available: false
-  },
-  // OCR & AI
-  {
-    id: "extract-text-ocr",
-    title: "How to Extract Text with OCR",
-    description: "Use Google Vision to perform optical character recognition.",
+    id: "ocr-summary",
+    title: "How to Use OCR and AI Summary",
+    description: "Extract text from scanned documents and images, and generate concise summaries using Gemini AI.",
     category: "OCR & AI",
-    duration: "1 min 30 sec",
-    youtubeUrl: "",
-    videoId: "",
-    available: false
+    duration: "1:34",
+    youtubeUrl: "https://youtu.be/sF4RPxbnSV4?si=oXiiKGExPCOkBb3j",
+    videoId: "sF4RPxbnSV4",
+    available: true
   },
-  {
-    id: "generate-ai-summary",
-    title: "How to Generate an AI Summary",
-    description: "Get brief summaries and key points of files using Gemini.",
-    category: "OCR & AI",
-    duration: "1 min 20 sec",
-    youtubeUrl: "",
-    videoId: "",
-    available: false
-  },
-  {
-    id: "ocr-processing-status",
-    title: "How to Understand OCR Processing Status",
-    description: "Learn about active, completed, or failed jobs.",
-    category: "OCR & AI",
-    duration: "45 sec",
-    youtubeUrl: "",
-    videoId: "",
-    available: false
-  },
-  // Collaboration
+
+  // Collaboration Category
   {
     id: "create-team",
     title: "How to Create a Team",
-    description: "Establish collaborative workspaces for shared files.",
+    description: "Set up collaborative team workspaces and invite members to share resources.",
     category: "Collaboration",
-    duration: "1 min 10 sec",
-    youtubeUrl: "",
-    videoId: "",
-    available: false
+    duration: "1:18",
+    youtubeUrl: "https://youtu.be/zhIjTBPeFFU?si=iOnZa2dGwoYqeoq0",
+    videoId: "zhIjTBPeFFU",
+    available: true
   },
   {
     id: "invite-team-members",
     title: "How to Invite Team Members",
-    description: "Add members to your workspace to collaborate.",
+    description: "Invite members to your team, assign roles, and collaborate together on shared documents.",
     category: "Collaboration",
-    duration: "1 min 05 sec",
-    youtubeUrl: "",
-    videoId: "",
-    available: false
-  },
-  {
-    id: "document-comments",
-    title: "How to Use Document Comments",
-    description: "Add notes and feedback on specific page areas.",
-    category: "Collaboration",
-    duration: "1 min 15 sec",
-    youtubeUrl: "",
-    videoId: "",
-    available: false
+    duration: "1:05",
+    youtubeUrl: "https://youtu.be/Rt4OrIFGCyM?si=_aU_i0pn9wqPkZkr",
+    videoId: "Rt4OrIFGCyM",
+    available: true
   },
   {
     id: "team-chat",
     title: "How to Use Team Chat",
-    description: "Chat in real-time inside the shared workspace.",
+    description: "Chat with team members in real-time to discuss documents and coordinate work.",
     category: "Collaboration",
-    duration: "1 min 45 sec",
-    youtubeUrl: "",
-    videoId: "",
-    available: false
+    duration: "1:45",
+    youtubeUrl: "https://youtu.be/TbxC5QdwfYw?si=jIG-JinGO55uZufP",
+    videoId: "TbxC5QdwfYw",
+    available: true
   },
-  // Sharing & Security
+
+  // Sharing & Security Category
   {
-    id: "share-document",
-    title: "How to Share a Document",
-    description: "Create public sharing links for your documents.",
+    id: "share-revoke-permission",
+    title: "How to Share Documents and Revoke Permissions",
+    description: "Generate sharing links, configure viewing/editing permissions, and revoke access instantly.",
     category: "Sharing & Security",
-    duration: "1 min 10 sec",
-    youtubeUrl: "",
-    videoId: "",
-    available: false
+    duration: "2:05",
+    youtubeUrl: "https://youtu.be/NRfjHbIhepw?si=3kxLr753Y6NuzvWf",
+    videoId: "NRfjHbIhepw",
+    available: true
   },
+
+  // Version Control Category
   {
-    id: "set-share-permissions",
-    title: "How to Set Share Permissions",
-    description: "Control who can view, edit, or download files.",
-    category: "Sharing & Security",
-    duration: "1 min 15 sec",
-    youtubeUrl: "",
-    videoId: "",
-    available: false
-  },
-  {
-    id: "set-share-expiration",
-    title: "How to Set Share Expiration",
-    description: "Revoke sharing links automatically at a specified date.",
-    category: "Sharing & Security",
-    duration: "55 sec",
-    youtubeUrl: "",
-    videoId: "",
-    available: false
-  },
-  {
-    id: "password-protect",
-    title: "How to Password-Protect a Document",
-    description: "Require a password to access files or link details.",
-    category: "Sharing & Security",
-    duration: "1 min 30 sec",
-    youtubeUrl: "",
-    videoId: "",
-    available: false
-  },
-  // Version Control
-  {
-    id: "view-version-history",
-    title: "How to View Version History",
-    description: "Trace modifications and updates on files.",
+    id: "version-history-restore",
+    title: "How to View Version History and Restore Versions",
+    description: "Track document changes, compare history, and roll back to previous versions when needed.",
     category: "Version Control",
-    duration: "1 min",
-    youtubeUrl: "",
-    videoId: "",
-    available: false
+    duration: "1:52",
+    youtubeUrl: "https://youtu.be/8K1_nItSR_M?si=8AsE6W-o0pxRKWm8",
+    videoId: "8K1_nItSR_M",
+    available: true
+  },
+
+  // Online Editors Category
+  {
+    id: "editor-docs",
+    title: "How to Use Online Editor for Docx Files",
+    description: "Create, view, and edit text documents directly inside your browser with the online editor.",
+    category: "Online Editors",
+    duration: "2:08",
+    youtubeUrl: "https://youtu.be/xDJtyDfMsf0?si=hqSdwOh1s5kshwQ7",
+    videoId: "xDJtyDfMsf0",
+    available: true
   },
   {
-    id: "restore-older-version",
-    title: "How to Restore an Older Version",
-    description: "Roll back updates to a prior saved version.",
-    category: "Version Control",
-    duration: "1 min 25 sec",
-    youtubeUrl: "",
-    videoId: "",
-    available: false
+    id: "editor-presentation",
+    title: "How to Use Online Editor for Presentations",
+    description: "Design presentation slides and customize layouts using the integrated presentation editor.",
+    category: "Online Editors",
+    duration: "2:22",
+    youtubeUrl: "https://youtu.be/UNC7lDeXlLA?si=Dv4lk8cr8YSizqX5",
+    videoId: "UNC7lDeXlLA",
+    available: true
+  },
+  {
+    id: "editor-excel",
+    title: "How to Use Online Editor for Spreadsheets",
+    description: "Edit Excel and sheet files online, create tables, and perform formula calculations.",
+    category: "Online Editors",
+    duration: "2:14",
+    youtubeUrl: "https://youtu.be/UsHDXNUTlF0?si=M3gpZFnE_GRNZhhk",
+    videoId: "UsHDXNUTlF0",
+    available: true
   }
 ];
 
