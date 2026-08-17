@@ -8,7 +8,7 @@ import DocumentPreviewSection from "../components/dashboard/DocumentPreviewSecti
 import DocumentActionModal from "../components/documents/DocumentActionModal";
 import ShareModal from "../components/documents/share/ShareModal";
 
-const RECENT_PREVIEW_LIMIT = 10;
+const RECENT_PREVIEW_LIMIT = 8;
 const RECENT_DAYS = 7;
 
 function Dashboard() {

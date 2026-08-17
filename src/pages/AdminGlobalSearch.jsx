@@ -1,18 +1,20 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search, Users, Building2, Loader, AlertCircle, User, Users2, FileText, Mic } from "lucide-react";
 import { request } from "../api/apiClient";
 import { normalizeDocumentType } from "../utils/documentUtils";
 
 const AdminGlobalSearch = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("all");
   const [isListening, setIsListening] = useState(false);
-  const [audioLevel, setAudioLevel] = useState(0);
 
   const recognitionRef = useRef(null);
+  const micButtonRef = useRef(null);
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
   const dataArrayRef = useRef(null);
@@ -39,7 +41,12 @@ const AdminGlobalSearch = () => {
         
         let sum = 0;
         for (let i = 0; i < bufferLength; i++) sum += dataArrayRef.current[i];
-        setAudioLevel(Math.min(100, Math.round(((sum / bufferLength) / 128) * 100)));
+        const level = Math.min(100, Math.round(((sum / bufferLength) / 128) * 100));
+        
+        if (micButtonRef.current) {
+          micButtonRef.current.style.boxShadow = `0 0 0 ${Math.max(0, level / 3)}px rgba(239, 68, 68, 0.4)`;
+        }
+        
         animationFrameRef.current = requestAnimationFrame(updateLevel);
       };
       
@@ -59,7 +66,9 @@ const AdminGlobalSearch = () => {
     if (audioContextRef.current) {
       audioContextRef.current.close();
     }
-    setAudioLevel(0);
+    if (micButtonRef.current) {
+      micButtonRef.current.style.boxShadow = 'none';
+    }
   };
 
   const toggleListening = () => {
@@ -158,8 +167,12 @@ const AdminGlobalSearch = () => {
     }
   };
 
-  const renderResultRow = (index, Icon, bg, fg, title, subtitle, extra = null) => (
-    <div key={index} className="flex items-center p-3 hover:bg-gray-50 rounded border-b border-gray-200">
+  const renderResultRow = (index, Icon, bg, fg, title, subtitle, extra = null, onClick = null) => (
+    <div 
+      key={index} 
+      className={`flex items-center p-3 hover:bg-gray-50 rounded border-b border-gray-200 ${onClick ? 'cursor-pointer' : ''}`}
+      onClick={onClick}
+    >
       <div className="flex-shrink-0 mr-3">
         <div className={`w-10 h-10 ${bg} rounded-full flex items-center justify-center`}>
           <Icon className={`w-5 h-5 ${fg}`} />
@@ -174,10 +187,27 @@ const AdminGlobalSearch = () => {
   );
 
   const renderUserResult = (user, index) => 
-    renderResultRow(index, User, "bg-blue-100", "text-blue-600", user.fullName, user.email, `Role: ${user.role || "USER"}`);
+    renderResultRow(
+      index, 
+      User, 
+      "bg-blue-100", 
+      "text-blue-600", 
+      user.fullName, 
+      user.email, 
+      `Role: ${user.role || "USER"}`
+    );
 
   const renderTeamResult = (team, index) => 
-    renderResultRow(index, Building2, "bg-green-100", "text-green-600", team.teamName, `${team.memberCount} members`);
+    renderResultRow(
+      index, 
+      Building2, 
+      "bg-green-100", 
+      "text-green-600", 
+      team.teamName, 
+      `${team.memberCount} members`,
+      null,
+      () => navigate(`/admin/teams/${team.id}`)
+    );
 
   const renderDocumentResult = (doc, index) => {
     const typeMap = {
@@ -188,7 +218,16 @@ const AdminGlobalSearch = () => {
       image: { bg: "bg-violet-50", fg: "text-violet-600" }
     };
     const { bg, fg } = typeMap[normalizeDocumentType(doc.fileType)] || { bg: "bg-gray-50", fg: "text-gray-400" };
-    return renderResultRow(index, FileText, bg, fg, doc.fileName, doc.fileType || "Unknown Type");
+    return renderResultRow(
+      index, 
+      FileText, 
+      bg, 
+      fg, 
+      doc.fileName, 
+      doc.fileType || "Unknown Type",
+      null,
+      () => navigate(`/documents/${doc.id}/preview`, { state: { fromAdmin: true } })
+    );
   };
 
   const renderResultSection = (tabId, title, Icon, colorClass, dataArray, renderItem) => {
@@ -219,6 +258,7 @@ const AdminGlobalSearch = () => {
             className="w-full pl-12 pr-12 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-gray-900"
           />
           <button
+            ref={micButtonRef}
             onClick={toggleListening}
             title="Search with voice"
             className={`absolute right-3 top-2.5 p-1 rounded-full transition-colors duration-75 ${
@@ -226,13 +266,6 @@ const AdminGlobalSearch = () => {
                 ? "bg-red-100 text-red-600"
                 : "text-gray-400 hover:text-blue-600 hover:bg-gray-100"
             }`}
-            style={
-              isListening
-                ? {
-                    boxShadow: `0 0 0 ${Math.max(0, audioLevel / 3)}px rgba(239, 68, 68, 0.4)`,
-                  }
-                : {}
-            }
           >
             <Mic className="w-5 h-5" />
           </button>
