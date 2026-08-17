@@ -10,7 +10,7 @@ import {
   fetchDocumentVersions,
   restoreDocumentVersion,
 } from "../../../services/documentVersionService";
-import { verifyDocumentPassword } from "../../../services/documentProtectionService";
+import { verifyDocumentPassword, verifySharedDocumentPassword } from "../../../services/documentProtectionService";
 import {
   hasValidUnlockSession,
   isDocumentProtected,
@@ -20,6 +20,8 @@ import {
 } from "../../../utils/documentProtection";
 import { getUnlockSession } from "../../../utils/unlockSessionStore";
 import { canRestoreVersion } from "../../../utils/versionHistoryPermissions";
+import { getShareVersionErrorMessage } from "../../../utils/shareAccessErrors";
+import { canAccessSharedVersionHistory } from "../share/sharePermissions";
 
 const VERSIONS_PAGE_SIZE = 10;
 
@@ -31,6 +33,7 @@ export default function VersionHistoryModal({
   open,
   document,
   userTeamRole = "",
+  shareToken = "",
   onClose,
   onRestored,
 }) {
@@ -42,6 +45,10 @@ export default function VersionHistoryModal({
   const canRestore = useMemo(
     () => canRestoreVersion({ doc: document, userTeamRole }),
     [document, userTeamRole],
+  );
+  const canUseShareVersionHistory = useMemo(
+    () => !shareToken || canAccessSharedVersionHistory(document),
+    [shareToken, document],
   );
 
   const [versions, setVersions] = useState([]);
@@ -71,6 +78,12 @@ export default function VersionHistoryModal({
         return;
       }
 
+      if (shareToken && !canAccessSharedVersionHistory(document)) {
+        setVersions([]);
+        setError("Version history is only available for email invites.");
+        return;
+      }
+
       setLoading(true);
       setError("");
       try {
@@ -78,6 +91,7 @@ export default function VersionHistoryModal({
           page: targetPage,
           pageSize: VERSIONS_PAGE_SIZE,
           documentProtected,
+          shareToken: shareToken || undefined,
         });
         setVersions(result.versions);
         setCurrentVersionNumber(result.currentVersionNumber);
@@ -85,12 +99,18 @@ export default function VersionHistoryModal({
         setPage(result.pagination.page);
       } catch (err) {
         setVersions([]);
-        setError(err instanceof Error ? err.message : "Unable to load version history.");
+        setError(
+          shareToken
+            ? getShareVersionErrorMessage(err)
+            : err instanceof Error
+              ? err.message || "Unable to load version history."
+              : "Unable to load version history.",
+        );
       } finally {
         setLoading(false);
       }
     },
-    [documentId, documentProtected],
+    [documentId, documentProtected, shareToken, document],
   );
 
   useEffect(() => {
@@ -118,6 +138,11 @@ export default function VersionHistoryModal({
   function handleView(version) {
     if (!documentId) return;
 
+    if (shareToken && !canUseShareVersionHistory) {
+      toast.error("Version history is only available for email invites.");
+      return;
+    }
+
     if (documentProtected && !hasValidUnlockSession(documentId)) {
       setPendingViewVersion(version);
       setPendingDownloadVersion(null);
@@ -127,6 +152,10 @@ export default function VersionHistoryModal({
     }
 
     onClose?.();
+    if (shareToken) {
+      navigate(`/share/${encodeURIComponent(shareToken)}/versions/${encodeURIComponent(version.id)}`);
+      return;
+    }
     navigate(`/documents/${documentId}/versions/${version.id}/preview`);
   }
 
@@ -134,7 +163,10 @@ export default function VersionHistoryModal({
     const downloadName = documentName.includes(".")
       ? documentName.replace(/(\.[^.]+)$/, `_v${version.versionNumber}$1`)
       : `${documentName}_v${version.versionNumber}`;
-    await downloadDocumentVersion(documentId, version.id, downloadName, { unlockToken });
+    await downloadDocumentVersion(documentId, version.id, downloadName, {
+      unlockToken,
+      shareToken: shareToken || undefined,
+    });
     toast.success(`Version ${version.versionNumber} download started.`);
   }
 
@@ -163,7 +195,9 @@ export default function VersionHistoryModal({
     setVerifyLoading(true);
     setVerifyError("");
     try {
-      const { unlockSession } = await verifyDocumentPassword(documentId, password);
+      const { unlockSession } = shareToken
+        ? await verifySharedDocumentPassword(shareToken, documentId, password)
+        : await verifyDocumentPassword(documentId, password);
       setUnlockSession(documentId, unlockSession);
       setVerifyOpen(false);
 
@@ -179,7 +213,11 @@ export default function VersionHistoryModal({
         const target = pendingViewVersion;
         setPendingViewVersion(null);
         onClose?.();
-        navigate(`/documents/${documentId}/versions/${target.id}/preview`);
+        if (shareToken) {
+          navigate(`/share/${encodeURIComponent(shareToken)}/versions/${encodeURIComponent(target.id)}`);
+        } else {
+          navigate(`/documents/${documentId}/versions/${target.id}/preview`);
+        }
       } else {
         toast.success("Document unlocked for this session.");
       }

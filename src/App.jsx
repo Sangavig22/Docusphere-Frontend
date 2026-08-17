@@ -20,6 +20,7 @@ function App() {
           pauseOnFocusLoss
           draggable
           pauseOnHover
+          style={{ zIndex: 100000 }}
         />
         <SessionTimeoutWarning />
         <AppRoutes />

@@ -21,7 +21,7 @@ async function refreshSession() {
 }
 
 export async function request(endpoint, options = {}) {
-  const { headers: customHeaders, skipAuthRefresh = false, ...restOptions } = options;
+  const { headers: customHeaders, skipAuthRefresh = false, skipAuthRedirect = false, ...restOptions } = options;
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...restOptions,
@@ -42,21 +42,19 @@ export async function request(endpoint, options = {}) {
  if (!response.ok) {
   const isAuthEndpoint = NON_REFRESH_AUTH_ENDPOINTS.test(endpoint);
 
-  if (response.status === 401 && !isAuthEndpoint && !skipAuthRefresh) {
-    const refreshed = await refreshSession();
-    if (refreshed) {
-      return request(endpoint, {
-        ...restOptions,
-        headers: customHeaders,
-        skipAuthRefresh: true,
-      });
+  if (response.status === 401 && !isAuthEndpoint && !skipAuthRedirect) {
+    if (!skipAuthRefresh) {
+      const refreshed = await refreshSession();
+      if (refreshed) {
+        return request(endpoint, {
+          ...restOptions,
+          headers: customHeaders,
+          skipAuthRefresh: true,
+          skipAuthRedirect,
+        });
+      }
     }
 
-    authService.signOut().catch(console.error);
-    window.location.href = '/signin';
-  }
-
-  if (response.status === 401 && !isAuthEndpoint && skipAuthRefresh) {
     authService.signOut().catch(console.error);
     window.location.href = '/signin';
   }

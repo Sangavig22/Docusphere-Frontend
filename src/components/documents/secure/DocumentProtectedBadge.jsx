@@ -2,7 +2,8 @@ import { Lock } from "lucide-react";
 import { isDocumentProtected } from "../../../utils/documentProtection";
 
 /**
- * Small lock on the file-type icon only. No blur, border, or "Protected" label.
+ * Compact lock badge on the file-type icon.
+ * Soft amber pill stays readable in light mode and muted in dark mode.
  */
 export default function DocumentProtectedBadge({ doc, className = "" }) {
   if (!isDocumentProtected(doc)) return null;
@@ -10,14 +11,15 @@ export default function DocumentProtectedBadge({ doc, className = "" }) {
   return (
     <span
       className={[
-        "absolute -bottom-0.5 -right-0.5 inline-flex h-[17px] w-[17px] items-center justify-center rounded-full",
-        "bg-card text-muted shadow-sm ring-1 ring-border ring-offset-1 ring-offset-card dark:ring-offset-card",
+        "absolute -bottom-1 -right-1 inline-flex h-4 w-4 items-center justify-center rounded-full",
+        "border border-amber-200/90 bg-amber-50 text-amber-700 shadow-sm",
+        "dark:border-amber-400/30 dark:bg-amber-500/15 dark:text-amber-300",
         className,
       ].join(" ")}
       title="Password protected"
       aria-label="Password protected"
     >
-      <Lock size={9} strokeWidth={2.25} className="opacity-90" />
+      <Lock size={9} strokeWidth={2.4} />
     </span>
   );
 }

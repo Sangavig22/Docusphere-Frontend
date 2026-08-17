@@ -1,5 +1,5 @@
 import { API_BASE_URL } from "../config/api";
-import { ShareAccessError } from "../utils/shareAccessErrors";
+import { ShareAccessError, isExpiredOrRevokedShareError } from "../utils/shareAccessErrors";
 
 function buildApiUrl(path) {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
@@ -52,11 +52,11 @@ async function parseShareResponse(response) {
   return data?.data ?? data;
 }
 
-function normalizeEditorConfig(config, { token } = {}) {
+function normalizeEditorConfig(config, { token, readOnly = false } = {}) {
   if (!config || typeof config !== "object") return config;
 
   if (config.config && typeof config.config === "object") {
-    return normalizeEditorConfig(config.config, { token });
+    return normalizeEditorConfig(config.config, { token, readOnly });
   }
 
   const result = { ...config };
@@ -71,7 +71,7 @@ function normalizeEditorConfig(config, { token } = {}) {
   if (result.editorConfig && typeof result.editorConfig === "object") {
     result.editorConfig = {
       ...result.editorConfig,
-      mode: result.editorConfig.mode || "edit",
+      mode: readOnly ? "view" : result.editorConfig.mode || "edit",
       customization: {
         ...(result.editorConfig.customization || {}),
         comments: false,
@@ -139,8 +139,16 @@ async function fetchShareEditorConfigRaw(path) {
 }
 
 function shouldStopRetrying(error) {
-  const status = Number(error?.status) || 0;
-  return status === 403 || status === 410 || status === 401;
+  return isExpiredOrRevokedShareError(error);
+}
+
+export async function fetchShareResource(path) {
+  const response = await fetch(buildApiUrl(path), {
+    method: "GET",
+    credentials: "include",
+    headers: { Accept: "application/json" },
+  });
+  return parseShareResponse(response);
 }
 
 export async function getSharedDocumentByToken(token) {
@@ -153,19 +161,24 @@ export async function getSharedDocumentByToken(token) {
   return parseShareResponse(response);
 }
 
-export async function getSharedEditorConfig(token, documentId) {
+export async function getSharedEditorConfig(token, documentId, { readOnly = false } = {}) {
   const encodedToken = encodeURIComponent(token);
+  const modeSuffix = readOnly ? "?mode=view" : "";
+  const modeQuery = readOnly ? "&mode=view" : "";
   let lastError = null;
 
-  try {
-    const data = await fetchShareEditorConfigRaw(`/api/share/${encodedToken}/editor-config`);
-    const config = data?.config ?? data?.data?.config;
-    if (config && typeof config === "object") {
-      return normalizeEditorConfig(config, { token });
+  const sharePaths = [`/api/share/${encodedToken}/editor-config${modeSuffix}`];
+  for (const path of sharePaths) {
+    try {
+      const data = await fetchShareEditorConfigRaw(path);
+      const config = data?.config ?? data?.data?.config;
+      if (config && typeof config === "object") {
+        return normalizeEditorConfig(config, { token, readOnly });
+      }
+    } catch (error) {
+      lastError = error;
+      if (shouldStopRetrying(error)) throw error;
     }
-  } catch (error) {
-    lastError = error;
-    if (shouldStopRetrying(error)) throw error;
   }
 
   if (!documentId) {
@@ -173,11 +186,19 @@ export async function getSharedEditorConfig(token, documentId) {
   }
 
   const encodedId = encodeURIComponent(documentId);
-  const config = await fetchEditorConfigFromPath(
-    `/api/editor/documents/${encodedId}?token=${encodedToken}`,
-  );
+  const editorPaths = [`/api/editor/documents/${encodedId}?token=${encodedToken}${modeQuery}`];
 
-  return normalizeEditorConfig(config, { token });
+  for (const path of editorPaths) {
+    try {
+      const config = await fetchEditorConfigFromPath(path);
+      return normalizeEditorConfig(config, { token, readOnly });
+    } catch (error) {
+      lastError = error;
+      if (shouldStopRetrying(error)) throw error;
+    }
+  }
+
+  throw lastError || new ShareAccessError("Unable to load document preview.", { status: 503 });
 }
 
 async function fetchShareCommentsFromPath(path) {
@@ -259,7 +280,7 @@ export async function addSharedComment(token, documentId, message) {
 export async function downloadSharedDocument(
   documentId,
   token,
-  { password, fileName, mimeType } = {},
+  { password, unlockToken, fileName, mimeType } = {},
 ) {
   const params = new URLSearchParams({ token });
   if (password) params.set("password", password);
@@ -269,14 +290,22 @@ export async function downloadSharedDocument(
     {
       method: "GET",
       credentials: "include",
-      headers: password ? { "X-Document-Password": password } : {},
+      headers: {
+        ...(password ? { "X-Document-Password": password } : {}),
+        ...(unlockToken ? { "X-Unlock-Token": unlockToken } : {}),
+      },
     },
   );
 
   if (!response.ok) {
-    throw new ShareAccessError(`Download failed (${response.status})`, {
-      status: response.status,
-    });
+    let data = null;
+    try {
+      data = await response.json();
+    } catch {
+      data = null;
+    }
+    const message = data?.message || data?.error || `Download failed (${response.status})`;
+    throw new ShareAccessError(message, { status: response.status });
   }
 
   const headerName = parseContentDispositionFilename(response.headers.get("Content-Disposition"));

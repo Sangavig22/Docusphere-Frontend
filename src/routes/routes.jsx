@@ -21,6 +21,7 @@ import Team from "../pages/Team.jsx";
 import TeamNew from "../pages/TeamNew.jsx";
 import TeamDetail from "../pages/TeamDetail.jsx";
 import SharedDocumentPage from "../pages/SharedDocumentPage";
+import SharedVersionPreviewPage from "../pages/SharedVersionPreviewPage";
 import AdminTeamManagementPage from "../pages/AdminTeamManagementPage.jsx";
 import AdminTeamDetailsPage from "../pages/AdminTeamDetailsPage.jsx";
 import AdminMergeTeamsPage from "../pages/AdminMergeTeamsPage.jsx";
@@ -84,6 +85,11 @@ export const routes = [
   {
     path: "/share/:token",
     element: <SharedDocumentPage />,
+    protected: false,
+  },
+  {
+    path: "/share/:token/versions/:versionId",
+    element: <SharedVersionPreviewPage />,
     protected: false,
   },
 

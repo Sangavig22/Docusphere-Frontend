@@ -1,5 +1,7 @@
 import { request } from "../api/apiClient.js";
 import { API_BASE_URL } from "../config/api.js";
+import { fetchShareResource } from "./documentShareService.js";
+import { isExpiredOrRevokedShareError } from "../utils/shareAccessErrors.js";
 import { decorateVersionStatuses, resolveChangeSummary } from "../utils/versionUtils.js";
 
 function resolveEditedBy(raw) {
@@ -115,24 +117,88 @@ function parseVersionsPayload(payload, { page = 1, documentProtected = false } =
   };
 }
 
-export async function fetchDocumentVersions(documentId, { page = 1, pageSize = 10, documentProtected = false } = {}) {
-  const params = new URLSearchParams();
-  params.set("page", String(Math.max(0, page - 1)));
-  params.set("size", String(pageSize));
-
-  const payload = await request(`/documents/${encodeURIComponent(documentId)}/versions?${params.toString()}`, {
-    method: "GET",
-  });
-
-  return parseVersionsPayload(payload, { page, documentProtected });
+function appendShareToken(path, shareToken) {
+  if (!shareToken) return path;
+  const separator = path.includes("?") ? "&" : "?";
+  return `${path}${separator}token=${encodeURIComponent(shareToken)}`;
 }
 
-export async function fetchDocumentVersion(documentId, versionId) {
-  const payload = await request(
-    `/documents/${encodeURIComponent(documentId)}/versions/${encodeURIComponent(versionId)}`,
-    { method: "GET" },
-  );
+function shareRequestOptions(shareToken, extra = {}) {
+  return shareToken ? { skipAuthRedirect: true, ...extra } : extra;
+}
 
+async function fetchSharedVersionsPayload(documentId, shareToken, query, { page, documentProtected }) {
+  const encodedToken = encodeURIComponent(shareToken);
+  const encodedId = encodeURIComponent(documentId);
+  let lastError = null;
+
+  // Primary path — same as before share-route experiments.
+  try {
+    const payload = await request(
+      appendShareToken(`/documents/${encodedId}/versions?${query}`, shareToken),
+      { method: "GET", ...shareRequestOptions(shareToken) },
+    );
+    return parseVersionsPayload(payload, { page, documentProtected });
+  } catch (error) {
+    lastError = error;
+    if (isExpiredOrRevokedShareError(error)) throw error;
+  }
+
+  const fallbackPaths = [
+    `/api/documents/${encodedId}/versions?${query}&token=${encodedToken}`,
+    `/api/share/${encodedToken}/versions?${query}`,
+  ];
+
+  for (const path of fallbackPaths) {
+    try {
+      const payload = await fetchShareResource(path);
+      return parseVersionsPayload(payload, { page, documentProtected });
+    } catch (error) {
+      lastError = error;
+      if (isExpiredOrRevokedShareError(error)) throw error;
+    }
+  }
+
+  throw lastError || new Error("Unable to load version history.");
+}
+
+async function fetchSharedVersionPayload(documentId, versionId, shareToken) {
+  const encodedToken = encodeURIComponent(shareToken);
+  const encodedId = encodeURIComponent(documentId);
+  const encodedVersionId = encodeURIComponent(versionId);
+  let lastError = null;
+
+  try {
+    return await request(
+      appendShareToken(
+        `/documents/${encodedId}/versions/${encodedVersionId}`,
+        shareToken,
+      ),
+      { method: "GET", ...shareRequestOptions(shareToken) },
+    );
+  } catch (error) {
+    lastError = error;
+    if (isExpiredOrRevokedShareError(error)) throw error;
+  }
+
+  const fallbackPaths = [
+    `/api/documents/${encodedId}/versions/${encodedVersionId}?token=${encodedToken}`,
+    `/api/share/${encodedToken}/versions/${encodedVersionId}`,
+  ];
+
+  for (const path of fallbackPaths) {
+    try {
+      return await fetchShareResource(path);
+    } catch (error) {
+      lastError = error;
+      if (isExpiredOrRevokedShareError(error)) throw error;
+    }
+  }
+
+  throw lastError || new Error("Unable to load version.");
+}
+
+function normalizeFetchedVersionPayload(payload, documentId) {
   const root = payload?.data ?? payload;
   const version = normalizeDocumentVersion(root?.version ?? root);
   if (!version) return null;
@@ -141,17 +207,53 @@ export async function fetchDocumentVersion(documentId, versionId) {
     ...version,
     changeSummary: resolveChangeSummary(version.changeSummary),
     documentName: root?.documentName ?? root?.name ?? root?.fileName ?? "",
+    documentId: root?.documentId ?? root?.document?.id ?? documentId,
   };
+}
+
+export async function fetchDocumentVersions(
+  documentId,
+  { page = 1, pageSize = 10, documentProtected = false, shareToken } = {},
+) {
+  const params = new URLSearchParams();
+  params.set("page", String(Math.max(0, page - 1)));
+  params.set("size", String(pageSize));
+  const query = params.toString();
+
+  if (shareToken) {
+    return fetchSharedVersionsPayload(documentId, shareToken, query, { page, documentProtected });
+  }
+
+  const payload = await request(
+    `/documents/${encodeURIComponent(documentId)}/versions?${query}`,
+    { method: "GET" },
+  );
+
+  return parseVersionsPayload(payload, { page, documentProtected });
+}
+
+export async function fetchDocumentVersion(documentId, versionId, { shareToken } = {}) {
+  const payload = shareToken
+    ? await fetchSharedVersionPayload(documentId, versionId, shareToken)
+    : await request(
+        `/documents/${encodeURIComponent(documentId)}/versions/${encodeURIComponent(versionId)}`,
+        { method: "GET" },
+      );
+
+  return normalizeFetchedVersionPayload(payload, documentId);
 }
 
 export async function downloadDocumentVersion(
   documentId,
   versionId,
   fileName = "document",
-  { unlockToken, password } = {},
+  { unlockToken, password, shareToken } = {},
 ) {
+  const params = new URLSearchParams();
+  if (shareToken) params.set("token", shareToken);
+
   const response = await fetch(
-    `${API_BASE_URL}/documents/${encodeURIComponent(documentId)}/versions/${encodeURIComponent(versionId)}/download`,
+    `${API_BASE_URL}/documents/${encodeURIComponent(documentId)}/versions/${encodeURIComponent(versionId)}/download${params.toString() ? `?${params.toString()}` : ""}`,
     {
       method: "GET",
       credentials: "include",
@@ -199,9 +301,27 @@ export async function forceSaveDocument(documentId) {
   });
 }
 
-export async function fetchVersionEditorConfig(documentId, versionId) {
+export async function fetchVersionEditorConfig(documentId, versionId, { shareToken } = {}) {
   return request(
-    `/editor/documents/${encodeURIComponent(documentId)}/versions/${encodeURIComponent(versionId)}`,
-    { method: "GET" },
+    appendShareToken(
+      `/editor/documents/${encodeURIComponent(documentId)}/versions/${encodeURIComponent(versionId)}`,
+      shareToken,
+    ),
+    { method: "GET", ...shareRequestOptions(shareToken) },
   );
+}
+
+export async function fetchSharedVersionEditorConfig(shareToken, documentId, versionId) {
+  const encodedToken = encodeURIComponent(shareToken);
+  const encodedVersionId = encodeURIComponent(versionId);
+  const shareOptions = shareRequestOptions(shareToken);
+
+  try {
+    return await request(
+      `/api/share/${encodedToken}/versions/${encodedVersionId}/editor-config`,
+      { method: "GET", ...shareOptions },
+    );
+  } catch {
+    return fetchVersionEditorConfig(documentId, versionId, { shareToken });
+  }
 }

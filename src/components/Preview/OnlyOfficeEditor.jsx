@@ -182,8 +182,8 @@ export default function OnlyOfficeEditor({
   }
 
   return (
-    <div className="h-full w-full bg-white rounded-xl shadow-sm overflow-hidden flex flex-col min-h-[600px]">
-      <div id={editorId} ref={containerRef} className="flex-1 w-full h-full" />
+    <div className="h-full w-full overflow-hidden bg-white flex flex-col">
+      <div id={editorId} ref={containerRef} className="h-full w-full min-h-0" />
     </div>
   );
 }
