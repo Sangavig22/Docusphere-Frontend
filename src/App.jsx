@@ -4,6 +4,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { UserProvider } from './context/UserContext';
 import { ThemeProvider } from './context/ThemeContext';
+import SessionTimeoutWarning from './components/Authentication/SessionTimeoutWarning';
 
 function App() {
    return (
@@ -20,6 +21,7 @@ function App() {
           draggable
           pauseOnHover
         />
+        <SessionTimeoutWarning />
         <AppRoutes />
       </UserProvider>
     </ThemeProvider>

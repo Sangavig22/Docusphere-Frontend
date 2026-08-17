@@ -2,7 +2,7 @@ import { createElement } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import logo from "../../assets/logo.png";
 import GradientButton from "../../components/Authentication/GradientButton";
-import { FileText, ShieldCheck, Users, Zap, Clock, Sparkles, ArrowRight } from "lucide-react";
+import { FileText, ShieldCheck, Users, Zap, Clock, Sparkles, ArrowRight, LayoutDashboard } from "lucide-react";
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -12,34 +12,34 @@ export default function LandingPage() {
 
   const features = [
     {
-      t: "Smart Document Organization",
-      d: "Organize and categorize documents with intelligent tagging and folder structures.",
+      t: "Smart Document Management",
+      d: "Upload, organize, preview, and manage documents across personal and team workspaces.",
       icon: FileText,
     },
     {
       t: "Enterprise-Grade Security",
-      d: "Role-based access control ensures your documents are protected and compliant.",
+      d: "Role-based access control, password-protected documents, and JWT authentication keep your data safe.",
       icon: ShieldCheck,
     },
     {
+      t: "AI-Powered OCR & Summarization",
+      d: "Extract text from scanned documents and generate instant AI summaries",
+      icon: Sparkles,
+    },
+    {
       t: "Team Collaboration",
-      d: "Work together seamlessly with comments, mentions, and real-time updates.",
+      d: "Collaborate in real time with team workspaces, integrated chat, mentions, and document change requests.",
       icon: Users,
     },
     {
-      t: "Fast Performance",
-      d: "Lightning-fast uploads, previews, and document processing.",
-      icon: Zap,
-    },
-    {
-      t: "Version Control",
-      d: "Track changes, compare versions, and restore previous document states.",
+      t: "Version Control & In-Browser Editing",
+      d: "Edit documents directly in the browser, track every change, and restore previous versions with ease.",
       icon: Clock,
     },
     {
-      t: "AI-Power Insights",
-      d: "Extract text, summarize content, and search semantically with advanced AI.",
-      icon: Sparkles,
+      t: "Powerful Admin Controls",
+      d: "Manage users and teams, monitor system activity, and export reports from a centralized dashboard.",
+      icon: LayoutDashboard,
     },
   ];
 
@@ -63,7 +63,7 @@ export default function LandingPage() {
               <GradientButton onClick={() => navigate(signInPath)}>
                 Sign In
               </GradientButton>
-              
+
               <GradientButton onClick={() => navigate("/signup")}>
                 Get Started
               </GradientButton>
@@ -75,8 +75,7 @@ export default function LandingPage() {
               <span className="block mt-1">One intelligent sphere.</span>
             </h1>
             <p className="mt-4 text-sm sm:text-base md:text-lg lg:text-xl max-w-2xl mx-auto font-semibold leading-relaxed">
-              DocuSphere lets your team manage documents, track versions, and
-              collaborate effortlessly — all in one place.
+              DocuSphere brings document management, version control, AI-powered insights, and team collaboration together — all in one secure platform.
             </p>
             <GradientButton className="mt-8" onClick={() => navigate("/signup")}>
               Get Started
@@ -114,7 +113,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        
+
         <section className="w-full max-w-6xl px-6 mt-10 mb-12">
           <div className="bg-[#05152C] text-white rounded-3xl px-6 sm:px-8 py-10 text-center transition-all duration-300 shadow-xl ">
             <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold">
@@ -124,7 +123,7 @@ export default function LandingPage() {
               Join thousands of teams already using DocuSphere to manage their
               documents more effectively.
             </p>
-              <GradientButton variant="light" onClick={() => navigate('/signup')}>
+            <GradientButton variant="light" onClick={() => navigate('/signup')}>
               Get Started
               <span className="ml-2 sm:ml-3 font-bold text-[#05152C]"> <ArrowRight size={18} className="sm:hidden" /> <ArrowRight size={22} className="hidden sm:inline" /></span>
             </GradientButton>
