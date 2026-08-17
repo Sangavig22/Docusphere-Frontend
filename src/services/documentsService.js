@@ -1,5 +1,5 @@
 import {
-  BACKEND_SINGLE_TYPE_FILTERS,
+  BACKEND_TYPE_FILTERS,
   DOCUMENTS_ENDPOINT,
   DOCUMENTS_PAGE_SIZE,
   DOCUMENT_SORT_MAP,
@@ -7,6 +7,7 @@ import {
 import { API_BASE_URL } from "../config/api";
 import authService from "./authService";
 import { getUserIdFromToken } from "../utils/authToken";
+import { resolveDocumentType } from "../utils/documentUtils.js";
 
 const CURRENT_USER_STORAGE_KEY = "currentUser";
 
@@ -117,10 +118,17 @@ function normalizeDoc(raw) {
     raw.teamMemberRole ??
     null;
 
+  const fileName = raw.name ?? raw.fileName ?? "Untitled";
+  const normalizedType = resolveDocumentType(raw, fileName);
+  const resolvedType =
+    normalizedType !== "other"
+      ? normalizedType
+      : raw.type ?? raw.mimeType ?? raw.extension ?? "other";
+
   return {
     id: raw.id ?? raw._id ?? raw.documentId,
-    name: raw.name ?? raw.fileName ?? "Untitled",
-    type: raw.type ?? raw.mimeType ?? raw.extension ?? "other",
+    name: fileName,
+    type: resolvedType,
     sizeBytes: Number(raw.sizeBytes ?? raw.size ?? raw.fileSize ?? 0),
     updatedAt: raw.updatedAt ?? raw.updated_at ?? raw.modifiedAt ?? new Date().toISOString(),
     category: raw.category ?? raw.folder ?? "",
@@ -230,8 +238,8 @@ export async function fetchMyDocuments({
   params.set("sortDirection", sort.sortDirection);
 
   if (query?.trim()) params.set("search", query.trim());
-  // Backend supports one concrete extension in `type`; grouped filters are applied in UI.
-  if (filterType && filterType !== "all" && BACKEND_SINGLE_TYPE_FILTERS.has(filterType)) {
+  // Send UI filter key to backend (pdf, word, sheet, powerpoint, image, or concrete extension).
+  if (filterType && filterType !== "all" && BACKEND_TYPE_FILTERS.has(filterType)) {
     params.set("type", filterType);
   }
   if (typeof starred === "boolean") params.set("starred", String(starred));

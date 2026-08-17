@@ -82,6 +82,19 @@ export async function downloadDocument(id, name = "document", { password, unlock
   window.URL.revokeObjectURL(url);
 }
 
+export async function revokeDocumentShare(id, token) {
+  const params = new URLSearchParams({ token: String(token || "").trim() });
+  return request(`/documents/${id}/share?${params.toString()}`, {
+    method: "DELETE",
+  });
+}
+
+export async function fetchDocumentShares(id) {
+  return request(`/documents/${id}/shares`, {
+    method: "GET",
+  });
+}
+
 export async function shareDocumentByEmail(id, payload) {
   return request(`/documents/${id}/share`, {
     method: "POST",

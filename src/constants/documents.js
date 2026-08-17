@@ -21,8 +21,17 @@ export const DOCUMENT_TYPE_FILTER_OPTIONS = [
   { key: "image", label: "Image" },
 ];
 
-export const BACKEND_SINGLE_TYPE_FILTERS = new Set([
+/**
+ * UI filter keys the frontend sends as `type`.
+ * Backend should accept these grouped values (preferred).
+ */
+export const BACKEND_TYPE_FILTERS = new Set([
   "pdf",
+  "word",
+  "sheet",
+  "powerpoint",
+  "image",
+  // concrete extensions (fallback / older API)
   "doc",
   "docx",
   "xls",
@@ -33,3 +42,14 @@ export const BACKEND_SINGLE_TYPE_FILTERS = new Set([
   "jpg",
   "jpeg",
 ]);
+
+/**
+ * Temporary frontend fallback when backend only accepts concrete extensions.
+ * Once backend accepts type=sheet|word|powerpoint|image, this map can be removed.
+ */
+export const GROUPED_TYPE_FALLBACK_MAP = {
+  word: ["doc", "docx"],
+  sheet: ["xls", "xlsx"],
+  powerpoint: ["ppt", "pptx"],
+  image: ["png", "jpg", "jpeg"],
+};

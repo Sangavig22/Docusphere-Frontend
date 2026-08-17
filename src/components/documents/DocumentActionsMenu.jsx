@@ -16,9 +16,9 @@ import { isDocumentProtected } from "../../utils/documentProtection";
 export const DEFAULT_DOCUMENT_ACTIONS = [
   // Order here is reflected directly in card/row action menus.
   { key: "preview", label: "Preview", icon: Eye },
+  { key: "duplicate", label: "Duplicate", icon: Copy },
   { key: "rename", label: "Rename", icon: Pencil },
   { key: "move", label: "Move to", icon: FolderInput },
-  { key: "duplicate", label: "Duplicate", icon: Copy },
   { key: "download", label: "Download", icon: Download },
   { key: "version_history", label: "Version History", icon: History },
   { key: "share", label: "Share", icon: Share2 },

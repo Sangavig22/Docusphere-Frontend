@@ -19,16 +19,22 @@ import {
   setUnlockSession,
 } from "../utils/documentProtection";
 import { formatBytes, formatDocumentFormat } from "../utils/documentUtils";
-import authService from "../services/authService";
 import {
   getPermissionBadgeClasses,
   getPermissionLabel,
+  getSharedAccessSummary,
+  canAccessSharedVersionHistory,
+  resolveShareAccessType,
 } from "../components/documents/share/sharePermissions";
 import { TOAST_ACTION_IDS, showSingleToast } from "../utils/toastFeedback";
 import {
-  getShareLoadErrorMessage,
+  getShareErrorTitle,
   parseEditorAccessError,
+  parseShareAccessError,
+  SHARE_ERROR_TYPES,
 } from "../utils/shareAccessErrors";
+import { formatShareExpiry } from "../utils/shareLinkUtils";
+import { getUnlockSession } from "../utils/unlockSessionStore";
 
 function resolveSharedDocumentId(doc) {
   return doc?.documentId || doc?.apiId || doc?.id;
@@ -58,6 +64,7 @@ export default function SharedDocumentPage() {
   const { token = "" } = useParams();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [errorTitle, setErrorTitle] = useState("");
   const [doc, setDoc] = useState(null);
   const [downloading, setDownloading] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
@@ -65,9 +72,9 @@ export default function SharedDocumentPage() {
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [verifyError, setVerifyError] = useState("");
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [editorConfig, setEditorConfig] = useState(null);
   const [editorConfigError, setEditorConfigError] = useState("");
+  const [editorPreviewUnavailable, setEditorPreviewUnavailable] = useState(false);
   const [editorConfigLoading, setEditorConfigLoading] = useState(false);
   const configLoadedRef = useRef(false);
 
@@ -77,6 +84,12 @@ export default function SharedDocumentPage() {
   );
   const isEditPermission = permission === "EDIT";
   const invitedEmail = useMemo(() => resolveInvitedEmail(doc), [doc]);
+  const shareAccessType = useMemo(() => resolveShareAccessType(doc), [doc]);
+  const canViewVersionHistory = useMemo(() => canAccessSharedVersionHistory(doc), [doc]);
+  const accessSummary = useMemo(
+    () => getSharedAccessSummary(permission, shareAccessType),
+    [permission, shareAccessType],
+  );
   const canComment =
     permission === "COMMENT" || permission === "EDIT" || doc?.canComment === true;
   const resolvedDocumentId = resolveSharedDocumentId(doc) || resolveDocumentId(doc);
@@ -94,21 +107,10 @@ export default function SharedDocumentPage() {
     () => getPermissionBadgeClasses(permission),
     [permission],
   );
-
-  useEffect(() => {
-    let mounted = true;
-    authService
-      .bootstrapSession()
-      .then((session) => {
-        if (mounted) setIsLoggedIn(Boolean(session));
-      })
-      .catch(() => {
-        if (mounted) setIsLoggedIn(false);
-      });
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  const linkExpiresLabel = useMemo(
+    () => formatShareExpiry(doc?.expiresAt),
+    [doc?.expiresAt],
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -116,6 +118,7 @@ export default function SharedDocumentPage() {
     async function run() {
       setLoading(true);
       setError("");
+      setErrorTitle("");
 
       try {
         const payload = await getSharedDocumentByToken(token);
@@ -133,9 +136,10 @@ export default function SharedDocumentPage() {
         }
       } catch (err) {
         if (!mounted) return;
-        const message = getShareLoadErrorMessage(err);
-        setError(message);
-        showSingleToast(TOAST_ACTION_IDS.SHARED_OPEN, message, "error");
+        const parsed = parseShareAccessError(err);
+        setError(parsed.message);
+        setErrorTitle(getShareErrorTitle(err));
+        showSingleToast(TOAST_ACTION_IDS.SHARED_OPEN, parsed.message, "error");
       } finally {
         if (mounted) setLoading(false);
       }
@@ -143,6 +147,7 @@ export default function SharedDocumentPage() {
 
     if (!token) {
       setError("This sharing link is invalid.");
+      setErrorTitle("Invalid link");
       setLoading(false);
       return () => {};
     }
@@ -157,19 +162,24 @@ export default function SharedDocumentPage() {
     configLoadedRef.current = false;
     setEditorConfig(null);
     setEditorConfigError("");
+    setEditorPreviewUnavailable(false);
     setEditorConfigLoading(false);
   }, [token]);
 
-  const showEditor = isEditPermission && canViewContent;
+  const showEditableEditor = isEditPermission && canViewContent;
+  const isPublicLink = shareAccessType.key === "public";
+  const showReadOnlyViewer = !isEditPermission && canViewContent && !isPublicLink;
+  const showDocumentPanel = showEditableEditor || showReadOnlyViewer;
 
   useEffect(() => {
-    if (!showEditor || !resolvedDocumentId || configLoadedRef.current) return;
+    if (!showDocumentPanel || !resolvedDocumentId || configLoadedRef.current || error) return;
 
     let mounted = true;
     setEditorConfigLoading(true);
     setEditorConfigError("");
+    setEditorPreviewUnavailable(false);
 
-    getSharedEditorConfig(token, resolvedDocumentId)
+    getSharedEditorConfig(token, resolvedDocumentId, { readOnly: !showEditableEditor })
       .then((cfg) => {
         if (!mounted) return;
         configLoadedRef.current = true;
@@ -177,7 +187,25 @@ export default function SharedDocumentPage() {
       })
       .catch((err) => {
         if (!mounted) return;
-        setEditorConfigError(parseEditorAccessError(err).message);
+        const parsed = parseEditorAccessError(err);
+        if (
+          !showEditableEditor &&
+          (parsed.type === SHARE_ERROR_TYPES.FORBIDDEN ||
+            parsed.type === SHARE_ERROR_TYPES.EDITOR_UNAVAILABLE)
+        ) {
+          setEditorPreviewUnavailable(true);
+          setEditorConfigError("");
+          return;
+        }
+        setEditorConfigError(parsed.message);
+        if (
+          parsed.type === SHARE_ERROR_TYPES.EXPIRED ||
+          parsed.type === SHARE_ERROR_TYPES.REVOKED ||
+          parsed.type === SHARE_ERROR_TYPES.INVALID
+        ) {
+          setError(parsed.message);
+          setErrorTitle(getShareErrorTitle(err));
+        }
       })
       .finally(() => {
         if (mounted) setEditorConfigLoading(false);
@@ -186,7 +214,7 @@ export default function SharedDocumentPage() {
     return () => {
       mounted = false;
     };
-  }, [showEditor, token, resolvedDocumentId]);
+  }, [showDocumentPanel, showEditableEditor, token, resolvedDocumentId, error]);
 
   const resolveEditorConfigError = useCallback(
     (error) => parseEditorAccessError(error).message,
@@ -228,20 +256,30 @@ export default function SharedDocumentPage() {
     }
     setDownloading(true);
     try {
+      const unlockToken = getUnlockSession(resolvedDocumentId)?.token;
       await downloadSharedDocument(resolvedDocumentId, token, {
+        unlockToken,
         fileName: doc?.name,
         mimeType: resolveDownloadMimeType(doc),
       });
       showSingleToast(TOAST_ACTION_IDS.SHARED_DOWNLOAD, "Download started.");
     } catch (err) {
+      const parsed = parseShareAccessError(err);
       const raw = String(err?.message || "");
       if (/password|protected/i.test(raw)) {
         setVerifyOpen(true);
         setVerifyError("Enter the document password to download this file.");
+      } else if (
+        parsed.type === SHARE_ERROR_TYPES.EXPIRED ||
+        parsed.type === SHARE_ERROR_TYPES.REVOKED ||
+        parsed.type === SHARE_ERROR_TYPES.INVALID
+      ) {
+        setError(parsed.message);
+        setErrorTitle(getShareErrorTitle(err));
       } else {
         showSingleToast(
           TOAST_ACTION_IDS.SHARED_DOWNLOAD,
-          raw || "Download failed.",
+          parsed.message || "Download failed.",
           "error",
         );
       }
@@ -262,14 +300,14 @@ export default function SharedDocumentPage() {
     return (
       <div className="min-h-screen bg-slate-50 p-6">
         <div className="mx-auto w-full max-w-2xl rounded-xl border border-rose-200 bg-white p-5 shadow-sm">
-          <p className="font-semibold text-rose-700">Unable to open shared document</p>
+          <p className="font-semibold text-rose-700">{errorTitle || "Unable to open shared document"}</p>
           <p className="mt-1 text-sm text-rose-600">{error}</p>
         </div>
       </div>
     );
   }
 
-  const editorBlocked = isEditPermission && !canViewContent;
+  const editorBlocked = showDocumentPanel && !canViewContent;
 
   return (
     <div className="min-h-screen bg-slate-50 p-6">
@@ -285,7 +323,7 @@ export default function SharedDocumentPage() {
       <div
         className={[
           "mx-auto w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-opacity duration-200",
-          isEditPermission ? "max-w-6xl" : "max-w-3xl",
+          showDocumentPanel ? "max-w-6xl" : "max-w-3xl",
           canViewContent ? "opacity-100" : "pointer-events-none opacity-60",
         ].join(" ")}
       >
@@ -298,6 +336,12 @@ export default function SharedDocumentPage() {
               {formatLabel}
             </span>
             <span>{sizeLabel}</span>
+            <span className="inline-flex shrink-0 items-center rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-blue-700">
+              {shareAccessType.label}
+            </span>
+            {linkExpiresLabel ? (
+              <span className="text-amber-700">Link expires on {linkExpiresLabel}</span>
+            ) : null}
             <span
               className={[
                 "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold ring-1 ring-inset",
@@ -308,6 +352,7 @@ export default function SharedDocumentPage() {
               {permissionLabel}
             </span>
           </div>
+          <p className="mt-2 text-xs leading-relaxed text-slate-600">{accessSummary}</p>
         </div>
 
         {protectedDoc ? (
@@ -331,7 +376,7 @@ export default function SharedDocumentPage() {
           >
             {downloading ? "Downloading..." : "Download"}
           </button>
-          {isLoggedIn && resolvedDocumentId ? (
+          {resolvedDocumentId && canViewVersionHistory ? (
             <button
               type="button"
               onClick={() => setVersionHistoryOpen(true)}
@@ -344,16 +389,35 @@ export default function SharedDocumentPage() {
           ) : null}
         </div>
 
-        {isEditPermission && resolvedDocumentId ? (
+        {showDocumentPanel && resolvedDocumentId ? (
           <div className="mt-6">
             {invitedEmail ? (
-              <InvitedEmailBanner invitedEmail={invitedEmail} isEdit />
+              <InvitedEmailBanner invitedEmail={invitedEmail} isEdit={showEditableEditor} />
             ) : null}
-            <p className="mb-2 text-sm font-semibold text-slate-800">Document editor</p>
+            <p className="mb-2 text-sm font-semibold text-slate-800">
+              {showEditableEditor ? "Document editor" : "Document preview"}
+            </p>
             <div className="h-[600px] overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
               {editorBlocked ? (
                 <div className="flex h-full items-center justify-center p-6 text-center text-sm text-slate-600">
-                  Unlock the document to start editing.
+                  Unlock the document to start viewing.
+                </div>
+              ) : editorPreviewUnavailable ? (
+                <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
+                  <p className="text-sm font-medium text-slate-800">
+                    In-browser preview is not available for this link.
+                  </p>
+                  <p className="max-w-md text-sm text-slate-600">
+                    You can still download the current document{canComment ? " and use the discussion section below" : ""}.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleDownload}
+                    disabled={downloading || !canViewContent}
+                    className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {downloading ? "Downloading..." : "Download document"}
+                  </button>
                 </div>
               ) : editorConfigError ? (
                 <div className="flex h-full items-center justify-center p-6 text-center text-sm text-rose-700">
@@ -363,7 +427,8 @@ export default function SharedDocumentPage() {
                 <OnlyOfficeEditor
                   documentId={resolvedDocumentId}
                   externalConfig={editorConfig}
-                  enabled={showEditor}
+                  readOnly={!showEditableEditor}
+                  enabled={showDocumentPanel}
                   resolveConfigError={resolveEditorConfigError}
                 />
               ) : (
@@ -371,10 +436,10 @@ export default function SharedDocumentPage() {
                   {editorConfigLoading ? (
                     <>
                       <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
-                      Loading editor...
+                      Loading document...
                     </>
                   ) : (
-                    "Loading editor..."
+                    "Loading document..."
                   )}
                 </div>
               )}
@@ -395,20 +460,23 @@ export default function SharedDocumentPage() {
               />
             </div>
           </div>
-        ) : !isEditPermission ? (
+        ) : isPublicLink ? null : !showEditableEditor && !showReadOnlyViewer ? (
           <p className="mt-6 text-sm text-slate-600">Read-only access. Commenting is disabled.</p>
         ) : null}
       </div>
 
-      <VersionHistoryModal
-        open={versionHistoryOpen}
-        document={{
-          ...doc,
-          id: resolvedDocumentId,
-          isOwner: doc?.isOwner ?? false,
-        }}
-        onClose={() => setVersionHistoryOpen(false)}
-      />
+      {canViewVersionHistory ? (
+        <VersionHistoryModal
+          open={versionHistoryOpen}
+          document={{
+            ...doc,
+            id: resolvedDocumentId,
+            isOwner: false,
+          }}
+          shareToken={token}
+          onClose={() => setVersionHistoryOpen(false)}
+        />
+      ) : null}
     </div>
   );
 }

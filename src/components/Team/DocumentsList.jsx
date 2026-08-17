@@ -1,5 +1,5 @@
 import { useMemo, useEffect, useState } from "react";
-import { DocumentCard, DocumentRow, normalizeDocumentType } from "../documents";
+import { DocumentCard, DocumentRow, matchesDocumentFilter, resolveDocumentType } from "../documents";
 import { DEFAULT_DOCUMENT_ACTIONS } from "../documents/DocumentActionsMenu";
 
 const resolveUploader = (doc) => {
@@ -40,7 +40,7 @@ const normalizeDoc = (doc, index) => {
     name: fileName,
     sizeBytes,
     updatedAt,
-    type: doc?.type || doc?.fileType || fileName.split(".").pop() || "other",
+    type: resolveDocumentType(doc, fileName),
     starred: Boolean(doc?.starred),
     uploadedBy: resolveUploader(doc),
   };
@@ -78,8 +78,7 @@ export default function DocumentsList({
     const q = searchQuery.trim().toLowerCase();
 
     let out = normalized.filter((d) => {
-      const type = normalizeDocumentType(d.type);
-      const matchesType = filterType === "all" ? true : type === filterType;
+      const matchesType = matchesDocumentFilter(d.type, filterType, d.name);
       const matchesQuery = !q ? true : `${d.name}`.toLowerCase().includes(q);
       return matchesType && matchesQuery;
     });

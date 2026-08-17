@@ -62,12 +62,17 @@ export function normalizeDocumentType(type) {
   if (
     t === "xls" ||
     t === "xlsx" ||
+    t === "xlsm" ||
+    t === "xlsb" ||
     t === "csv" ||
+    t === "ods" ||
     t === "sheet" ||
     t === "spreadsheet" ||
+    t === "excel" ||
     rawNoParams.includes("spreadsheetml") ||
     rawNoParams.includes("ms-excel") ||
-    rawNoParams.includes("excel")
+    rawNoParams.includes("excel") ||
+    rawNoParams.includes("opendocument.spreadsheet")
   ) {
     return "sheet";
   }
@@ -95,6 +100,15 @@ export function normalizeDocumentType(type) {
     return "image";
   }
 
+  // Handle values like "report.xlsx" stored in the type field.
+  if (raw.includes(".")) {
+    const extension = raw.split(".").pop()?.replace(/^\.+/, "") || "";
+    if (extension && extension !== t) {
+      const fromExtension = normalizeDocumentType(extension);
+      if (fromExtension !== "other") return fromExtension;
+    }
+  }
+
   return "other";
 }
 
@@ -113,16 +127,30 @@ function extractExtension(value) {
 
 export function matchesDocumentFilter(docType, filterType, docName = "") {
   if (!filterType || filterType === "all") return true;
-  const normalizedFromType = normalizeDocumentType(docType);
-  if (normalizedFromType === filterType) return true;
 
-  const extensionFromName = extractExtension(docName);
-  if (extensionFromName && normalizeDocumentType(extensionFromName) === filterType) return true;
+  const candidates = [docType, docName, extractExtension(docName), extractExtension(docType)].filter(Boolean);
 
-  const extensionFromType = extractExtension(docType);
-  if (extensionFromType && normalizeDocumentType(extensionFromType) === filterType) return true;
+  return candidates.some((candidate) => normalizeDocumentType(candidate) === filterType);
+}
 
-  return false;
+export function resolveDocumentType(raw = {}, fallbackName = "") {
+  const name = fallbackName || raw?.name || raw?.fileName || "";
+  const candidates = [
+    raw?.extension,
+    raw?.fileExtension,
+    raw?.mimeType,
+    raw?.contentType,
+    raw?.fileType,
+    raw?.type,
+    name,
+  ];
+
+  for (const candidate of candidates) {
+    const normalized = normalizeDocumentType(candidate);
+    if (normalized !== "other") return normalized;
+  }
+
+  return normalizeDocumentType(name);
 }
 export function formatDocumentFormat(type, name) {
   const rawName = (name ?? "").toString().trim();
