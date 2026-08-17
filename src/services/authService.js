@@ -743,6 +743,26 @@ const authService = {
         clearVerifiedSession();
         emitUserProfileUpdated();
     },
+
+    async isTokenValid() {
+        try {
+            await request('/auth/me', { method: 'GET' });
+            return true;
+        } catch {
+            return false;
+        }
+    },
+
+    async refreshToken() {
+        try {
+            const response = await request('/auth/refresh', { method: 'POST' });
+            this.saveAuth(response, this.isRememberMeValid());
+            return true;
+        } catch {
+            this.signOut();
+            return false;
+        }
+    },
 };
 
 export default authService;
