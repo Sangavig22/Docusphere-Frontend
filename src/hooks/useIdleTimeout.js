@@ -3,7 +3,7 @@ import { toast } from 'react-toastify';
 import { request } from '../api/apiClient.js';
 import authService from '../services/authService.js';
 
-const DEFAULT_IDLE = 5 * 60 * 1000; // 5 minutes
+const DEFAULT_IDLE = 30 * 60 * 1000; // 30 minutes
 const DEFAULT_WARNING = 2 * 60 * 1000; // 2 minutes before
 
 export default function useIdleTimeout({ idleTimeout = DEFAULT_IDLE, warningBefore = DEFAULT_WARNING } = {}) {
