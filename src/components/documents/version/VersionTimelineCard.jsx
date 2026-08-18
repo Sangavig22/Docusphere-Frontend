@@ -32,9 +32,7 @@ export default function VersionTimelineCard({
                 Version {version.versionNumber}
                 <span className="ml-1.5 text-sm font-medium text-muted">({formatVersionLabel(version.versionNumber)})</span>
               </h4>
-              {isFirst && version.isCurrent ? (
-                <span className="text-xs font-medium text-blue-600 dark:text-blue-400">← Current</span>
-              ) : null}
+              {null}
             </div>
             <VersionStatusBadges version={version} compact />
           </div>
