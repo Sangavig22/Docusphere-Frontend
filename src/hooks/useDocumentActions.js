@@ -255,16 +255,22 @@ export default function useDocumentActions({ onSuccess } = {}) {
       return { ok: true };
     } catch (error) {
       const raw = String(error?.message || "");
-      const invalidCurrentPassword = isInvalidPasswordError(raw);
-      if (!invalidCurrentPassword) {
+      const invalidAccountPassword =
+        /account password is incorrect/i.test(raw) ||
+        /account password is required/i.test(raw);
+      const invalidCurrentPassword = !invalidAccountPassword && isInvalidPasswordError(raw);
+      if (!invalidCurrentPassword && !invalidAccountPassword) {
         toast.error(getActionErrorMessage(error, "Action failed. Please try again."));
       }
       return {
         ok: false,
         invalidCurrentPassword,
-        message: invalidCurrentPassword
-          ? "Current password is incorrect."
-          : getActionErrorMessage(error, "Action failed. Please try again."),
+        invalidAccountPassword,
+        message: invalidAccountPassword
+          ? "Account password is incorrect. Please try again."
+          : invalidCurrentPassword
+            ? "Current password is incorrect."
+            : getActionErrorMessage(error, "Action failed. Please try again."),
       };
     } finally {
       setLoadingAction(false);
@@ -378,7 +384,7 @@ export default function useDocumentActions({ onSuccess } = {}) {
     });
   }
 
-  async function resetDocumentPasswordHandler({ newPassword }) {
+  async function resetDocumentPasswordHandler({ newPassword, accountPassword } = {}) {
     const doc = modalState.doc;
     if (!doc) return { ok: false, message: "Document not found." };
     if (doc?.isOwner === false) {
@@ -386,11 +392,11 @@ export default function useDocumentActions({ onSuccess } = {}) {
       return { ok: false, message: "Only owner can reset this document password." };
     }
     return runProtectionModalAction(async () => {
-      await resetDocumentProtectionPassword(resolveApiId(doc), newPassword);
+      await resetDocumentProtectionPassword(resolveApiId(doc), { accountPassword, newPassword });
       markProtected(doc);
       clearUnlocked(doc);
       setModalState(EMPTY_MODAL);
-      toast.success("Password reset successfully.");
+      toast.success("Document password reset successfully.");
       await onSuccess?.("secure_file", withProtectionFlag(doc, true));
     });
   }

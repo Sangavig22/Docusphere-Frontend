@@ -22,8 +22,11 @@ export default function VersionStatusBadges({ version, compact = false }) {
   if (!version) return null;
 
   const badges = [];
-  if (version.isLatest) badges.push({ key: "latest", label: "Latest", tone: "latest" });
-  if (version.isCurrent) badges.push({ key: "current", label: compact ? "Current" : "Current Active Version", tone: "current" });
+  if (version.isCurrent) {
+    badges.push({ key: "current", label: compact ? "Current" : "Current Active Version", tone: "current" });
+  } else if (version.isLatest) {
+    badges.push({ key: "latest", label: "Latest", tone: "latest" });
+  }
   if (version.isRestored) badges.push({ key: "restored", label: "Restored", tone: "restored" });
   if (version.isProtected) badges.push({ key: "protected", label: "Protected", tone: "protected" });
 

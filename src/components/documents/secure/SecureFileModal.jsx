@@ -52,6 +52,7 @@ export default function SecureFileModal({
   const canManageProtection = document?.isOwner !== false;
 
   const [currentPassword, setCurrentPassword] = useState("");
+  const [accountPassword, setAccountPassword] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -64,6 +65,7 @@ export default function SecureFileModal({
   useEffect(() => {
     if (!open) return;
     setCurrentPassword("");
+    setAccountPassword("");
     setPassword("");
     setConfirmPassword("");
     setError("");
@@ -103,6 +105,10 @@ export default function SecureFileModal({
     if (result?.invalidCurrentPassword) {
       setError("Current password is incorrect.");
       setShowRecovery(true);
+      return false;
+    }
+    if (result?.invalidAccountPassword) {
+      setError("Account password is incorrect. Please try again.");
       return false;
     }
     if (result?.message) setError(result.message);
@@ -183,12 +189,21 @@ export default function SecureFileModal({
       setError("Passwords do not match.");
       return;
     }
+    const account = validateCurrentPasswordInput(accountPassword);
+    if (!account.valid) {
+      setError("Please sign in again with your account password.");
+      return;
+    }
     setSubmitting(true);
     try {
-      const response = await onResetPassword?.({ newPassword: next.value });
+      const response = await onResetPassword?.({
+        accountPassword: account.value,
+        newPassword: next.value,
+      });
       if (!handleProtectionResult(response)) return;
       setMode("main");
       setCurrentPassword("");
+      setAccountPassword("");
       setPassword("");
       setConfirmPassword("");
       setRemoveConfirm(false);
@@ -321,6 +336,7 @@ export default function SecureFileModal({
                     setCurrentPassword("");
                     setPassword("");
                     setConfirmPassword("");
+                    setAccountPassword("");
                     setError("");
                     setRemoveConfirm(false);
                     setShowRecovery(false);
@@ -448,6 +464,18 @@ export default function SecureFileModal({
                 Resetting password will invalidate existing unlock sessions.
               </p>
               <PasswordInput
+                id="secure-file-reset-account-password"
+                label="Sign in again (account password)"
+                value={accountPassword}
+                onChange={(value) => {
+                  setAccountPassword(value);
+                  if (error) setError("");
+                }}
+                error={/account password/i.test(error) ? error : ""}
+                disabled={busy}
+                autoFocus
+              />
+              <PasswordInput
                 id="secure-file-reset-new-password"
                 label="New password"
                 value={password}
@@ -456,7 +484,6 @@ export default function SecureFileModal({
                   if (error) setError("");
                 }}
                 disabled={busy}
-                autoFocus
               />
               <PasswordInput
                 id="secure-file-reset-confirm-password"
@@ -466,7 +493,7 @@ export default function SecureFileModal({
                   setConfirmPassword(value);
                   if (error) setError("");
                 }}
-                error={error}
+                error={/account password/i.test(error) ? "" : error}
                 disabled={busy}
                 onSubmit={handleResetPassword}
               />

@@ -2,6 +2,27 @@ import { request } from "../api/apiClient.js";
 import { API_BASE_URL } from "../config/api.js";
 import { parseUnlockSessionFromResponse } from "../utils/documentProtection.js";
 
+async function verifyAccountPasswordFirst(accountPassword) {
+  if (!accountPassword) {
+    throw new Error("Account password is required to reset document protection.");
+  }
+  try {
+    await request("/auth/verify-password", {
+      method: "POST",
+      body: JSON.stringify({ password: accountPassword }),
+    });
+  } catch (error) {
+    const msg = String(error?.message || "");
+    // Surface a clear error so the UI can flag the field specifically
+    if (/request failed \(404\)/i.test(msg)) {
+      // Backend doesn't have this endpoint yet — skip client-side check,
+      // backend reset endpoint must validate it instead.
+      return;
+    }
+    throw new Error("Account password is incorrect. Please try again.");
+  }
+}
+
 function buildApiUrl(path) {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   const base = (API_BASE_URL || "").trim();
@@ -58,16 +79,39 @@ export async function changeDocumentPassword(id, currentPassword, newPassword) {
   return protectDocument(id, newPassword);
 }
 
-export async function resetDocumentProtectionPassword(id, newPassword) {
+export async function resetDocumentProtectionPassword(id, payload) {
+  const normalized =
+    typeof payload === "string"
+      ? { newPassword: payload }
+      : payload && typeof payload === "object"
+        ? payload
+        : {};
+  const { accountPassword, newPassword } = normalized;
+  const resolvedNewPassword = String(newPassword || "").trim();
+
+  // Verify account password with the auth service BEFORE allowing the reset.
+  // This ensures a wrong account password is rejected even if the backend
+  // reset endpoint does not validate it.
+  await verifyAccountPasswordFirst(accountPassword);
+
+  const body = accountPassword
+    ? {
+        accountPassword,
+        password: resolvedNewPassword,
+        newPassword: resolvedNewPassword,
+        confirmPassword: resolvedNewPassword,
+      }
+    : { password: resolvedNewPassword, newPassword: resolvedNewPassword };
+
   try {
     return await request(`/documents/${id}/protect/reset`, {
       method: "POST",
-      body: JSON.stringify({ password: newPassword, newPassword }),
+      body: JSON.stringify(body),
     });
   } catch (error) {
     // Backward-compatible fallback for backends that still use /protect for owner reset.
     if (/request failed \(404\)/i.test(String(error?.message || ""))) {
-      return protectDocument(id, newPassword);
+      return protectDocument(id, resolvedNewPassword);
     }
     throw error;
   }
