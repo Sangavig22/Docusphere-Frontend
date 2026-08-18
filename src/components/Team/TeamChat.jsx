@@ -94,6 +94,14 @@ export default function TeamChat({
     return members
       .filter((member) => Number(member.userId ?? member.id) !== currentUserId)
       .filter((member) => {
+        const normalizedStatus = String(member?.status || "").toUpperCase();
+        const normalizedName = String(member?.fullName ?? member?.userFullName ?? member?.name ?? "").trim();
+        const isPendingInvitation =
+          normalizedStatus === "PENDING" ||
+          normalizedName === "Pending Invitation";
+        return !isPendingInvitation;
+      })
+      .filter((member) => {
         if (!normalized) return true;
         const fullName = String(member.fullName ?? "").toLowerCase();
         const email = String(member.email ?? "").toLowerCase();

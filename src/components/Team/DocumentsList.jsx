@@ -159,7 +159,7 @@ export default function DocumentsList({
     if (doc.canManageTeamDoc)
       return undefined;
 
-    return ["preview", "download", "version_history"];
+    return ["preview", "download"];
   };
   if (viewMode === "list") {
     return (

@@ -17,6 +17,7 @@ export default function DocumentPreviewPage() {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const justEdited = queryParams.get("edited") === "true";
+  const isAdminRoute = location.state?.fromAdmin === true;
 
   const [document, setDocument] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -151,7 +152,7 @@ export default function DocumentPreviewPage() {
 
   if (loading) {
     return (
-      <Layout pageTitle="Loading..." pageSubtitle="Fetching document details">
+      <Layout pageTitle="Loading..." pageSubtitle="Fetching document details" type={isAdminRoute ? "admin" : "dashboard"}>
         <div className="flex items-center justify-center h-full">
           <div className="animate-spin h-10 w-10 border-4 border-blue-600 border-t-transparent rounded-full" />
         </div>
@@ -166,15 +167,16 @@ export default function DocumentPreviewPage() {
   const canEdit = canEditDocument(document, currentUserId, currentUserGlobalRole, userTeamRole);
 
   return (
-    <Layout 
-      pageTitle={document?.name || "Document Preview"} 
+    <Layout
+      pageTitle={document?.name || "Document Preview"}
       pageSubtitle={`Last updated: ${formatUpdatedDate(document?.updatedAt || document?.updated_at)}`}
+      type={isAdminRoute ? "admin" : "dashboard"}
     >
       <div className="flex flex-col h-full gap-4">
         {/* Toolbar */}
         <div className="flex items-center justify-between bg-white p-3 rounded-xl shadow-sm">
           <div className="flex items-center gap-3">
-            <button 
+            <button
               onClick={() => navigate(-1)}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             >
@@ -182,8 +184,8 @@ export default function DocumentPreviewPage() {
             </button>
             <div className="h-8 w-[1px] bg-gray-200" />
             <div className="flex items-center gap-2 px-2">
-               <FileText className="h-5 w-5 text-blue-600" />
-               <span className="font-medium text-gray-800">{document?.name}</span>
+              <FileText className="h-5 w-5 text-blue-600" />
+              <span className="font-medium text-gray-800">{document?.name}</span>
             </div>
           </div>
 
@@ -211,8 +213,8 @@ export default function DocumentPreviewPage() {
         <div className="flex-1 flex gap-4 min-h-0">
           {/* Preview Section (Left) */}
           <div className="flex-[3] flex flex-col min-w-0">
-            <PreviewViewer 
-              fileUrl={document?.fileUrl} 
+            <PreviewViewer
+              fileUrl={document?.fileUrl}
               fileName={document?.name}
               fileType={fileType}
               updatedAt={document?.updatedAt || document?.updated_at}

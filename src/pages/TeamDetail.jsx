@@ -57,6 +57,8 @@ function TeamDetail() {
   const [memberQuery, setMemberQuery] = useState("");
   const [memberRoleFilter, setMemberRoleFilter] = useState("all");
   const [memberStatusFilter, setMemberStatusFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const pageSize = 9;
   
   const [toolbar, setToolbar] = useState({
     query: "",
@@ -91,6 +93,14 @@ function TeamDetail() {
     const normalizedQuery = memberQuery.trim().toLowerCase();
 
     return membersWithStatuses.filter((member) => {
+      const isPendingInvitation =
+        String(member?.status || "").toUpperCase() === "PENDING" ||
+        String(member?.fullName ?? member?.userFullName ?? member?.name ?? "").trim() === "Pending Invitation";
+
+      if (!isLeader && isPendingInvitation) {
+        return false;
+      }
+
       const memberName = String(member.fullName ?? member.userFullName ?? member.name ?? "").toLowerCase();
       const memberEmail = String(member.email ?? member.userEmail ?? "").toLowerCase();
       const memberRole = String(member.role || "").toUpperCase();
@@ -116,6 +126,51 @@ function TeamDetail() {
   const updateToolbar = (key, value) => {
     setToolbar((prev) => ({ ...prev, [key]: value }));
   };
+
+  const filteredTeamDocuments = useMemo(() => {
+    const q = toolbar.query.trim().toLowerCase();
+    const normalized = [...documents].map((doc, index) => ({
+      ...doc,
+      id: doc?.id ?? doc?.documentId ?? doc?._id ?? `team-doc-${index}`,
+      name: doc?.name || doc?.fileName || `Document ${index + 1}`,
+      sizeBytes: Number(doc?.sizeBytes ?? doc?.size ?? 0),
+      updatedAt: doc?.updatedAt || doc?.updated_at || doc?.createdAt || new Date().toISOString(),
+      type: doc?.type || doc?.fileType || (doc?.name || doc?.fileName || "").split(".").pop() || "other",
+      canManageTeamDoc: canManageAllTeamDocs || doc?.isOwner === true,
+      canShareTeamDoc: canManageAllTeamDocs || doc?.isOwner === true,
+    }));
+
+    let out = normalized.filter((doc) => {
+      const matchesQuery = !q ? true : `${doc.name}`.toLowerCase().includes(q);
+      const matchesType = toolbar.filter === "all" ? true : String(doc.type || "").toLowerCase() === String(toolbar.filter).toLowerCase();
+      return matchesQuery && matchesType;
+    });
+
+    out = out.slice().sort((a, b) => {
+      if (toolbar.sort === "name_desc") return b.name.localeCompare(a.name);
+      if (toolbar.sort === "size_desc") return (b.sizeBytes ?? 0) - (a.sizeBytes ?? 0);
+      if (toolbar.sort === "updated_desc") {
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+      }
+      return a.name.localeCompare(b.name);
+    });
+
+    return out;
+  }, [documents, toolbar.query, toolbar.filter, toolbar.sort, canManageAllTeamDocs]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredTeamDocuments.length / pageSize));
+  const paginatedTeamDocuments = useMemo(() => {
+    const startIndex = (page - 1) * pageSize;
+    return filteredTeamDocuments.slice(startIndex, startIndex + pageSize);
+  }, [filteredTeamDocuments, page]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [toolbar.query, toolbar.filter, toolbar.sort]);
+
+  useEffect(() => {
+    setPage((prev) => Math.min(prev, totalPages));
+  }, [totalPages]);
 
   useEffect(() => {
     localStorage.setItem(`team-detail-active-tab:${teamId}`, activeTab);
@@ -198,11 +253,21 @@ function TeamDetail() {
 
   const handleToggleChatBlock = async (member) => {
     const memberName = member.name ?? member.userFullName ?? member.fullName ?? "Member";
-    const blocked = member.active !== false;
+    const normalizedActive = member.active ?? true;
+    const isBlocked =
+      member?.active === false ||
+      String(normalizedActive).toLowerCase() === "false" ||
+      member?.chatBlocked === true ||
+      String(member?.chatBlocked ?? "false").toLowerCase() === "true";
+    const nextBlocked = !isBlocked;
 
     try {
-      await updateMemberChatBlock(member, blocked);
-      toast.success(blocked ? `${memberName} can no longer access group chat` : `${memberName} can access group chat again`);
+      await updateMemberChatBlock(member, nextBlocked);
+      toast.success(
+        nextBlocked
+          ? `${memberName} can no longer access group chat`
+          : `${memberName} can access group chat again`,
+      );
     } catch (err) {
       toast.error(`Failed to update chat access: ${err.message || err.toString()}`);
     }
@@ -282,12 +347,12 @@ function TeamDetail() {
                viewMode={toolbar.view}
               onViewModeChange={(v) => updateToolbar("view", v)}
               hideSort={false}
-              hideFilter={true}
+              hideFilter={false}
             />
           </div>
 
           <DocumentsList
-            documents={documents}
+            documents={paginatedTeamDocuments}
             selectedDocumentId={selectedDocumentId}
             viewMode={toolbar.view}
             searchQuery={toolbar.query}
@@ -300,6 +365,29 @@ function TeamDetail() {
             canManageAllTeamDocs={canManageAllTeamDocs}
             showStar={false}
           />
+          <div className="flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3 text-sm text-muted shadow-sm">
+            <span>
+              Page {page} of {totalPages} (showing {paginatedTeamDocuments.length} on this page, {filteredTeamDocuments.length} total)
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={isDocsLoading || page <= 1}
+                className="rounded-lg border border-border px-3 py-1.5 text-text disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={isDocsLoading || page >= totalPages}
+                className="rounded-lg border border-border px-3 py-1.5 text-text disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
           <DocumentActionModal
             open={
               modalState.open &&
