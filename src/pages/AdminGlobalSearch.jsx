@@ -15,61 +15,6 @@ const AdminGlobalSearch = () => {
 
   const recognitionRef = useRef(null);
   const micButtonRef = useRef(null);
-  const audioContextRef = useRef(null);
-  const analyserRef = useRef(null);
-  const dataArrayRef = useRef(null);
-  const animationFrameRef = useRef(null);
-  const mediaStreamRef = useRef(null);
-
-  const startAudioAnalyzer = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaStreamRef.current = stream;
-      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      analyserRef.current = audioContextRef.current.createAnalyser();
-      
-      const source = audioContextRef.current.createMediaStreamSource(stream);
-      source.connect(analyserRef.current);
-      
-      analyserRef.current.fftSize = 256;
-      const bufferLength = analyserRef.current.frequencyBinCount;
-      dataArrayRef.current = new Uint8Array(bufferLength);
-      
-      const updateLevel = () => {
-        if (!analyserRef.current) return;
-        analyserRef.current.getByteFrequencyData(dataArrayRef.current);
-        
-        let sum = 0;
-        for (let i = 0; i < bufferLength; i++) sum += dataArrayRef.current[i];
-        const level = Math.min(100, Math.round(((sum / bufferLength) / 128) * 100));
-        
-        if (micButtonRef.current) {
-          micButtonRef.current.style.boxShadow = `0 0 0 ${Math.max(0, level / 3)}px rgba(239, 68, 68, 0.4)`;
-        }
-        
-        animationFrameRef.current = requestAnimationFrame(updateLevel);
-      };
-      
-      updateLevel();
-    } catch (err) {
-      console.error("Audio analyzer error:", err);
-    }
-  };
-
-  const stopAudioAnalyzer = () => {
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-    }
-    if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach(track => track.stop());
-    }
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
-    }
-    if (micButtonRef.current) {
-      micButtonRef.current.style.boxShadow = 'none';
-    }
-  };
 
   const toggleListening = () => {
     if (isListening) {
@@ -91,7 +36,6 @@ const AdminGlobalSearch = () => {
     recognition.onstart = () => {
       setSearchQuery("");
       setIsListening(true);
-      startAudioAnalyzer();
     };
     
     recognition.onresult = (event) => {
@@ -110,12 +54,10 @@ const AdminGlobalSearch = () => {
         setError(`Speech recognition failed: ${event.error}`);
       }
       setIsListening(false);
-      stopAudioAnalyzer();
     };
 
     recognition.onend = () => {
       setIsListening(false);
-      stopAudioAnalyzer();
       recognitionRef.current = null;
     };
 
@@ -263,7 +205,7 @@ const AdminGlobalSearch = () => {
             title="Search with voice"
             className={`absolute right-3 top-2.5 p-1 rounded-full transition-colors duration-75 ${
               isListening
-                ? "bg-red-100 text-red-600"
+                ? "bg-red-100 text-red-600 animate-pulse"
                 : "text-gray-400 hover:text-blue-600 hover:bg-gray-100"
             }`}
           >

@@ -142,7 +142,7 @@ function Topbar({
           {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
         </button>
         {/* Notification Bell */}
-        <NotificationsBell context={isAdmin ? 'admin' : 'user'} />
+        <NotificationsBell />
 
         {/* User Avatar with Dropdown */}
         <div className="relative" ref={menuRef}>
