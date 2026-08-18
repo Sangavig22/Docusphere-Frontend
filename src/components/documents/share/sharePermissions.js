@@ -1,19 +1,19 @@
 export const INVITE_PERMISSION_OPTIONS = [
-  { value: "VIEW", label: "Can view" },
-  { value: "COMMENT", label: "Can comment" },
-  { value: "EDIT", label: "Can edit" },
+  { value: "VIEW", label: "view" },
+  { value: "COMMENT", label: "comment" },
+  { value: "EDIT", label: "edit" },
 ];
 
 export const PUBLIC_PERMISSION_OPTIONS = [
-  { value: "VIEW", label: "Can view" },
-  { value: "COMMENT", label: "Can comment" },
+  { value: "VIEW", label: "view" },
+  { value: "COMMENT", label: "comment" },
 ];
 
 export function getPermissionLabel(permission) {
   const value = String(permission || "VIEW").toUpperCase();
-  if (value === "COMMENT") return "Can comment";
-  if (value === "EDIT") return "Can edit";
-  return "Can view";
+  if (value === "COMMENT") return "comment";
+  if (value === "EDIT") return "edit";
+  return "view";
 }
 
 export function getPermissionRole(permission) {
@@ -92,7 +92,7 @@ export function getSharedAccessSummary(permission, shareAccessType) {
     return "You can edit, download, and view version history via this email invite. Sign-in is not required.";
   }
   if (value === "COMMENT") {
-    return "You can view, download, comment, and browse version history via this email invite. Sign-in is not required.";
+    return "You can download, comment, and browse version history via this email invite. Sign-in is not required.";
   }
-  return "You can view, download, and browse version history via this email invite. Sign-in is not required.";
+  return "You can download and browse version history via this email invite. Sign-in is not required.";
 }

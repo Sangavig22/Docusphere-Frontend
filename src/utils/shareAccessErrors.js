@@ -149,16 +149,23 @@ export function getShareVersionErrorMessage(error) {
   const status = Number(error?.status) || 0;
   const parsed = parseShareAccessError(error);
 
-  if (parsed.type !== SHARE_ERROR_TYPES.GENERIC) {
+  if (parsed.type === SHARE_ERROR_TYPES.EXPIRED || parsed.type === SHARE_ERROR_TYPES.REVOKED) {
     return parsed.message;
   }
 
-  if (status === 401 || status === 403) {
-    return "Version history is unavailable for this share link. The link may not include version access yet.";
+  if (
+    status === 400 ||
+    status === 401 ||
+    status === 403 ||
+    status === 404 ||
+    parsed.type === SHARE_ERROR_TYPES.INVALID ||
+    parsed.type === SHARE_ERROR_TYPES.FORBIDDEN
+  ) {
+    return "Version history is not available for this share link yet.";
   }
 
   const raw = String(error?.message || "").trim();
-  if (raw && !/^no message available$/i.test(raw)) {
+  if (raw && !/^no message available$/i.test(raw) && !/invalid/i.test(raw)) {
     return raw;
   }
 
