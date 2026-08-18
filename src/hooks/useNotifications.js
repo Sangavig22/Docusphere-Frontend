@@ -69,7 +69,7 @@ export const useNotifications = (explicitContext) => {
     if (socketRef.current?.connected) return;
 
     try {
-      const token = authService.getToken();
+      const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
       if (!token) {
         console.warn('No auth token available for socket connection');
         return;

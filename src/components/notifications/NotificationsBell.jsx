@@ -1,19 +1,10 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useNotifications } from '../../hooks/useNotifications';
-import { useNotificationSound } from '../../hooks/useNotificationSound';
 import NotificationCenter from './NotificationCenter';
 
-/**
- * Main notifications bell component.
- * Integrates hook logic with UI components.
- *
- * @param {string} [context='user'] - 'admin' or 'user'.
- *   Pass 'admin' when rendered inside the admin layout so only admin
- *   notifications are fetched and displayed. Defaults to 'user'.
- */
-const NotificationsBell = ({ context = 'user' }) => {
+
+const NotificationsBell = ({ context }) => {
   const notifications = useNotifications(context);
-  const sound = useNotificationSound();
 
   const {
     notifications: notificationsList,
@@ -26,15 +17,6 @@ const NotificationsBell = ({ context = 'user' }) => {
     loadMore,
     markAllAsRead,
   } = notifications;
-
-  /**
-   * Play sound when a new unread notification arrives
-   */
-  useEffect(() => {
-    if (notificationsList.length > 0 && !notificationsList[0]?.read) {
-      sound.playSoundWithDelay(300);
-    }
-  }, [notificationsList.length, notificationsList[0]?.read, sound]);
 
   /**
    * Toggle read/unread status of a notification
