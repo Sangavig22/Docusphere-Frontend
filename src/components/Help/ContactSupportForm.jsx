@@ -1,27 +1,31 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
-import { supportService } from "../../services/supportService";
+import { helpSupportService } from "../../services/helpSupportService";
 
 const CATEGORIES = [
-  "Account",
-  "Document Upload",
-  "Document Management",
-  "OCR",
-  "AI Summarization",
-  "Sharing",
-  "Security",
-  "Collaboration",
-  "Version Control",
-  "Other"
+  { value: "ACCOUNT", label: "Account" },
+  { value: "DOCUMENT_UPLOAD", label: "Document Upload" },
+  { value: "DOCUMENT_MANAGEMENT", label: "Document Management" },
+  { value: "OCR", label: "OCR" },
+  { value: "AI_SUMMARIZATION", label: "AI Summarization" },
+  { value: "SHARING", label: "Sharing" },
+  { value: "SECURITY", label: "Security" },
+  { value: "COLLABORATION", label: "Collaboration" },
+  { value: "VERSION_CONTROL", label: "Version Control" },
+  { value: "OTHER", label: "Other" }
 ];
 
-const PRIORITIES = ["Low", "Medium", "High"];
+const PRIORITIES = [
+  { value: "LOW", label: "Low" },
+  { value: "MEDIUM", label: "Medium" },
+  { value: "HIGH", label: "High" }
+];
 
 export default function ContactSupportForm({ onSuccess }) {
   const [formData, setFormData] = useState({
     subject: "",
     category: "",
-    priority: "Medium",
+    priority: "MEDIUM",
     description: "",
   });
 
@@ -61,13 +65,13 @@ export default function ContactSupportForm({ onSuccess }) {
     setTicketResult(null);
 
     try {
-      const ticket = await supportService.createTicket(formData);
+      const ticket = await helpSupportService.createTicket(formData);
       toast.success("Your support request has been submitted.");
       setTicketResult(ticket);
       setFormData({
         subject: "",
         category: "",
-        priority: "Medium",
+        priority: "MEDIUM",
         description: "",
       });
       if (onSuccess) {
@@ -137,8 +141,8 @@ export default function ContactSupportForm({ onSuccess }) {
               >
                 <option value="" disabled>Select a category</option>
                 {CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
+                  <option key={cat.value} value={cat.value}>
+                    {cat.label}
                   </option>
                 ))}
               </select>
@@ -157,8 +161,8 @@ export default function ContactSupportForm({ onSuccess }) {
                 className="w-full px-3.5 py-2 text-sm border border-border rounded-lg bg-card text-text focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {PRIORITIES.map((pri) => (
-                  <option key={pri} value={pri}>
-                    {pri}
+                  <option key={pri.value} value={pri.value}>
+                    {pri.label}
                   </option>
                 ))}
               </select>

@@ -1,28 +1,31 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Send, ArrowLeft, Clock, ShieldAlert, MessageCircle } from "lucide-react";
 import { toast } from "react-toastify";
-import { supportService } from "../../services/supportService";
+import { helpSupportService } from "../../services/helpSupportService";
 
 export default function TicketDetails({ ticketId, onBack }) {
   const [ticket, setTicket] = useState(null);
+  const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [replyText, setReplyText] = useState("");
   const [sending, setSending] = useState(false);
 
   const messagesEndRef = useRef(null);
 
-  useEffect(() => {
-    const fetchTicket = async () => {
-      try {
-        const data = await supportService.getTicketById(ticketId);
-        setTicket(data);
-      } catch (err) {
-        toast.error(err.message || "Failed to load ticket details.");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchTicket = async () => {
+    try {
+      const data = await helpSupportService.getTicketById(ticketId);
+      setTicket(data);
+      const messagesData = await helpSupportService.getTicketMessages(ticketId);
+      setMessages(messagesData || []);
+    } catch (err) {
+      toast.error(err.message || "Failed to load ticket details.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchTicket();
 
     // Listen to background agent response trigger event
@@ -42,7 +45,7 @@ export default function TicketDetails({ ticketId, onBack }) {
   // Scroll to bottom whenever messages list changes
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [ticket?.messages]);
+  }, [messages]);
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -50,9 +53,13 @@ export default function TicketDetails({ ticketId, onBack }) {
 
     setSending(true);
     try {
-      const updated = await supportService.addTicketMessage(ticketId, replyText.trim());
-      setTicket(updated);
+      await helpSupportService.sendMessage(ticketId, replyText.trim());
       setReplyText("");
+      // Refresh ticket and messages
+      const ticketData = await helpSupportService.getTicketById(ticketId);
+      setTicket(ticketData);
+      const messagesData = await helpSupportService.getTicketMessages(ticketId);
+      setMessages(messagesData || []);
     } catch (err) {
       toast.error(err.message || "Failed to send message.");
     } finally {
@@ -61,12 +68,13 @@ export default function TicketDetails({ ticketId, onBack }) {
   };
 
   const getStatusBadge = (status) => {
-    switch (status) {
-      case "Open":
+    const val = String(status).toUpperCase();
+    switch (val) {
+      case "OPEN":
         return "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400 border border-green-200 dark:border-green-500/20";
-      case "In Progress":
+      case "IN_PROGRESS":
         return "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20";
-      case "Resolved":
+      case "RESOLVED":
         return "bg-slate-100 text-slate-700 dark:bg-slate-500/10 dark:text-slate-400 border border-slate-200 dark:border-slate-500/20";
       default:
         return "bg-gray-100 text-gray-700 dark:bg-gray-500/10 dark:text-gray-400 border border-gray-200 dark:border-gray-500/20";
@@ -134,7 +142,7 @@ export default function TicketDetails({ ticketId, onBack }) {
                 Ticket #{ticket.id}
               </span>
               <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${getStatusBadge(ticket.status)}`}>
-                {ticket.status}
+                {String(ticket.status || "").replace("_", " ").toLowerCase()}
               </span>
             </div>
             <h3 className="font-bold text-text text-base sm:text-lg truncate mt-1">
@@ -146,11 +154,11 @@ export default function TicketDetails({ ticketId, onBack }) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-3 border-t border-border text-xs text-muted">
           <div>
             <span className="block font-semibold text-text">Category</span>
-            <span>{ticket.category}</span>
+            <span>{String(ticket.category || "").replace("_", " ").toLowerCase()}</span>
           </div>
           <div>
             <span className="block font-semibold text-text">Priority</span>
-            <span>{ticket.priority}</span>
+            <span>{String(ticket.priority || "").toLowerCase()}</span>
           </div>
           <div>
             <span className="block font-semibold text-text">Created</span>
@@ -167,9 +175,21 @@ export default function TicketDetails({ ticketId, onBack }) {
       <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden flex flex-col h-[450px]">
         {/* Scrollable messages container */}
         <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-50/50 dark:bg-slate-900/10">
-          {ticket.messages && ticket.messages.length > 0 ? (
-            ticket.messages.map((msg, index) => {
-              const isUser = msg.sender === "user";
+          {messages && messages.length > 0 ? (
+            messages.map((msg, index) => {
+              const isUser = msg.senderRole !== "ROLE_ADMIN";
+              const isSystem = msg.message && msg.message.startsWith("Ticket status updated to");
+              
+              if (isSystem) {
+                return (
+                  <div key={msg.id || index} className="flex justify-center">
+                    <span className="px-3 py-1 rounded-full bg-slate-200 dark:bg-slate-800 text-[10px] text-muted font-semibold shadow-sm">
+                      {msg.message}
+                    </span>
+                  </div>
+                );
+              }
+
               return (
                 <div
                   key={msg.id || index}
@@ -182,13 +202,13 @@ export default function TicketDetails({ ticketId, onBack }) {
                         : "bg-card border border-border text-text rounded-tl-none"
                     }`}
                   >
-                    <p className="whitespace-pre-line">{msg.text}</p>
+                    <p className="whitespace-pre-line">{msg.message}</p>
                     <span
                       className={`block text-[9px] mt-1 text-right ${
                         isUser ? "text-blue-200" : "text-muted"
                       }`}
                     >
-                      {formatTime(msg.timestamp)}
+                      {msg.senderFullName && !isUser ? `${msg.senderFullName} • ` : ""}{formatTime(msg.createdAt)}
                     </span>
                   </div>
                 </div>

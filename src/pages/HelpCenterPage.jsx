@@ -27,7 +27,7 @@ import ContactSupportForm from "../components/help/ContactSupportForm";
 import TicketList from "../components/help/TicketList";
 import TicketDetails from "../components/help/TicketDetails";
 import SystemStatus from "../components/help/SystemStatus";
-import { supportService } from "../services/supportService";
+import { helpSupportService } from "../services/helpSupportService";
 
 export default function HelpCenterPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -50,8 +50,8 @@ export default function HelpCenterPage() {
   const loadTickets = async () => {
     setTicketsLoading(true);
     try {
-      const data = await supportService.getTickets();
-      setTickets(data);
+      const data = await helpSupportService.getUserTickets();
+      setTickets(data || []);
     } catch (err) {
       console.error("Failed to load support tickets", err);
     } finally {

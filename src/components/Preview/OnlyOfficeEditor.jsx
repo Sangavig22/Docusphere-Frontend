@@ -76,7 +76,7 @@ const OnlyOfficeEditor = forwardRef(({
     if (!script) {
       script = window.document.createElement("script");
       script.id = scriptId;
-      const ONLYOFFICE_SERVER_URL = "http://localhost";
+      const ONLYOFFICE_SERVER_URL = "http://localhost:8081";
       script.src = import.meta.env.VITE_ONLYOFFICE_API_URL || `${ONLYOFFICE_SERVER_URL}/web-apps/apps/api/documents/api.js`;
       script.async = true;
       script.onload = initializeEditor;
