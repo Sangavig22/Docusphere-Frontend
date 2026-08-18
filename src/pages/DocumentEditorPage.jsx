@@ -4,10 +4,18 @@ import { ChevronLeft, Save } from "lucide-react";
 import Layout from "../components/Layout/Layout";
 import OnlyOfficeEditor from "../components/Preview/OnlyOfficeEditor";
 import SaveChangesModal from "../components/documents/version/SaveChangesModal";
+import PasswordVerifyModal from "../components/documents/secure/PasswordVerifyModal";
 import { request } from "../api/apiClient";
 import { teamsApi } from "../services/teamsApi";
 import authService from "../services/authService";
+import { verifyDocumentPassword } from "../services/documentProtectionService";
 import { canEditDocument } from "../utils/DocumentPermissionUtils";
+import {
+  hasValidUnlockSession,
+  isDocumentProtected,
+  isInvalidPasswordError,
+  setUnlockSession,
+} from "../utils/documentProtection";
 import AccessDeniedPage from "./AccessDeniedPage";
 import { toast } from "react-toastify";
 import {
@@ -25,35 +33,76 @@ export default function DocumentEditorPage() {
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  const [verifyOpen, setVerifyOpen] = useState(false);
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [verifyError, setVerifyError] = useState("");
+  const [isUnlocked, setIsUnlocked] = useState(true);
+
   useEffect(() => {
+    let mounted = true;
     const fetchDocumentAndRole = async () => {
       try {
         setLoading(true);
         setCheckingPermissions(true);
         const docData = await request(`/documents/${documentId}`);
+        if (!mounted) return;
         setDocument(docData);
+
+        const isProtected = isDocumentProtected(docData);
+        const unlocked = !isProtected || hasValidUnlockSession(documentId);
+        setIsUnlocked(unlocked);
+
+        if (isProtected && !hasValidUnlockSession(documentId)) {
+          setVerifyOpen(true);
+        }
 
         if (docData?.teamId) {
           try {
             const teams = await teamsApi.getMyTeams();
             const myTeam = teams?.find((t) => String(t.id) === String(docData.teamId));
+            if (!mounted) return;
             setUserTeamRole(myTeam?.currentUserRole || "");
           } catch (tErr) {
             console.error("Failed to fetch user teams role", tErr);
-            setUserTeamRole("");
+            if (mounted) setUserTeamRole("");
           }
         }
       } catch (error) {
-        toast.error("Failed to load document details");
-        console.error(error);
+        if (mounted) {
+          toast.error("Failed to load document details");
+          console.error(error);
+        }
       } finally {
-        setLoading(false);
-        setCheckingPermissions(false);
+        if (mounted) {
+          setLoading(false);
+          setCheckingPermissions(false);
+        }
       }
     };
 
     fetchDocumentAndRole();
+    return () => {
+      mounted = false;
+    };
   }, [documentId]);
+
+  async function handleVerifyPassword(password) {
+    setVerifyLoading(true);
+    setVerifyError("");
+    try {
+      const { unlockSession } = await verifyDocumentPassword(documentId, password);
+      setUnlockSession(documentId, unlockSession);
+      setVerifyOpen(false);
+      setIsUnlocked(true);
+      toast.success("Document unlocked for this session.");
+    } catch (err) {
+      const raw = String(err?.message || "");
+      const invalidPassword = isInvalidPasswordError(raw);
+      setVerifyError(invalidPassword ? "Invalid password." : raw || "Unable to verify password.");
+    } finally {
+      setVerifyLoading(false);
+    }
+  }
 
   async function handleSaveChanges(changeSummary) {
     setSaving(true);
@@ -102,6 +151,18 @@ export default function DocumentEditorPage() {
       pageTitle={document?.name || "Edit Document"} 
       pageSubtitle="Edit your document via ONLYOFFICE Community Edition"
     >
+      <PasswordVerifyModal
+        open={verifyOpen}
+        documentName={document?.name || "Document"}
+        loading={verifyLoading}
+        error={verifyError}
+        onClose={() => {
+          setVerifyOpen(false);
+          navigate(-1);
+        }}
+        onUnlock={handleVerifyPassword}
+      />
+
       <SaveChangesModal
         open={saveModalOpen}
         loading={saving}
@@ -135,8 +196,17 @@ export default function DocumentEditorPage() {
           </button>
         </div>
 
-        <div className="flex-1 min-h-[600px] bg-gray-100 dark:bg-card rounded-xl overflow-hidden shadow-inner">
-          <OnlyOfficeEditor ref={editorRef} documentId={documentId} />
+        <div
+          className={[
+            "flex-1 min-h-[600px] bg-gray-100 dark:bg-card rounded-xl overflow-hidden shadow-inner",
+            isUnlocked ? "opacity-100" : "pointer-events-none opacity-60",
+          ].join(" ")}
+        >
+          <OnlyOfficeEditor 
+            ref={editorRef} 
+            documentId={documentId} 
+            enabled={isUnlocked}
+          />
         </div>
       </div>
     </Layout>

@@ -1,6 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState, forwardRef, useImperativeHandle } from "react";
 import { request } from "../../api/apiClient";
-import { fetchVersionEditorConfig } from "../../services/documentVersionService";
+import { fetchVersionEditorConfig, forceSaveDocument } from "../../services/documentVersionService";
+import { verifyDocumentPassword } from "../../services/documentProtectionService";
+import { getUnlockSession, setUnlockSession } from "../../utils/documentProtection";
+import PasswordVerifyModal from "../documents/secure/PasswordVerifyModal";
 
 function applyReadOnlyConfig(config) {
   if (!config || typeof config !== "object") return config;
@@ -23,7 +26,7 @@ function applyReadOnlyConfig(config) {
   };
 }
 
-export default function OnlyOfficeEditor({
+const OnlyOfficeEditor = forwardRef(({
   documentId,
   versionId,
   readOnly = false,
@@ -31,7 +34,7 @@ export default function OnlyOfficeEditor({
   enabled = true,
   resolveConfigError,
   externalConfig = null,
-}) {
+}, ref) => {
   const containerRef = useRef(null);
   const editorRef = useRef(null);
   const documentKeyRef = useRef(null);
@@ -43,6 +46,20 @@ export default function OnlyOfficeEditor({
   const [loadError, setLoadError] = useState(null);
   const [config, setConfig] = useState(null);
   const [loadingConfig, setLoadingConfig] = useState(true);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useImperativeHandle(ref, () => ({
+    forceSave: async () => {
+      try {
+        await forceSaveDocument(documentId);
+        return true;
+      } catch (error) {
+        console.error("Force save failed:", error);
+        return false;
+      }
+    }
+  }));
 
   useEffect(() => {
     const scriptId = "onlyoffice-api-script";
@@ -85,6 +102,60 @@ export default function OnlyOfficeEditor({
     };
   }, []);
 
+  const loadConfig = async (docPassword = "") => {
+    try {
+      setLoadingConfig(true);
+      setErrorMessage("");
+
+      let data;
+      const sessionToken = getUnlockSession(documentId)?.token;
+      const headers = {};
+      if (docPassword) {
+        headers["X-Document-Password"] = docPassword;
+      } else if (sessionToken) {
+        headers["X-Unlock-Token"] = sessionToken;
+      }
+
+      if (typeof fetchConfig === "function") {
+        data = await fetchConfig({ headers });
+      } else if (versionId) {
+        data = await fetchVersionEditorConfig(documentId, versionId, {
+          password: docPassword,
+          unlockToken: sessionToken
+        });
+      } else {
+        data = await request(`/editor/documents/${documentId}`, {
+          headers,
+          skipAuthRedirect: true,
+        });
+      }
+      setConfig(readOnly ? applyReadOnlyConfig(data) : data);
+      setLoadError(null);
+      setShowPasswordModal(false);
+    } catch (error) {
+      console.error("Failed to load ONLYOFFICE editor config:", error);
+
+      const status = error.status;
+      const errCode = error.data?.errorCode;
+      const errMsg = error.message;
+
+      if (status === 401 && errCode === "DOCUMENT_PASSWORD_REQUIRED") {
+        setShowPasswordModal(true);
+      } else if (status === 400 && errCode === "INVALID_PASSWORD") {
+        setErrorMessage("Incorrect password. Please try again.");
+        setShowPasswordModal(true);
+      } else {
+        const message =
+          typeof resolveConfigError === "function"
+            ? resolveConfigError(error)
+            : errMsg || "Failed to load editor configuration from server.";
+        setLoadError(message);
+      }
+    } finally {
+      setLoadingConfig(false);
+    }
+  };
+
   useEffect(() => {
     if (!enabled) {
       setLoadingConfig(false);
@@ -97,31 +168,6 @@ export default function OnlyOfficeEditor({
       setLoadingConfig(false);
       return;
     }
-
-    const loadConfig = async () => {
-      try {
-        setLoadingConfig(true);
-        let data;
-        if (typeof fetchConfig === "function") {
-          data = await fetchConfig();
-        } else if (versionId) {
-          data = await fetchVersionEditorConfig(documentId, versionId);
-        } else {
-          data = await request(`/editor/documents/${documentId}`);
-        }
-        setConfig(readOnly ? applyReadOnlyConfig(data) : data);
-        setLoadError(null);
-      } catch (error) {
-        console.error("Failed to load ONLYOFFICE editor config:", error);
-        const message =
-          typeof resolveConfigError === "function"
-            ? resolveConfigError(error)
-            : "Failed to load editor configuration from server. Please make sure backend is running.";
-        setLoadError(message);
-      } finally {
-        setLoadingConfig(false);
-      }
-    };
 
     if (documentId && enabled) {
       loadConfig();
@@ -156,6 +202,29 @@ export default function OnlyOfficeEditor({
     }
   }, [scriptLoaded, config, editorId]);
 
+  const handleVerifyPassword = async (passwordInput) => {
+    setLoadingConfig(true);
+    setErrorMessage("");
+    try {
+      const { unlockSession } = await verifyDocumentPassword(documentId, passwordInput);
+      setUnlockSession(documentId, unlockSession);
+      await loadConfig(passwordInput);
+    } catch (err) {
+      console.error("Verification failed:", err);
+      const status = err.status;
+      const errCode = err.data?.errorCode;
+      const errMsg = err.message || "";
+
+      if (status === 400 || errCode === "INVALID_PASSWORD" || /invalid|incorrect|wrong/i.test(errMsg)) {
+        setErrorMessage("Incorrect password. Please try again.");
+      } else {
+        setErrorMessage(errMsg || "Verification failed. Please try again.");
+      }
+    } finally {
+      setLoadingConfig(false);
+    }
+  };
+
   if (!enabled) {
     return null;
   }
@@ -173,10 +242,25 @@ export default function OnlyOfficeEditor({
   if (!scriptLoaded || loadingConfig || !config) {
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[400px] gap-4">
-        <div className="animate-spin h-10 w-10 border-4 border-blue-600 border-t-transparent rounded-full" />
-        <p className="text-gray-500 font-medium animate-pulse">
-          {readOnly ? "Loading read-only version preview..." : "Loading ONLYOFFICE Editor..."}
-        </p>
+        {showPasswordModal ? (
+          <PasswordVerifyModal
+            open={showPasswordModal}
+            loading={loadingConfig}
+            error={errorMessage}
+            onClose={() => {
+              setShowPasswordModal(false);
+              setLoadError("Password verification is required to view this document.");
+            }}
+            onUnlock={handleVerifyPassword}
+          />
+        ) : (
+          <>
+            <div className="animate-spin h-10 w-10 border-4 border-blue-600 border-t-transparent rounded-full" />
+            <p className="text-gray-500 font-medium animate-pulse">
+              {readOnly ? "Loading read-only version preview..." : "Loading ONLYOFFICE Editor..."}
+            </p>
+          </>
+        )}
       </div>
     );
   }
@@ -186,4 +270,6 @@ export default function OnlyOfficeEditor({
       <div id={editorId} ref={containerRef} className="h-full w-full min-h-0" />
     </div>
   );
-}
+});
+
+export default OnlyOfficeEditor;

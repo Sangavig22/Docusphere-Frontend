@@ -229,6 +229,7 @@ export default function VersionPreviewPage() {
             documentId={documentId}
             versionId={versionId}
             readOnly
+            enabled={canPreview}
           />
         </div>
       </div>

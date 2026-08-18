@@ -301,13 +301,20 @@ export async function forceSaveDocument(documentId) {
   });
 }
 
-export async function fetchVersionEditorConfig(documentId, versionId, { shareToken } = {}) {
+export async function fetchVersionEditorConfig(documentId, versionId, { shareToken, password, unlockToken } = {}) {
+  const headers = {};
+  if (password) {
+    headers["X-Document-Password"] = password;
+  }
+  if (unlockToken) {
+    headers["X-Unlock-Token"] = unlockToken;
+  }
   return request(
     appendShareToken(
       `/editor/documents/${encodeURIComponent(documentId)}/versions/${encodeURIComponent(versionId)}`,
       shareToken,
     ),
-    { method: "GET", ...shareRequestOptions(shareToken) },
+    { method: "GET", headers, ...shareRequestOptions(shareToken) },
   );
 }
 
