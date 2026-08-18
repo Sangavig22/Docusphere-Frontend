@@ -53,7 +53,11 @@ export default function MembersTable({
           const mId = m.userId ?? m.id ?? m._id;
           const mName = m.fullName ?? m.userFullName ?? m.name ?? "Member";
           const mEmail = m.email ?? m.userEmail ?? "-";
-          const isBlocked = m.active === false;
+          const isBlocked =
+            m?.active === false ||
+            String(m?.active ?? "true").toLowerCase() === "false" ||
+            m?.chatBlocked === true ||
+            String(m?.chatBlocked ?? "false").toLowerCase() === "true";
           const normalizedStatus = String(m.status || "INACTIVE").toUpperCase();
           const isOnline = normalizedStatus === "ACTIVE";
           

@@ -227,14 +227,15 @@ function TeamNew({ backPath = "/team" }) {
               <button
                 type="button"
                 onClick={() => navigate(resolvedBackPath)}
-                className="px-4 py-2 text-sm text-slate-600"
+                className="group relative overflow-hidden rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-600 shadow-sm transition-all duration-300 hover:border-slate-300 hover:text-slate-800"
               >
-                Cancel
+                <span className="absolute inset-0 origin-left scale-x-0 bg-gradient-to-r from-slate-100 to-slate-200 transition-transform duration-300 group-hover:scale-x-100" />
+                <span className="relative z-10">Cancel</span>
               </button>
 
               <button
                 type="submit"
-                className="rounded-full bg-blue-600 px-6 py-2 text-white"
+                className="rounded-full bg-blue-600 px-6 py-2 text-white shadow-sm transition-all duration-300 hover:bg-blue-700"
               >
                 Create Team
               </button>

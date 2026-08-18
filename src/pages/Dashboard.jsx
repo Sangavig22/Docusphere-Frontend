@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useDashboardData } from "../hooks/useDashboardData";
 import { DASHBOARD_CONFIG } from "../config/dashboardsConfig";
 import { usePaginatedMyDocuments } from "../hooks/usePaginatedMyDocuments";
@@ -7,11 +8,16 @@ import StatCard from "../components/ui/StatCard";
 import DocumentPreviewSection from "../components/dashboard/DocumentPreviewSection";
 import DocumentActionModal from "../components/documents/DocumentActionModal";
 import ShareModal from "../components/documents/share/ShareModal";
+import SecureFileModal from "../components/documents/secure/SecureFileModal";
+import ProtectedMoveBlockedModal from "../components/documents/secure/ProtectedMoveBlockedModal";
+import PasswordVerifyModal from "../components/documents/secure/PasswordVerifyModal";
+import VersionHistoryModal from "../components/documents/version/VersionHistoryModal";
 
 const RECENT_PREVIEW_LIMIT = 8;
 const RECENT_DAYS = 7;
 
 function Dashboard() {
+  const navigate = useNavigate();
   const { counts, isLoading, error } = useDashboardData();
   const {
     documents: recentDocuments,
@@ -33,8 +39,29 @@ function Dashboard() {
     reloadStarred();
   }, [reloadRecent, reloadStarred]);
 
-  const { modalState, loadingAction, handleAction, closeModal, submitModal, shareWithPeople } =
-    useDocumentActions({ onSuccess: refreshPreviewLists });
+  const {
+    modalState,
+    verifyState,
+    loadingAction,
+    handleAction,
+    closeModal,
+    closeVerifyModal,
+    submitModal,
+    shareWithPeople,
+    enableDocumentProtection,
+    changeDocumentPassword,
+    removeDocumentProtection,
+    resetDocumentPassword,
+    submitVerifyPassword,
+  } = useDocumentActions({
+    onSuccess: (type, doc) => {
+      if (type === "preview" && doc) {
+        navigate(`/documents/${doc.id}/preview`);
+      } else {
+        refreshPreviewLists();
+      }
+    },
+  });
 
   const onToggleStarRecent = useCallback(
     async (id) => {
@@ -103,7 +130,13 @@ function Dashboard() {
       />
 
       <DocumentActionModal
-        open={modalState.open && modalState.type !== "share"}
+        open={
+          modalState.open &&
+          modalState.type !== "share" &&
+          modalState.type !== "secure_file" &&
+          modalState.type !== "protected_move_block" &&
+          modalState.type !== "version_history"
+        }
         type={modalState.type}
         title={modalState.title}
         message={modalState.message}
@@ -121,6 +154,38 @@ function Dashboard() {
         loading={loadingAction}
         onClose={closeModal}
         onShareWithPeople={shareWithPeople}
+      />
+      <ProtectedMoveBlockedModal
+        open={modalState.open && modalState.type === "protected_move_block"}
+        documentName={modalState.doc?.name}
+        loading={loadingAction}
+        onClose={closeModal}
+        onManageProtection={submitModal}
+      />
+      <SecureFileModal
+        open={modalState.open && modalState.type === "secure_file"}
+        document={modalState.doc}
+        loading={loadingAction}
+        onClose={closeModal}
+        onEnableProtection={enableDocumentProtection}
+        onChangePassword={changeDocumentPassword}
+        onRemoveProtection={removeDocumentProtection}
+        onResetPassword={resetDocumentPassword}
+      />
+      <PasswordVerifyModal
+        open={verifyState.open}
+        documentName={verifyState.doc?.name}
+        loading={loadingAction}
+        error={verifyState.error}
+        onClose={closeVerifyModal}
+        onUnlock={submitVerifyPassword}
+      />
+      <VersionHistoryModal
+        open={modalState.open && modalState.type === "version_history"}
+        document={modalState.doc}
+        userTeamRole={modalState.doc?.teamRole || ""}
+        onClose={closeModal}
+        onRestored={() => refreshPreviewLists()}
       />
     </div>
   );
