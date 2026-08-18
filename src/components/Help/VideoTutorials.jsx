@@ -9,16 +9,29 @@ export default function VideoTutorials({ tutorials, activeTutorialId, clearActiv
   const modalRef = useRef(null);
   const triggerRef = useRef(null);
 
-  // If a tutorial is requested to open from another page (e.g. guide links)
-  useEffect(() => {
+  // Adjust state during rendering when activeTutorialId changes
+  const [prevActiveTutorialId, setPrevActiveTutorialId] = useState(activeTutorialId);
+  if (activeTutorialId !== prevActiveTutorialId) {
+    setPrevActiveTutorialId(activeTutorialId);
     if (activeTutorialId) {
       const found = tutorials.find((t) => t.id === activeTutorialId);
       if (found) {
         setSelectedTutorial(found);
       }
+    }
+  }
+
+  // Clear the parent's activeTutorialId in an effect to avoid render-phase side effects
+  useEffect(() => {
+    if (activeTutorialId) {
       clearActiveTutorial?.();
     }
-  }, [activeTutorialId, tutorials, clearActiveTutorial]);
+  }, [activeTutorialId, clearActiveTutorial]);
+
+  const closeModal = () => {
+    setSelectedTutorial(null);
+    triggerRef.current?.focus();
+  };
 
   // Handle keypress Escape to close modal
   useEffect(() => {
@@ -36,11 +49,6 @@ export default function VideoTutorials({ tutorials, activeTutorialId, clearActiv
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [selectedTutorial]);
-
-  const closeModal = () => {
-    setSelectedTutorial(null);
-    triggerRef.current?.focus();
-  };
 
   const availableTutorials = tutorials.filter((t) => t.available);
 

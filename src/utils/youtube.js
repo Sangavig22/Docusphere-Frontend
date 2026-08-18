@@ -20,7 +20,7 @@ export function extractYoutubeId(url) {
   }
 
   // Regex to extract from various formats
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
   const match = trimmed.match(regExp);
 
   if (match && match[2].length === 11) {

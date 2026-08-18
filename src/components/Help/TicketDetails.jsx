@@ -11,18 +11,18 @@ export default function TicketDetails({ ticketId, onBack }) {
 
   const messagesEndRef = useRef(null);
 
-  const fetchTicket = async () => {
-    try {
-      const data = await supportService.getTicketById(ticketId);
-      setTicket(data);
-    } catch (err) {
-      toast.error(err.message || "Failed to load ticket details.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const fetchTicket = async () => {
+      try {
+        const data = await supportService.getTicketById(ticketId);
+        setTicket(data);
+      } catch (err) {
+        toast.error(err.message || "Failed to load ticket details.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchTicket();
 
     // Listen to background agent response trigger event

@@ -4,17 +4,14 @@ import { API_BASE_URL } from "../../config/api";
 
 export default function SystemStatus() {
   const [checking, setChecking] = useState(true);
-  const [backendAvailable, setBackendAvailable] = useState(false);
 
   useEffect(() => {
     const checkBackend = async () => {
       try {
         // Try pinging auth/me or base endpoint to see if API is reachable
-        const res = await fetch(`${API_BASE_URL}/auth/me`, { method: "GET" });
-        // Even if unauthorized (401), if we get a response, the backend is up
-        setBackendAvailable(res.status === 401 || res.ok);
-      } catch (err) {
-        setBackendAvailable(false);
+        await fetch(`${API_BASE_URL}/auth/me`, { method: "GET" });
+      } catch {
+        // Ignored
       } finally {
         setChecking(false);
       }
