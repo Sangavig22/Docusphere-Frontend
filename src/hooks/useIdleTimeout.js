@@ -3,8 +3,8 @@ import { toast } from 'react-toastify';
 import { request } from '../api/apiClient.js';
 import authService from '../services/authService.js';
 
-const DEFAULT_IDLE = 30 * 60 * 1000; // 30 minutes
-const DEFAULT_WARNING = 2 * 60 * 1000; // 2 minutes before
+const DEFAULT_IDLE = 30 * 60 * 1000; // 30 mintues
+const DEFAULT_WARNING = 2 * 60 * 1000; // 2 minute before
 
 export default function useIdleTimeout({ idleTimeout = DEFAULT_IDLE, warningBefore = DEFAULT_WARNING } = {}) {
   const [showWarning, setShowWarning] = useState(false);
@@ -38,14 +38,16 @@ export default function useIdleTimeout({ idleTimeout = DEFAULT_IDLE, warningBefo
         position: 'top-center',
         autoClose: 3000,
       });
-      setTimeout(() => {
-        window.location.href = '/signin';
-      }, 800);
     } else {
-      setTimeout(() => {
-        window.location.href = '/signin?sessionExpired=true';
-      }, 300);
+      toast.error('Your session has timed out. Please sign in again.', {
+        position: 'top-center',
+        autoClose: false,
+      });
     }
+
+    setTimeout(() => {
+      window.location.href = '/signin';
+    }, 800);
   }, [clearTimers]);
 
   const resetTimers = useCallback(() => {
@@ -127,18 +129,26 @@ export default function useIdleTimeout({ idleTimeout = DEFAULT_IDLE, warningBefo
         }
 
         if (!session) {
+          toast.error('Your session has timed out. Please log in again.', {
+            autoClose: false,
+          });
+
           try {
             await authService.signOut();
           } catch (signOutError) {
             console.error('signOut after session check failed', signOutError);
           }
 
-          window.location.href = '/signin?sessionExpired=true';
+          window.location.href = '/signin';
         }
       } catch (error) {
         if (cancelled) {
           return;
         }
+
+        toast.error('Your session has timed out. Please log in again.', {
+          autoClose: false,
+        });
 
         try {
           await authService.signOut();
@@ -146,7 +156,7 @@ export default function useIdleTimeout({ idleTimeout = DEFAULT_IDLE, warningBefo
           console.error('signOut after session check failed', signOutError);
         }
 
-        window.location.href = '/signin?sessionExpired=true';
+        window.location.href = '/signin';
       }
     };
 
