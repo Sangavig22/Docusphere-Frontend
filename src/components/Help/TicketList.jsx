@@ -4,6 +4,9 @@ import { MessageSquare, Clock, ShieldAlert } from "lucide-react";
 export default function TicketList({ tickets, onSelectTicket }) {
   const [filterStatus, setFilterStatus] = useState("ALL");
 
+  const userRole = sessionStorage.getItem("userRole") || localStorage.getItem("userRole") || "";
+  const isAdmin = userRole.toUpperCase() === "ROLE_ADMIN" || userRole.toUpperCase() === "ADMIN";
+
   const statuses = [
     { value: "ALL", label: "All" },
     { value: "OPEN", label: "Open" },
@@ -96,7 +99,13 @@ export default function TicketList({ tickets, onSelectTicket }) {
                 <h4 className="font-semibold text-text text-sm sm:text-base line-clamp-1">
                   {ticket.subject}
                 </h4>
-                <div className="flex items-center gap-4 text-xs text-muted">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
+                  {isAdmin && ticket.userFullName && (
+                    <div className="flex items-center gap-1">
+                      <span className="font-semibold text-slate-700 dark:text-slate-300">User:</span>
+                      <span>{ticket.userFullName} ({ticket.userEmail})</span>
+                    </div>
+                  )}
                   <div className="flex items-center gap-1">
                     <Clock size={12} />
                     <span>Updated: {formatDate(ticket.updatedAt)}</span>

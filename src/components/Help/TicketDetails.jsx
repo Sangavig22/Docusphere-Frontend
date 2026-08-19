@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Send, ArrowLeft, Clock, ShieldAlert, MessageCircle } from "lucide-react";
+import { Send, ArrowLeft, Clock, ShieldAlert, MessageCircle, Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
 import { helpSupportService } from "../../services/helpSupportService";
 
@@ -9,6 +9,10 @@ export default function TicketDetails({ ticketId, onBack }) {
   const [loading, setLoading] = useState(true);
   const [replyText, setReplyText] = useState("");
   const [sending, setSending] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+
+  const userRole = sessionStorage.getItem("userRole") || localStorage.getItem("userRole") || "";
+  const isAdmin = userRole.toUpperCase() === "ROLE_ADMIN" || userRole.toUpperCase() === "ADMIN";
 
   const messagesEndRef = useRef(null);
 
@@ -64,6 +68,19 @@ export default function TicketDetails({ ticketId, onBack }) {
       toast.error(err.message || "Failed to send message.");
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleUpdateStatus = async (newStatus) => {
+    setUpdatingStatus(true);
+    try {
+      await helpSupportService.updateTicketStatus(ticketId, newStatus);
+      toast.success(`Ticket status updated to ${newStatus.replace("_", " ")}`);
+      await fetchTicket();
+    } catch (err) {
+      toast.error(err.message || "Failed to update ticket status.");
+    } finally {
+      setUpdatingStatus(false);
     }
   };
 
@@ -169,6 +186,54 @@ export default function TicketDetails({ ticketId, onBack }) {
             <span>{formatDate(ticket.updatedAt)} {formatTime(ticket.updatedAt)}</span>
           </div>
         </div>
+
+        {isAdmin && ticket.userFullName && (
+          <div className="pt-3 border-t border-border text-xs text-muted">
+            <span className="font-semibold text-text">Submitted By: </span>
+            <span>{ticket.userFullName} ({ticket.userEmail})</span>
+          </div>
+        )}
+
+        {isAdmin && (
+          <div className="pt-3 border-t border-border flex flex-wrap items-center gap-2 text-xs font-semibold text-muted">
+            <span>Update Status (Admin Actions):</span>
+            <div className="flex flex-wrap gap-1.5 mt-1 sm:mt-0">
+              <button
+                type="button"
+                onClick={() => handleUpdateStatus("OPEN")}
+                disabled={updatingStatus}
+                className="px-2.5 py-1 rounded text-[10px] bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 font-bold uppercase transition-colors"
+              >
+                Open
+              </button>
+              <button
+                type="button"
+                onClick={() => handleUpdateStatus("IN_PROGRESS")}
+                disabled={updatingStatus}
+                className="px-2.5 py-1 rounded text-[10px] bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold uppercase transition-colors"
+              >
+                In Progress
+              </button>
+              <button
+                type="button"
+                onClick={() => handleUpdateStatus("RESOLVED")}
+                disabled={updatingStatus}
+                className="px-2.5 py-1 rounded text-[10px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold uppercase transition-colors"
+              >
+                Resolved
+              </button>
+              <button
+                type="button"
+                onClick={() => handleUpdateStatus("CLOSED")}
+                disabled={updatingStatus}
+                className="px-2.5 py-1 rounded text-[10px] bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-text font-bold uppercase transition-colors"
+              >
+                Closed
+              </button>
+            </div>
+            {updatingStatus && <Loader2 size={12} className="animate-spin text-blue-600" />}
+          </div>
+        )}
       </div>
 
       {/* Conversation Thread */}

@@ -40,6 +40,9 @@ export default function HelpCenterPage() {
   const [selectedTicketId, setSelectedTicketId] = useState(null);
   const [activeTutorialId, setActiveTutorialId] = useState(null);
 
+  const userRole = sessionStorage.getItem("userRole") || localStorage.getItem("userRole") || "";
+  const isAdmin = userRole.toUpperCase() === "ROLE_ADMIN" || userRole.toUpperCase() === "ADMIN";
+
   // Load tickets when switching to tickets tab
   useEffect(() => {
     if (activeTab === "tickets") {
@@ -50,7 +53,9 @@ export default function HelpCenterPage() {
   const loadTickets = async () => {
     setTicketsLoading(true);
     try {
-      const data = await helpSupportService.getUserTickets();
+      const data = isAdmin
+        ? await helpSupportService.getAllAdminTickets()
+        : await helpSupportService.getUserTickets();
       setTickets(data || []);
     } catch (err) {
       console.error("Failed to load support tickets", err);
@@ -291,7 +296,7 @@ export default function HelpCenterPage() {
               : "border-transparent text-muted hover:text-text"
           }`}
         >
-          My Support Tickets
+          {isAdmin ? "All Support Tickets (Admin)" : "My Support Tickets"}
         </button>
       </div>
 
@@ -403,19 +408,21 @@ export default function HelpCenterPage() {
             ) : (
               <>
                 {/* Left panel: Create Ticket form */}
-                <div className="lg:col-span-1 space-y-4">
-                  <h3 className="text-lg font-bold text-text">Contact Support</h3>
-                  <ContactSupportForm
-                    onSuccess={() => {
-                      loadTickets();
-                    }}
-                  />
-                </div>
+                {!isAdmin && (
+                  <div className="lg:col-span-1 space-y-4">
+                    <h3 className="text-lg font-bold text-text">Contact Support</h3>
+                    <ContactSupportForm
+                      onSuccess={() => {
+                        loadTickets();
+                      }}
+                    />
+                  </div>
+                )}
 
                 {/* Right panel: Tickets List */}
-                <div className="lg:col-span-2 space-y-4">
+                <div className={`${isAdmin ? "lg:col-span-3" : "lg:col-span-2"} space-y-4`}>
                   <h3 className="text-lg font-bold text-text flex items-center justify-between">
-                    <span>My Support Requests</span>
+                    <span>{isAdmin ? "All Support Requests (Admin)" : "My Support Requests"}</span>
                     <button
                       type="button"
                       onClick={loadTickets}
