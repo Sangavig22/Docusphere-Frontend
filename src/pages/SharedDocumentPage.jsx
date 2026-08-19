@@ -168,8 +168,7 @@ export default function SharedDocumentPage() {
 
   const showEditableEditor = isEditPermission && canViewContent;
   const isPublicLink = shareAccessType.key === "public";
-  const showReadOnlyViewer = !isEditPermission && canViewContent && !isPublicLink;
-  const showDocumentPanel = showEditableEditor || showReadOnlyViewer;
+  const showDocumentPanel = showEditableEditor;
 
   useEffect(() => {
     if (!showDocumentPanel || !resolvedDocumentId || configLoadedRef.current || error) return;
@@ -460,7 +459,7 @@ export default function SharedDocumentPage() {
               />
             </div>
           </div>
-        ) : isPublicLink ? null : !showEditableEditor && !showReadOnlyViewer ? (
+        ) : isPublicLink ? null : !isEditPermission && !canComment ? (
           <p className="mt-6 text-sm text-slate-600">Read-only access. Commenting is disabled.</p>
         ) : null}
       </div>
